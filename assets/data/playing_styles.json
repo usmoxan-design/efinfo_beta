@@ -1,0 +1,134 @@
+[
+    {
+        "title": "Goal Poacher",
+        "description": "So‘nggi himoyachining orqasida o‘ynaydigan, to‘pni kutib gol urishga tayyor bo‘lgan hujumchi.",
+        "compatible_positions": "CF",
+        "data": "assets/markdown/001.md"
+    },
+    {
+        "title": "Dummy Runner",
+        "description": "Raqib himoyachilarni chalg‘itib, boshqa o‘yinchilar uchun bo‘sh joy yaratadigan futbolchi.",
+        "compatible_positions": "CF/SS/AMF",
+        "data": "assets/markdown/002.md"
+    },
+    {
+        "title": "Fox in the Box",
+        "description": "Raqib jarima maydoni ichida to‘pni kutib turgan va har qanday imkoniyatdan gol urishga tayyor hujumchi.",
+        "compatible_positions": "CF",
+        "data": "assets/markdown/003.md"
+    },
+    {
+        "title": "Target Man",
+        "description": "Old chiziqda to‘pni ushlab turuvchi va jismoniy kuchi bilan himoyachilarga qarshi kurashadigan hujumchi.",
+        "compatible_positions": "CF",
+        "data": "assets/markdown/004.md"
+    },
+    {
+        "title": "Deep-lying Forward",
+        "description": "To‘pni olish va hujumni boshlash uchun orqaroqqa qaytadigan hujumchi.",
+        "compatible_positions": "CF/SS",
+        "data": "assets/markdown/005.md"
+    },
+    {
+        "title": "Creative Playmaker",
+        "description": "Raqib himoyasidagi bo‘shliqlardan foydalanib, hujumni boshlovchi va golli paslar beruvchi o‘yinchi.",
+        "compatible_positions": "SS/RWF/LWF/AMF/RMF/LMF",
+        "data": "assets/markdown/006.md"
+    },
+    {
+        "title": "Prolific Winger",
+        "description": "Yon chiziqda o‘ynab, zarurat tug‘ilganda markazga kirib hujumni davom ettiradigan futbolchi.",
+        "compatible_positions": "RWF/LWF",
+        "data": "assets/markdown/007.md"
+    },
+    {
+        "title": "Roaming Flank",
+        "description": "Yon chiziqdan markazga kesib kirib pas qabul qilishni yoqtiradigan o‘yinchi.",
+        "compatible_positions": "RWF/LWF/RMF/LMF",
+        "data": "assets/markdown/008.md"
+    },
+    {
+        "title": "Cross Specialist",
+        "description": "Yon chiziqda to‘pni ushlab, qulay vaziyatda markazga to‘p uzatishni kutadigan o‘yinchi.",
+        "compatible_positions": "RWF/LWF/RMF/LMF",
+        "data": "assets/markdown/009.md"
+    },
+    {
+        "title": "Classic No. 10",
+        "description": "Jarima maydoni yaqinida hujumni tashkil etuvchi va zarba berishga tayyor bo‘lgan ijodkor o‘yinchi.",
+        "compatible_positions": "SS/AMF",
+        "data": "assets/markdown/010.md"
+    },
+    {
+        "title": "Hole Player",
+        "description": "Jamoa hujumga o‘tganida raqib jarima maydoniga yugurib kirishga harakat qiladigan o‘yinchi.",
+        "compatible_positions": "SS/AMF/RMF/LMF/CMF",
+        "data": "assets/markdown/011.md"
+    },
+    {
+        "title": "Box-to-Box",
+        "description": "Maydonning har bir qismini faol qamrab olib, butun o‘yin davomida harakatda bo‘ladigan o‘yinchi.",
+        "compatible_positions": "RMF/LMF/CMF/DMF",
+        "data": "assets/markdown/012.md"
+    },
+    {
+        "title": "Anchor Man",
+        "description": "Orqa chiziqni himoya qiluvchi, chuqur joylashgan tayanch yarim himoyachi.",
+        "compatible_positions": "DMF",
+        "data": "assets/markdown/013.md"
+    },
+    {
+        "title": "The Destroyer",
+        "description": "Qattiq pressing va to‘p tortib olish bilan raqib hujumlarini buzib tashlaydigan kurashchan o‘yinchi.",
+        "compatible_positions": "CMF/DMF/CB",
+        "data": "assets/markdown/014.md"
+    },
+    {
+        "title": "Orchestrator",
+        "description": "Chuqur pozitsiyada turib, hujumni boshlashga tayyor o‘yinchi.",
+        "compatible_positions": "CMF/DMF",
+        "data": "assets/markdown/015.md"
+    },
+    {
+        "title": "Build Up",
+        "description": "Orqadan o‘yin boshlaydigan, hujumni tashkil etuvchi va uzoq paslar beruvchi himoyachi.",
+        "compatible_positions": "CB",
+        "data": "assets/markdown/016.md"
+    },
+    {
+        "title": "Extra Frontman",
+        "description": "Himoyachi bo‘lsa ham, hujumga faol qo‘shilib, raqib darvozasiga tahdid soluvchi o‘yinchi.",
+        "compatible_positions": "CB",
+        "data": "assets/markdown/017.md"
+    },
+    {
+        "title": "Attacking Full-back",
+        "description": "Yon himoyachi bo‘lib, imkoniyat bo‘lsa hujumga qo‘shiladigan va oldinga chiqadigan futbolchi.",
+        "compatible_positions": "RB/LB",
+        "data": "assets/markdown/018.md"
+    },
+    {
+        "title": "Defensive Full-back",
+        "description": "Yon chiziqda o‘ynab, asosan himoyaviy vazifalarni bajarishga e’tibor qaratadigan futbolchi.",
+        "compatible_positions": "RB/LB",
+        "data": "assets/markdown/019.md"
+    },
+    {
+        "title": "Full-back Finisher",
+        "description": "Yon himoyachi bo‘lib, hujumga markaziy zonalarda faol qo‘shilishni yoqtiradi.",
+        "compatible_positions": "RB/LB",
+        "data": "assets/markdown/020.md"
+    },
+    {
+        "title": "Attacking Goalkeeper",
+        "description": "Darvozabon bo‘lib, himoya ortidagi bo‘sh joylarni yopish uchun tez-tez oldinga chiqadigan o‘yinchi.",
+        "compatible_positions": "GK",
+        "data": "assets/markdown/021.md"
+    },
+    {
+        "title": "Defensive Goalkeeper",
+        "description": "Asosan darvoza chizig‘iga yaqin o‘ynaydigan, xavfsizlikni birinchi o‘ringa qo‘yadigan darvozabon.",
+        "compatible_positions": "GK",
+        "data": "assets/markdown/022.md"
+    }
+]

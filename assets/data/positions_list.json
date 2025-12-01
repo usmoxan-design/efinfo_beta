@@ -1,0 +1,80 @@
+[
+    {
+        "title": "CF - Center Forward",
+        "description": "Markaziy hujumchi. Asosiy gol uruvchi futbolchi, jamoaning hujum markazida o‘ynaydi.",
+        "image": "assets/images/positions/CF.png",
+        "full_description": "assets/data/positions_data/CF.json"
+    },
+    {
+        "title": "SS - Second Striker",
+        "description": "Ikkinchi hujumchi. Markaziy hujumchining orqasida o‘ynaydi va gol urishda ham, pas berishda ham faol ishtirok etadi.",
+        "image": "assets/images/positions/SS.png",
+        "full_description": "assets/data/positions_data/SS.json"
+    },
+    {
+        "title": "RWF - Right Wing Forward",
+        "description": "O‘ng qanot hujumchisi. Qanotdan tezlik bilan hujum uyushtirib, markazga to‘p uzatadi yoki o‘zi zarba beradi.",
+        "image": "assets/images/positions/RWF.png",
+        "full_description": "assets/data/positions_data/RWF.json"
+    },
+    {
+        "title": "LWF - Left Wing Forward",
+        "description": "Chap qanot hujumchisi. Hujumlarda chap tomondan faol harakatlanib, gol vaziyatlarini yaratadi.",
+        "image": "assets/images/positions/LWF.png",
+        "full_description": "assets/data/positions_data/LWF.json"
+    },
+    {
+        "title": "AMF - Attacking Midfielder",
+        "description": "Hujumkor yarim himoyachi. Yarim himoyada ijodkorlik bilan shug‘ullanadi va hujumlarni tashkil etadi.",
+        "image": "assets/images/positions/AMF.png",
+        "full_description": "assets/data/positions_data/AMF.json"
+    },
+    {
+        "title": "RMF - Right Midfielder",
+        "description": "O‘ng yarim himoyachi. O‘ng tomonda harakatlanib, hujum va himoya o‘rtasida muvozanatni ta’minlaydi.",
+        "image": "assets/images/positions/RMF.png",
+        "full_description": "assets/data/positions_data/RMF.json"
+    },
+    {
+        "title": "LMF - Left Midfielder",
+        "description": "Chap yarim himoyachi. Chap tomonda o‘ynab, hujumlarni boshlaydi va himoyaga yordam beradi.",
+        "image": "assets/images/positions/LMF.png",
+        "full_description": "assets/data/positions_data/LMF.json"
+    },
+    {
+        "title": "CMF - Central Midfielder",
+        "description": "Markaziy yarim himoyachi. O‘yin tempini boshqaradi, to‘pni taqsimlaydi va himoyaga yordam beradi.",
+        "image": "assets/images/positions/CMF.png",
+        "full_description": "assets/data/positions_data/CMF.json"
+    },
+    {
+        "title": "DMF - Defensive Midfielder",
+        "description": "Himoyaviy yarim himoyachi. Raqib hujumlarini to‘xtatadi va himoyachilarga yordam beradi.",
+        "image": "assets/images/positions/DMF.png",
+        "full_description": "assets/data/positions_data/DMF.json"
+    },
+    {
+        "title": "RB - Right Back",
+        "description": "O‘ng qanot himoyachisi. O‘ng tomonda himoya qiladi va kerak bo‘lganda hujumga qo‘shiladi.",
+        "image": "assets/images/positions/RB.png",
+        "full_description": "assets/data/positions_data/RB.json"
+    },
+    {
+        "title": "LB - Left Back",
+        "description": "Chap qanot himoyachisi. Chap tomonda raqib hujumchilariga qarshi o‘ynaydi va hujumlarga yordam beradi.",
+        "image": "assets/images/positions/LB.png",
+        "full_description": "assets/data/positions_data/LB.json"
+    },
+    {
+        "title": "CB - Centre Back",
+        "description": "Markaziy himoyachi. Jamoaning asosiy himoyachisi bo‘lib, raqib hujumchilarini to‘xtatadi.",
+        "image": "assets/images/positions/CB.png",
+        "full_description": "assets/data/positions_data/CB.json"
+    },
+    {
+        "title": "GK - Goalkeeper",
+        "description": "Darvozabon. Jamoaning eng so‘nggi himoyachisi, to‘plarni darvozaga kiritmaslik uchun javobgar.",
+        "image": "assets/images/positions/GK.png",
+        "full_description": "assets/data/positions_data/GK.json"
+    }
+]

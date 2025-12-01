@@ -1,0 +1,242 @@
+[
+    {
+        "title": "Scissors Feint",
+        "description": "Feint (aldov) buyrug‘i kiritilganda Scissors Feint (qaychi harakati) bajaradi.",
+        "image": "assets/images/player_skills/scissors_feint.jpg",
+        "full_description": "assets/markdown/playerskills/01.md"
+    },
+    {
+        "title": "Double Touch",
+        "description": "Feint buyrug‘i kiritilganda Double Touch (ikki marta tegish) fintini bajaradi.",
+        "image": "assets/images/player_skills/double_touch.jpg",
+        "full_description": "assets/markdown/playerskills/02.md"
+    },
+    {
+        "title": "Flip Flap",
+        "description": "Feint buyrug‘i kiritilganda Flip Flap fintini bajaradi.",
+        "image": "assets/images/player_skills/flip_flap.jpg",
+        "full_description": "assets/markdown/playerskills/03.md"
+    },
+    {
+        "title": "Marseille Turn",
+        "description": "Feint buyrug‘i kiritilganda Marseille Turn (Zidan aylanish harakati) bajaradi.",
+        "image": "assets/images/player_skills/marseille_turn.jpg",
+        "full_description": "assets/markdown/playerskills/04.md"
+    },
+    {
+        "title": "Sombrero",
+        "description": "To‘pni qabul qilayotganda vaziyatga qarab Sombrero yoki Flick Turn fintini bajaradi.",
+        "image": "assets/images/player_skills/sombrero.jpg",
+        "full_description": "assets/markdown/playerskills/05.md"
+    },
+    {
+        "title": "Chop Turn",
+        "description": "Feint buyrug‘i kiritilganda Chop Turn fintini bajaradi.",
+        "image": "assets/images/player_skills/chop_turn.jpg",
+        "full_description": "assets/markdown/playerskills/06.md"
+    },
+    {
+        "title": "Cut Behind & Turn",
+        "description": "Cut Behind fintini bajaradi. Katta burchakda burilayotganda maxsus to‘p qabul qilish harakati ishlatiladi.",
+        "image": "assets/images/player_skills/cut_behind.jpg",
+        "full_description": "assets/markdown/playerskills/07.md"
+    },
+    {
+        "title": "Scotch Move",
+        "description": "Feint buyrug‘i kiritilganda Scotch Move fintini bajaradi.",
+        "image": "assets/images/player_skills/scotch_move.jpg",
+        "full_description": "assets/markdown/playerskills/08.md"
+    },
+    {
+        "title": "Sole Control",
+        "description": "Feint va burilish paytida to‘pni oyoq tagi bilan yaxshiroq boshqarish imkonini beradi.",
+        "image": "assets/images/player_skills/sole_control.jpg",
+        "full_description": "assets/markdown/playerskills/09.md"
+    },
+    {
+        "title": "Heading",
+        "description": "Bosh bilan zarba berish aniqligini va pastga yo‘naltirilgan zarbalar chastotasini oshiradi.",
+        "image": "assets/images/player_skills/heading.jpg",
+        "full_description": "assets/markdown/playerskills/10.md"
+    },
+    {
+        "title": "Long-range Curler",
+        "description": "Masofadan kuchli egri zarba (Controlled Shot) bajaradi, uzoqdan ham nishonni topadi.",
+        "image": "assets/images/player_skills/long_range_curler.jpg",
+        "full_description": "assets/markdown/playerskills/11.md"
+    },
+    {
+        "title": "Chip Shot Control",
+        "description": "Yuqori tezlikda harakatlanayotganda ham aniq Chip Shot zarbasini bajaradi.",
+        "image": "assets/images/player_skills/chip_shot_control.jpg",
+        "full_description": "assets/markdown/playerskills/13.md"
+    },
+    {
+        "title": "Knuckle Shot",
+        "description": "Power Gauge 50–65% bo‘lganda Stunning Shot buyrug‘i kiritilganda Knuckle Shot bajaradi. Erkin zarbalar uchun foydali.",
+        "image": "assets/images/player_skills/knuckle_shot.jpg",
+        "full_description": "assets/markdown/playerskills/14.md"
+    },
+    {
+        "title": "Dipping Shot",
+        "description": "Power Gauge 20–50% bo‘lganda Stunning Shot buyrug‘i kiritilganda Dipping Shot bajaradi.",
+        "image": "assets/images/player_skills/dipping_shot.jpg",
+        "full_description": "assets/markdown/playerskills/15.md"
+    },
+    {
+        "title": "Rising Shot",
+        "description": "Power Gauge 65–95% bo‘lganda Stunning Shot buyrug‘i kiritilganda Rising Shot bajaradi.",
+        "image": "assets/images/player_skills/rising_shot.jpg",
+        "full_description": "assets/markdown/playerskills/16.md"
+    },
+    {
+        "title": "Long-range Shooting",
+        "description": "Jarima maydonchasidan tashqaridan zarbalar beradi va ko‘p hollarda nishonga tegadi.",
+        "image": "assets/images/player_skills/long_range_curler.jpg",
+        "full_description": "assets/markdown/playerskills/17.md"
+    },
+    {
+        "title": "Acrobatic Finishing",
+        "description": "Noqulay holatlarda ham zarba yo‘lini topa oladi va muvozanatni yo‘qotmaydi.",
+        "image": "assets/images/player_skills/acrobatic_finishing.jpg",
+        "full_description": "assets/markdown/playerskills/18.md"
+    },
+    {
+        "title": "Heel Trick",
+        "description": "Oyoq tovonidan foydalanib zarba va pas bera oladi, hatto noqulay holatlarda ham.",
+        "image": "assets/images/player_skills/heel_trick.jpg",
+        "full_description": "assets/markdown/playerskills/19.md"
+    },
+    {
+        "title": "First-time Shot",
+        "description": "Bir urinishda (first-time) zarba berishda texnika va aniqlikni oshiradi.",
+        "image": "assets/images/player_skills/first_time_shot.jpg",
+        "full_description": "assets/markdown/playerskills/20.md"
+    },
+    {
+        "title": "One-touch Pass",
+        "description": "Bir tegishda pas berish texnikasini va aniqligini yaxshilaydi.",
+        "image": "assets/images/player_skills/one_touch_pass.jpg",
+        "full_description": "assets/markdown/playerskills/21.md"
+    },
+    {
+        "title": "Through Passing",
+        "description": "Aniq uzatmalar (through pass) beradi va ularning trayektoriyasini to‘g‘rilaydi.",
+        "image": "assets/images/player_skills/through_pass.jpg",
+        "full_description": "assets/markdown/playerskills/22.md"
+    },
+    {
+        "title": "Weighted Pass",
+        "description": "Kuchli orqa aylanish (backspin) bilan aniq havola yoki chip uzatma beradi.",
+        "image": "assets/images/player_skills/weighted_pass.jpg",
+        "full_description": "assets/markdown/playerskills/23.md"
+    },
+    {
+        "title": "Pinpoint Crossing",
+        "description": "Aniq va kuchli egri uzatma (cross) beradi.",
+        "image": "assets/images/player_skills/pinpoint_crossing.jpg",
+        "full_description": "assets/markdown/playerskills/24.md"
+    },
+    {
+        "title": "Outside Curler",
+        "description": "Oyoq tashqi tomoni bilan egri zarba yoki pas bajaradi, uzoq masofadan ham aniq ishlaydi.",
+        "image": "assets/images/player_skills/outside_curler.jpg",
+        "full_description": "assets/markdown/playerskills/25.md"
+    },
+    {
+        "title": "Rabona",
+        "description": "Rabona zarbasi bajaradi, bu raqib himoyasini chalg‘itadi va kuchli oyoq bilan aniq bajariladi.",
+        "image": "assets/images/player_skills/rabona.jpg",
+        "full_description": "assets/markdown/playerskills/26.md"
+    },
+    {
+        "title": "No Look Pass",
+        "description": "Raqibni chalg‘itish uchun qarama-qarshi yo‘nalishda (qaramasdan) pas beradi.",
+        "image": "assets/images/player_skills/no_look_pass.jpg",
+        "full_description": "assets/markdown/playerskills/27.md"
+    },
+    {
+        "title": "Low Lofted Pass",
+        "description": "Past trayektoriya bilan uzoqqa aniq lofted pas bera oladi.",
+        "image": "assets/images/player_skills/low_lofted_pass.jpg",
+        "full_description": "assets/markdown/playerskills/28.md"
+    },
+    {
+        "title": "Long Throw",
+        "description": "Uzoqdan to‘p uloqtirish masofasini oshiradi.",
+        "image": "assets/images/player_skills/long_throw.jpg",
+        "full_description": "assets/markdown/playerskills/29.md"
+    },
+    {
+        "title": "Penalty Specialist",
+        "description": "Penalti zarbalarini yuqori aniqlik bilan bajaradi.",
+        "image": "assets/images/player_skills/penalty_specialist.jpg",
+        "full_description": "assets/markdown/playerskills/30.md"
+    },
+    {
+        "title": "Gamesmanship",
+        "description": "To‘p bilan bo‘lgan paytda raqibdan osonroq jarima ishlay oladi.",
+        "image": "assets/images/player_skills/gamesmanship.jpg",
+        "full_description": "assets/markdown/playerskills/31.md"
+    },
+    {
+        "title": "Man Marking",
+        "description": "Raqib harakatlariga tez javob beradi va mustahkam markirovka qiladi.",
+        "image": "assets/images/player_skills/man_marking.jpg",
+        "full_description": "assets/markdown/playerskills/32.md"
+    },
+    {
+        "title": "Track Back",
+        "description": "Raqib to‘pni ushlab turganida bosimni old chiziqlardan boshlab faol tarzda davom ettiradi.",
+        "image": "assets/images/player_skills/track_back.jpg",
+        "full_description": "assets/markdown/playerskills/33.md"
+    },
+    {
+        "title": "Interception",
+        "description": "Raqibning paslarini tezda sezadi va ularni ko‘proq to‘xtata oladi.",
+        "image": "assets/images/player_skills/interception.jpg",
+        "full_description": "assets/markdown/playerskills/34.md"
+    },
+    {
+        "title": "Blocker",
+        "description": "Pas va zarbalarni bloklashda tez javob beradi va qaytish ehtimolini kamaytiradi.",
+        "image": "assets/images/player_skills/blocker.jpg",
+        "full_description": "assets/markdown/playerskills/35.md"
+    },
+    {
+        "title": "Aerial Superiority",
+        "description": "Havodagi kurashlarda ustunlikka ega bo‘ladi va bosh bilan zarba aniqligini saqlaydi.",
+        "image": "assets/images/player_skills/aerial_superiority.jpg",
+        "full_description": "assets/markdown/playerskills/36.md"
+    },
+    {
+        "title": "Sliding Tackle",
+        "description": "Sirpanib to‘pni olishda tezlik va aniqlikni oshiradi, to‘pni osonroq egallaydi.",
+        "image": "assets/images/player_skills/sliding_tackle.jpg",
+        "full_description": "assets/markdown/playerskills/37.md"
+    },
+    {
+        "title": "Acrobatic Clearance",
+        "description": "Noqulay holatlarda ham oyoq bilan to‘pni uzoqlashtira oladi.",
+        "image": "assets/images/player_skills/acrobatic_clearance.jpg",
+        "full_description": "assets/markdown/playerskills/38.md"
+    },
+    {
+        "title": "Captaincy",
+        "description": "Jamoa sardori sifatida maydonda ilhom manbai bo‘ladi va butun jamoa charchashini kamaytiradi.",
+        "image": "assets/images/player_skills/captaincy.jpg",
+        "full_description": "assets/markdown/playerskills/39.md"
+    },
+    {
+        "title": "Super-sub",
+        "description": "Ikkinchi bo‘limdan so‘ng o‘yinga kirganda o‘yinchi qobiliyatlari oshadi.",
+        "image": "assets/images/player_skills/supersub.jpg",
+        "full_description": "assets/markdown/playerskills/40.md"
+    },
+    {
+        "title": "Fighting Spirit",
+        "description": "Raqib bosimi ostida ham zarba va bosh bilan o‘ynash aniqligini yo‘qotmaydi hamda kamroq charchaydi.",
+        "image": "assets/images/player_skills/fighting_spirit.jpg",
+        "full_description": "assets/markdown/playerskills/12.md"
+    }
+]

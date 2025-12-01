@@ -1,0 +1,86 @@
+[
+    {
+        "title": "Phenomenal Finishing",
+        "description": "Murakkab yoki muvozanatsiz holatlarda zarba aniqligini sezilarli darajada oshiradigan yakunlovchi mahorat.",
+        "image": "assets/images/player_skills/phenomenal_finishing.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/01.md"
+    },
+    {
+        "title": "Phenomenal Pass",
+        "description": "Noqulay holatlarda ham aniq paslar uzatishni osonlashtiruvchi mahorat, ayniqsa muhim lahzalarda xatoni kamaytiradi.",
+        "image": "assets/images/player_skills/phenomenal_pass.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/02.md"
+    },
+    {
+        "title": "Blitz Curler",
+        "description": "Zarba yo‘nalishiga keskin egilish kiritib, darvozabon uchun oldindan taxmin qilishni qiyinlashtiradi.",
+        "image": "assets/images/player_skills/blitz_curler.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/03.md"
+    },
+    {
+        "title": "Visionary Pass",
+        "description": "Pas aniqligini oshiradi va qabul qiluvchining birinchi teginish yoki bir zarbali o‘yinini yaxshilaydi.",
+        "image": "assets/images/player_skills/visionary_pass.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/04.md"
+    },
+    {
+        "title": "Bullet Header",
+        "description": "Bosh bilan beriladigan zarbalarni kuchliroq va aniqroq bajarish imkonini beradi, ayniqsa pastga yo‘naltirilganlarda.",
+        "image": "assets/images/player_skills/bullet_header.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/05.md"
+    },
+    {
+        "title": "Momentum Dribbling",
+        "description": "Dribling paytida to‘p ustidan nazoratni yaxshilab, tez harakatda ham muvozanatni saqlash imkonini beradi.",
+        "image": "assets/images/player_skills/momentum_dribling.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/06.md"
+    },
+    {
+        "title": "Edged Crossing",
+        "description": "Cross uzatmalarining traektoriyasini o‘zgartirib, to‘pning oxirgi qismida pastga tez tushishini ta’minlaydi.",
+        "image": "assets/images/player_skills/edged_crossing.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/07.md"
+    },
+    {
+        "title": "Fortress",
+        "description": "Tanaffusda hisobda oldinda bo‘lgan paytda himoyaviy ko‘rsatkichlarni 5% ga oshiradi, himoyada barqarorlik beradi.",
+        "image": "assets/images/player_skills/fortress.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/08.md"
+    },
+    {
+        "title": "Game-Changing Pass",
+        "description": "Ikkinchi taymda jamoa yutqazayotgan yoki durangda bo‘lsa, pas aniqligini 10% ga oshiradi.",
+        "image": "assets/images/player_skills/game_changing_pass.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/09.md"
+    },
+    {
+        "title": "Aerial Fort",
+        "description": "Penaltibox ichida havo duelidagi ustunlikni oshirib, raqibning yuqoridan uzatmalariga qarshi himoyani kuchaytiradi.",
+        "image": "assets/images/player_skills/aerial_fort.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/10.md"
+    },
+    {
+        "title": "Acceleration Burst",
+        "description": "Joyidan turgan yoki sekin harakatda ham keskin tezlik bilan yo‘nalishni o‘zgartirish imkonini beradi.",
+        "image": "assets/images/player_skills/acceleration_burst.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/11.md"
+    },
+    {
+        "title": "Long-Reach Tackle",
+        "description": "Raqib uzoqroqda bo‘lsa ham, to‘pni oyoq bilan olib qo‘yish imkoniyatini oshiradi, hatto to‘xtab turgan holatda ham ishlaydi.",
+        "image": "assets/images/player_skills/long_reach_tackle.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/12.md"
+    },
+    {
+        "title": "GK Directing Defense",
+        "description": "Darvozabon himoyachilarning joylashuvi va himoya harakatlarini mustahkamlab, himoya barqarorligini oshiradi.",
+        "image": "assets/images/player_skills/gk_directing_defense.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/13.md"
+    },
+    {
+        "title": "Low Screamer",
+        "description": "Power Gauge 50% dan past bo‘lganda to‘pni pastdan kuchli, tez va to‘g‘ridan-to‘g‘ri zarba bilan yo‘naltiradi.",
+        "image": "assets/images/player_skills/low_screamer.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/14.md"
+    }
+]
