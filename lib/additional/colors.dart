@@ -13,3 +13,8 @@ const Color topColor = Color.fromARGB(255, 201, 198, 204);
 const Color white = Color(0xFFFFFFFF);
 const Color dividerColor = Color.fromARGB(255, 145, 145, 145);
 const Color anotherCol = Color(0xFFBE7DE1);
+
+//// Page
+const Color backgroundColor = Color(0xFF011A0B); //0xFF06DF5D
+const Color mainColor = Color(0xFF06DF5D);
+const Color blackColor = Color(0xFF1A1A1A);

@@ -15,6 +15,7 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 
+// ignore: must_be_immutable
 class ViewdocPage extends StatefulWidget {
   ViewdocPage(
       {super.key,

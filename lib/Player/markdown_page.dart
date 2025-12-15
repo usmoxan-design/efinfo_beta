@@ -1,3 +1,4 @@
+import 'package:efinfo_beta/additional/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -58,23 +59,23 @@ class _MarkdownPageState extends State<MarkdownPage> {
                     wordSpacing: 5,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C2C2C)),
+                    color: Colors.white),
                 h3: const TextStyle(
                     wordSpacing: 5,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C2C2C)),
+                    color: Colors.white),
                 h2: const TextStyle(
                     wordSpacing: 5,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF117340)),
+                    color: mainColor),
                 p: GoogleFonts.notoColorEmoji(
                     letterSpacing: 0,
                     wordSpacing: 0,
                     fontSize: 16,
                     height: 1.5,
-                    color: const Color(0xFF6E6E6E)),
+                    color: const Color(0xFF878787)),
               ),
             ),
     );

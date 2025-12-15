@@ -71,7 +71,7 @@ class _TabOneState extends State<TabOne> {
                       hintText: 'Qidirish...',
                       prefixIcon: const Icon(Icons.search),
                       filled: true,
-                      fillColor: Colors.grey.shade200,
+                      // fillColor: Colors.grey.shade200,
                       contentPadding: const EdgeInsets.symmetric(
                           vertical: 12, horizontal: 16),
                       border: OutlineInputBorder(
@@ -102,7 +102,7 @@ class _TabOneState extends State<TabOne> {
                         );
                       },
                       child: Card(
-                        color: Colors.white,
+                        // color: Colors.white,
                         margin: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
                         elevation: 1,
@@ -254,7 +254,7 @@ class _TabTwoState extends State<TabTwo> {
                       hintText: 'Qidirish...',
                       prefixIcon: const Icon(Icons.search),
                       filled: true,
-                      fillColor: Colors.grey.shade200,
+                      // fillColor: Colors.grey.shade200,
                       contentPadding: const EdgeInsets.symmetric(
                           vertical: 12, horizontal: 16),
                       border: OutlineInputBorder(
@@ -285,7 +285,7 @@ class _TabTwoState extends State<TabTwo> {
                         );
                       },
                       child: Card(
-                        color: Colors.white,
+                        // color: Colors.white,
                         margin: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
                         elevation: 1,

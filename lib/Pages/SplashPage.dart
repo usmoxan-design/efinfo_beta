@@ -1,3 +1,4 @@
+import 'package:efinfo_beta/additional/colors.dart';
 import 'package:efinfo_beta/mainpage.dart';
 import 'package:flutter/material.dart';
 
@@ -13,6 +14,7 @@ class SplashPage extends StatelessWidget {
       );
     });
     return Scaffold(
+      backgroundColor: backgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -20,26 +22,17 @@ class SplashPage extends StatelessWidget {
           children: [
             const Spacer(),
             SizedBox(
-              height: 40,
+              height: 60,
               child: Image.asset(
-                'assets/images/efootball-logo.png',
-                color: const Color(0xFF117340),
+                'assets/images/mainLogo.png',
               ),
             ),
+            const SizedBox(height: 30),
             const Text(
-              ' Info beta',
-              style: TextStyle(
-                fontSize: 20,
-                color: Color(0xFF117340),
-              ),
+              ' v1.0.6',
+              style: TextStyle(fontSize: 20, color: mainColor),
             ),
             const Spacer(),
-            const Text(
-              ' v1.0.2',
-              style: TextStyle(
-                fontSize: 20,
-              ),
-            ),
           ],
         ),
       ),

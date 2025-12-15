@@ -6,6 +6,12 @@
         "data": "assets/markdown/001.md"
     },
     {
+        "title": "Adv. Striker",
+        "description": "Bu o‘yin uslubi to‘liq jarima maydonchasi ichida imkoniyat topish va to‘g‘ridan-to‘g‘ri gol urishga ixtisoslashgan hujumchi turidir",
+        "compatible_positions": "CF",
+        "data": "assets/markdown/023.md"
+    },
+    {
         "title": "Dummy Runner",
         "description": "Raqib himoyachilarni chalg‘itib, boshqa o‘yinchilar uchun bo‘sh joy yaratadigan futbolchi.",
         "compatible_positions": "CF/SS/AMF",

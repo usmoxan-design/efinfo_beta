@@ -79,7 +79,7 @@ class _PlayingStylePageState extends State<PlayingStylePage> {
                         hintText: 'Qidirish...',
                         prefixIcon: const Icon(Icons.search),
                         filled: true,
-                        fillColor: Colors.grey.shade200,
+                        // fillColor: Colors.grey.shade200,
                         contentPadding: const EdgeInsets.symmetric(
                             vertical: 12, horizontal: 16),
                         border: OutlineInputBorder(
@@ -97,7 +97,7 @@ class _PlayingStylePageState extends State<PlayingStylePage> {
                       final style = filteredStyles[index];
 
                       return Card(
-                        color: Colors.white,
+                        // color: Colors.white,
                         margin: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
                         elevation: 1,

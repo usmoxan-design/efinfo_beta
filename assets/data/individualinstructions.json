@@ -1,0 +1,44 @@
+[
+    {
+        "title": "Offence (Hujum)",
+        "instruction": "Anchoring",
+        "description": "",
+        "data": "assets/markdown/individual/01.md"
+    },
+    {
+        "title": "Offence (Hujum)",
+        "instruction": "Offensive",
+        "description": "",
+        "data": "assets/markdown/individual/02.md"
+    },
+    {
+        "title": "Offence (Hujum)",
+        "instruction": "Defensive",
+        "description": "",
+        "data": "assets/markdown/individual/03.md"
+    },
+    {
+        "title": "Defense (Himoya)",
+        "instruction": "Man Marking",
+        "description": "",
+        "data": "assets/markdown/individual/04.md"
+    },
+    {
+        "title": "Defense (Himoya)",
+        "instruction": "Tight Marking",
+        "description": "",
+        "data": "assets/markdown/individual/05.md"
+    },
+    {
+        "title": "Defense (Himoya)",
+        "instruction": "Deep Line",
+        "description": "",
+        "data": "assets/markdown/individual/06.md"
+    },
+    {
+        "title": "Defense (Himoya)",
+        "instruction": "Counter Target",
+        "description": "",
+        "data": "assets/markdown/individual/07.md"
+    }
+]

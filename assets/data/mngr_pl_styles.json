@@ -1,0 +1,27 @@
+[
+    {
+        "title": "Possesion Game",
+        "description": "Bu uslub haqiqiy futbolning Pep Guardiolaning Man City yoki sobiq Barcelona uslubiga o'xshaydi: to'pni uzoq vaqt o'z qo'lingizda ushlang, qisqa va aniq paslar bilan hujumni sekin-sekin quring, raqibni charchating va xatolarga majbur qiling.",
+        "data": "assets/markdown/manager_styles/01.md"
+    },
+    {
+        "title": "Quick Counter",
+        "description": "Bu uslub haqiqiy futbolning Mourinho (Inter) yoki Simeone (Atletico) uslubiga o'xshaydi: chuqur himoya qiling, to'pni qaytarib oling va darhol tez paslar/through ball bilan hujumni boshlang",
+        "data": "assets/markdown/manager_styles/02.md"
+    },
+    {
+        "title": "Long Ball Counter",
+        "description": "Bu uslub haqiqiy futbolning Sean Dyche (Everton) yoki klassik ingliz route one taktikalariga o'xshaydi: chuqur himoya qiling, to'pni qaytarib oling va darhol uzun lofted passlar (yuqori uzun paslar) bilan hujumchilarga uzating",
+        "data": "assets/markdown/manager_styles/03.md"
+    },
+    {
+        "title": "Out Wide",
+        "description": "Bu uslub haqiqiy futbolning Kloppning Liverpool yoki hozirgi Ruben Amorimning Man Utd uslubiga o'xshaydi: qanotlardan keng ochib o'ynang, wingers (qanotchilar) chetlarda joylashib, fullbacklar (to'rtburchaklar) oldinga chiqsin, cross (kesib uzatish) bilan jarima maydoniga to'p yuboring.",
+        "data": "assets/markdown/manager_styles/04.md"
+    },
+    {
+        "title": "Long Ball",
+        "description": "Bu uslub haqiqiy futbolning klassik route one ingliz uslubi yoki Franz Beckenbauerning Bayern Munich taktikalariga o'xshaydi: to'pni himoyadan to'g'ridan-to'g'ri target striker (fokal hujumchi) ga uzun lofted pass bilan uzating, ikkinchi to'plarni (second balls) oling va tez gol uring.",
+        "data": "assets/markdown/manager_styles/05.md"
+    }
+]

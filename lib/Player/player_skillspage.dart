@@ -29,10 +29,12 @@ class _PlayerSkillsPageState extends State<PlayerSkillsPage>
       appBar: AppBar(
         title: const Text('Player Skills'),
         bottom: TabBar(
+          indicatorColor: Color(0xFF00C853),
+          indicatorWeight: 3,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white38,
+          labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
           controller: _tabController,
-          indicatorColor: Theme.of(context).colorScheme.primary,
-          labelColor: Theme.of(context).colorScheme.primary,
-          unselectedLabelColor: Colors.grey,
           tabs: const [
             Tab(text: 'Oddiy skillar'),
             Tab(text: 'Noyob skillar'),

@@ -1,4 +1,5 @@
 import 'package:efinfo_beta/Others/positionskillchecker.dart';
+import 'package:efinfo_beta/Others/teambuilder.dart';
 import 'package:flutter/material.dart';
 
 class Morepage extends StatefulWidget {
@@ -15,7 +16,7 @@ class _MorepageState extends State<Morepage> {
       _ListItem(
         title: 'Skill moslik Hisoblagich',
         icon: "assets/images/skill_calculator.png",
-        color: const Color(0xFF117340),
+        color: const Color(0xFF06DF5D),
         onTap: () {
           Navigator.push(
             context,
@@ -24,8 +25,21 @@ class _MorepageState extends State<Morepage> {
         },
         // onBlock: true, // 🔒 bloklangan
       ),
+      _ListItem(
+        title: 'SuperSquad XI',
+        icon: "assets/images/formations.png",
+        color: const Color(0xFF06DF5D),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const TeamBuilderScreen()),
+          );
+        },
+        // onBlock: true, // 🔒 bloklangan
+      ),
     ];
     return Scaffold(
+      backgroundColor: const Color(0xFF011A0B), //0xFF06DF5D
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: ListView(
@@ -90,6 +104,7 @@ class _ListItem extends StatelessWidget {
                         width: 60,
                         child: Image.asset(
                           icon.toString(),
+                          color: const Color(0xFF06DF5D),
                         )),
                     const SizedBox(height: 10),
                     Text(

@@ -1,0 +1,34 @@
+[
+    {
+        "id": "1",
+        "name": "Alisson",
+        "position": "GK",
+        "rating": 100,
+        "team": "LIV",
+        "imageUrl": "https://efootballhub.net/images/efootball24/players/52880711153650_l.webp"
+    },
+    {
+        "id": "2",
+        "name": "Van Dijk",
+        "position": "CB",
+        "rating": 102,
+        "team": "LIV",
+        "imageUrl": "https://efootballhub.net/images/efootball24/players/52883663925032_l.webp"
+    },
+     {
+        "id": "3",
+        "name": "Saliba",
+        "position": "CB",
+        "rating": 103,
+        "team": "ARS",
+        "imageUrl": "https://efootballhub.net/images/efootball24/players/106742553898721_l.webp"
+    },
+    {
+        "id": "9",
+        "name": "Messi",
+        "position": "RWF",
+        "rating": 108,
+        "team": "BAR",
+        "imageUrl": "https://efootballhub.net/images/efootball24/players/89133456301399_l.webp"
+    }
+]

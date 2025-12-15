@@ -82,5 +82,11 @@
         "description": "Power Gauge 50% dan past bo‘lganda to‘pni pastdan kuchli, tez va to‘g‘ridan-to‘g‘ri zarba bilan yo‘naltiradi.",
         "image": "assets/images/player_skills/low_screamer.jpg",
         "full_description": "assets/markdown/playerskills/unical_skills/14.md"
+    },
+    {
+        "title": "Willpower",
+        "description": "Willpower — bu eFootball Mobile o‘yinidagi yangi hujum skili bo‘lib, futbolchiga har zarba (shot) berganda shooting qobiliyatlarini asta-sekin oshirish imkonini beradi.",
+        "image": "assets/images/player_skills/willpower.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/15.md"
     }
 ]

@@ -96,40 +96,40 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
       'AMF': 88,
       'RMF': 80,
       'LMF': 80,
-      'CMF': 70,
-      'DMF': 45
+      'CMF': 90,
+      'DMF': 70
     },
     'Flip Flap': {
       'CF': 85,
       'SS': 90,
       'RWF': 92,
       'LWF': 92,
-      'AMF': 75,
-      'RMF': 78,
-      'LMF': 78
+      'AMF': 80,
+      'RMF': 80,
+      'LMF': 80
     },
     'Marseille Turn': {
-      'CF': 75,
+      'CF': 85,
       'SS': 82,
       'RWF': 70,
       'LWF': 70,
       'AMF': 90,
-      'CMF': 80
+      'CMF': 90
     },
-    'Sombrero': {'CF': 88, 'SS': 85, 'RWF': 70, 'LWF': 70, 'AMF': 65},
+    'Sombrero': {'CF': 88, 'SS': 85, 'RWF': 85, 'LWF': 85, 'AMF': 75},
     'Chop Turn': {
       'CF': 85,
-      'SS': 80,
-      'RWF': 78,
-      'LWF': 78,
+      'SS': 85,
+      'RWF': 85,
+      'LWF': 85,
       'AMF': 75,
       'CMF': 65
     },
     'Cut Behind & Turn': {'CF': 80, 'SS': 88, 'RWF': 85, 'LWF': 85, 'AMF': 75},
-    'Sole Control': {'CF': 70, 'SS': 75, 'AMF': 80, 'CMF': 82, 'DMF': 75},
-    'Heading': {'CF': 95, 'SS': 85, 'CB': 88, 'LB': 60, 'RB': 60, 'DMF': 55},
+    'Sole Control': {'CF': 70, 'SS': 75, 'AMF': 80, 'CMF': 85, 'DMF': 90},
+    'Heading': {'CF': 95, 'SS': 85, 'CB': 90, 'LB': 65, 'RB': 65, 'DMF': 87},
     'Long-range Curler': {
-      'CF': 82,
+      'CF': 90,
       'SS': 85,
       'AMF': 90,
       'CMF': 88,
@@ -177,7 +177,14 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
     'Low Lofted Pass': {'CMF': 90, 'DMF': 85, 'AMF': 88, 'RB': 80, 'LB': 80},
     'Long Throw': {'RB': 90, 'LB': 90, 'RWB': 92, 'LWB': 92},
     'Penalty Specialist': {'CF': 95, 'SS': 90, 'AMF': 80, 'CMF': 70},
-    'Gamesmanship': {'CF': 80, 'SS': 85, 'AMF': 82, 'CMF': 78},
+    'Gamesmanship': {
+      'CF': 80,
+      'SS': 85,
+      'AMF': 82,
+      'CMF': 78,
+      'RWF': 85,
+      'LWF': 85,
+    },
     'Man Marking': {'CB': 95, 'DMF': 90, 'RB': 85, 'LB': 85},
     'Track Back': {
       'DMF': 95,
@@ -191,7 +198,7 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
     'Blocker': {'CB': 95, 'RB': 90, 'LB': 90, 'DMF': 85},
     'Aerial Superiority': {'CB': 95, 'CF': 85, 'GK': 80, 'DMF': 78},
     'Sliding Tackle': {'CB': 95, 'RB': 90, 'LB': 90, 'DMF': 88},
-    'Acrobatic Clearance': {'CB': 92, 'RB': 88, 'LB': 88, 'GK': 85},
+    'Acrobatic Clearance': {'CB': 95, 'RB': 88, 'LB': 88, 'GK': 85},
     'Captaincy': {'CB': 95, 'CMF': 92, 'GK': 88, 'DMF': 85, 'CF': 75},
     'Super-sub': {'CF': 88, 'SS': 92, 'RWF': 85, 'LWF': 85},
     'Fighting Spirit': {'CB': 90, 'CMF': 88, 'DMF': 90, 'GK': 88, 'CF': 75}
