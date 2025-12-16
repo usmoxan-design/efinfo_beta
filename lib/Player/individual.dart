@@ -1,3 +1,4 @@
+import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 
@@ -216,7 +217,7 @@ class ModernInstructionsListPage extends StatelessWidget {
         .toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: AppColors.background,
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -236,7 +237,7 @@ class ModernInstructionsListPage extends StatelessWidget {
                   ),
                 ),
                 _buildSectionHeader(
-                    "Offense (Hujum ko'rsatmalari)", Colors.cyanAccent),
+                    "Offense (Hujum ko'rsatmalari)", AppColors.accent),
                 ...attackList.map((e) => _InstructionCard(item: e)),
                 const SizedBox(height: 24),
                 _buildSectionHeader(
@@ -256,7 +257,7 @@ class ModernInstructionsListPage extends StatelessWidget {
       expandedHeight: 140.0,
       floating: false,
       pinned: true,
-      backgroundColor: const Color(0xFF161B22),
+      backgroundColor: AppColors.background,
       flexibleSpace: FlexibleSpaceBar(
         // centerTitle: true,
         title: const Text(
@@ -274,8 +275,8 @@ class ModernInstructionsListPage extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.blueGrey.withOpacity(0.2),
-                const Color(0xFF0D1117),
+                AppColors.accent.withOpacity(0.1),
+                AppColors.background,
               ],
             ),
           ),
@@ -326,7 +327,7 @@ class _InstructionCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF21262D),
+        color: AppColors.cardSurface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -335,7 +336,7 @@ class _InstructionCard extends StatelessWidget {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: AppColors.accent.withOpacity(0.1)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -419,7 +420,7 @@ class ModernInstructionDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           // Orqa fon effekti
@@ -462,7 +463,7 @@ class ModernInstructionDetailPage extends StatelessWidget {
                           width: 100,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: const Color(0xFF161B22),
+                            color: AppColors.surface,
                             border: Border.all(color: item.color, width: 3),
                             boxShadow: [
                               BoxShadow(
@@ -499,7 +500,7 @@ class ModernInstructionDetailPage extends StatelessWidget {
                   margin: const EdgeInsets.symmetric(horizontal: 16),
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF161B22).withOpacity(0.9),
+                    color: AppColors.cardSurface.withOpacity(0.9),
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(30),
                       topRight: Radius.circular(30),

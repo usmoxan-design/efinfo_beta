@@ -57,49 +57,49 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
     });
   }
 
- void _saveTournament() {
-  String name = _tournamentNameController.text.trim();
-  if (name.isEmpty) {
-    _showSnackbar("Turnir nomini kiriting!", Colors.orange);
-    return;
+  void _saveTournament() {
+    String name = _tournamentNameController.text.trim();
+    if (name.isEmpty) {
+      _showSnackbar("Turnir nomini kiriting!", Colors.orange);
+      return;
+    }
+
+    int teamCount = _teams.length;
+
+    if (teamCount < 2) {
+      _showSnackbar("Kamida 2 ta jamoa bo'lishi kerak!", Colors.orange);
+      return;
+    }
+
+    // 2, 4, 8, 12, 16, 20, ... tekshiruvi
+    if (teamCount % 2 != 0 || (teamCount & (teamCount - 1)) != 0) {
+      _showSnackbar(
+        "Jamoalar soni juft va uning 4 ga bo‘linadigan bo‘lishi shart. Masalan: 2, 4, 8, 12, 16.",
+        Colors.orange,
+      );
+      return;
+    }
+
+    // Saqlashdan oldin yangilangan modelni qaytarish
+    TournamentModel result;
+    if (widget.tournament != null) {
+      result = TournamentModel(
+        name: name,
+        teams: _teams,
+        id: widget.tournament!.id,
+        isDrawDone: widget.tournament!.isDrawDone,
+        matches: widget.tournament!.matches,
+        championId: widget.tournament!.championId,
+      );
+    } else {
+      result = TournamentModel(
+        name: name,
+        teams: _teams,
+      );
+    }
+
+    Navigator.pop(context, result);
   }
-
-  int teamCount = _teams.length;
-
-  if (teamCount < 2) {
-    _showSnackbar("Kamida 2 ta jamoa bo'lishi kerak!", Colors.orange);
-    return;
-  }
-
-  // 2, 4, 8, 12, 16, 20, ... tekshiruvi
-  if (teamCount % 2 != 0 || (teamCount & (teamCount - 1)) != 0) {
-    _showSnackbar(
-      "Jamoalar soni juft va uning 4 ga bo‘linadigan bo‘lishi shart. Masalan: 2, 4, 8, 12, 16.",
-      Colors.orange,
-    );
-    return;
-  }
-
-  // Saqlashdan oldin yangilangan modelni qaytarish
-  TournamentModel result;
-  if (widget.tournament != null) {
-    result = TournamentModel(
-      name: name,
-      teams: _teams,
-      id: widget.tournament!.id,
-      isDrawDone: widget.tournament!.isDrawDone,
-      matches: widget.tournament!.matches,
-      championId: widget.tournament!.championId,
-    );
-  } else {
-    result = TournamentModel(
-      name: name,
-      teams: _teams,
-    );
-  }
-
-  Navigator.pop(context, result);
-}
 
   void _showSnackbar(String message, Color color) {
     if (mounted) {
@@ -144,7 +144,7 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
                     child: TextField(
                       controller: _teamController,
                       decoration: const InputDecoration(
-                        labelText: 'Jamoa nomini kiriting',
+                        labelText: 'Qatnashchi nomini kiriting',
                         border: OutlineInputBorder(),
                       ),
                       onSubmitted: (_) =>

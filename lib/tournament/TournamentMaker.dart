@@ -1,4 +1,4 @@
-import 'package:efinfo_beta/additional/colors.dart';
+import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:efinfo_beta/tournament/TournamentEditor.dart';
 import 'package:efinfo_beta/tournament/tournamentBracket.dart';
 import 'package:efinfo_beta/tournament/tournament_model.dart';
@@ -144,7 +144,7 @@ void _deleteTournament(TournamentModel tournament) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("eFInfo Turnirchi"),
-        backgroundColor: const Color(0xFF1A1A1A),
+        backgroundColor: AppColors.background,
         elevation: 0,
       ),
       body: _isLoading
@@ -179,7 +179,7 @@ void _deleteTournament(TournamentModel tournament) {
         },
         label: const Text("Yangi Turnir"),
         icon: const Icon(BoxIcons.bx_plus),
-        backgroundColor: mainColor,
+        backgroundColor: AppColors.accent,
       ),
     );
   }
@@ -213,7 +213,7 @@ void _deleteTournament(TournamentModel tournament) {
       child: Container(
         // elevation: 6,
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
+          color: AppColors.cardSurface.withOpacity(0.8),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -239,7 +239,7 @@ void _deleteTournament(TournamentModel tournament) {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
-                      color: mainColor,
+                      color: AppColors.accent,
                     ),
                   ),
                   Icon(

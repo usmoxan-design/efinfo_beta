@@ -1,9 +1,10 @@
 // ... (Importlar TeamModel, MatchModel, TournamentModel va BracketService)
+import 'package:confetti/confetti.dart';
 import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:efinfo_beta/Others/imageSaver.dart';
-import 'package:efinfo_beta/additional/colors.dart';
+import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:efinfo_beta/tournament/match_model.dart';
 import 'package:efinfo_beta/tournament/service/bracket_service.dart';
 import 'package:efinfo_beta/tournament/team_model.dart';
@@ -19,7 +20,6 @@ import 'dart:ui' as ui;
 
 // JSON dan ma'lumotlarni yuklash uchun
 
-
 import 'dart:math';
 
 class TournamentBracketPage extends StatefulWidget {
@@ -33,10 +33,13 @@ class TournamentBracketPage extends StatefulWidget {
 class _TournamentBracketPageState extends State<TournamentBracketPage> {
   late TournamentModel _currentTournament;
   final BracketService _bracketService = BracketService();
+  late ConfettiController _confettiController;
 
   @override
   void initState() {
     super.initState();
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 5));
     _currentTournament = widget.tournament;
     // Turnir boshlanishida 3-o'rin matchini tekshirish
     if (_currentTournament.isDrawDone) {
@@ -46,6 +49,19 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
       _currentTournament =
           _bracketService.createThirdPlaceMatch(_currentTournament);
     }
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
+
+  int _calculateTotalRounds() {
+    if (_currentTournament.teams.isEmpty) return 0;
+    return log(BracketService.getNextPowerOfTwo(
+            _currentTournament.teams.length)) ~/
+        log(2);
   }
 
   // --- Natijani Tahrirlash (UI'dan servisga chaqirish) ---
@@ -114,11 +130,21 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                     _currentTournament = finalTournament;
                     // Birinchi dialog yopiladi
                     Navigator.pop(context);
-                    // Barcha o'zgarishlarni ListPage ga qaytarish
-                    // Navigator.pop(context, _currentTournament);
                   });
-                  _showSnackbar(
-                      "Natija saqlandi. Bracket yangilandi.", Colors.green);
+
+                  // Agar bu final matchi bo'lsa va g'olib aniqlansa, konfeti otish
+                  int totalRounds = _calculateTotalRounds();
+                  if (match.round == totalRounds &&
+                      updatedTournament.matches
+                              .firstWhere((m) => m.id == match.id)
+                              .winnerId !=
+                          null) {
+                    _confettiController.play();
+                    _showSnackbar("Turnir g'olibi aniqlandi! 🏆", Colors.amber);
+                  } else {
+                    _showSnackbar(
+                        "Natija saqlandi. Bracket yangilandi.", Colors.green);
+                  }
                 } catch (e) {
                   _showSnackbar(
                       e.toString().replaceAll("Exception: ", ""), Colors.red);
@@ -244,7 +270,7 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: mainColor,
+                    color: AppColors.accent,
                   ),
                 ),
               ),
@@ -301,7 +327,7 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
     bool hasWinner = match.winnerId != null;
     Color cardColor = match.round == 99
         ? Colors.orange[50]!
-        : (hasWinner ? Colors.green[50]! : white);
+        : (hasWinner ? Colors.green[50]! : Colors.white);
 
     // Karta o'lchamini dinamik sozlash
     double width = 200;
@@ -447,10 +473,10 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF011A0B),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text("Turnir To'ri: ${_currentTournament.name}"),
-        backgroundColor: blackColor,
+        backgroundColor: AppColors.background,
         elevation: 0,
         actions: [
           if (championName != null)
@@ -476,7 +502,7 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
               child: ElevatedButton(
                 onPressed: captureAndSave,
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.cyan,
+                    backgroundColor: AppColors.accent,
                     foregroundColor: Colors.black),
                 child: const Text("Saqlash"),
               ),
@@ -485,22 +511,42 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
       ),
 
       // >>>>>>>>>>> IKKI YO'NALISHLI SCROLL TUZATILGAN QISM <<<<<<<<<<<
-      body: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SingleChildScrollView(
-            // Ichki gorizontal skroll
-            scrollDirection: Axis.horizontal,
-            child: RepaintBoundary(
-              key: pitchBoundaryKey,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: _buildBracket(context),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                // Ichki gorizontal skroll
+                scrollDirection: Axis.horizontal,
+                child: RepaintBoundary(
+                  key: pitchBoundaryKey,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: _buildBracket(context),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+          // Confetti Widget
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirectionality: BlastDirectionality.explosive,
+              shouldLoop: false,
+              colors: const [
+                Colors.green,
+                Colors.blue,
+                Colors.pink,
+                Colors.orange,
+                Colors.purple
+              ],
+            ),
+          ),
+        ],
       ),
       // >>>>>>>>>>> TUZATISH TUGADI <<<<<<<<<<<
     );

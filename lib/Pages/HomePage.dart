@@ -1,4 +1,7 @@
+import 'package:efinfo_beta/Player/BoosterRecommendationPage.dart';
+import 'package:efinfo_beta/Player/SkillRecommendationPage.dart';
 import 'package:efinfo_beta/Player/player_skillspage.dart';
+import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:efinfo_beta/Player/playingstylespage.dart';
 import 'package:efinfo_beta/Player/positions.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +25,7 @@ class _HomePageState extends State<HomePage> {
         title: 'Playing Styles',
         subtitle: 'O\'yin stili',
         icon: "assets/images/playing_styles.png",
-        color: const Color(0xFF06DF5D),
+        color: AppColors.accent,
         onTap: () {
           Navigator.push(
             context,
@@ -35,7 +38,7 @@ class _HomePageState extends State<HomePage> {
         title: 'Player Skills',
         subtitle: 'Futbolchi skillari',
         icon: "assets/images/soccer_shoe.png",
-        color: const Color(0xFF06DF5D),
+        color: AppColors.accent,
         onTap: () {
           Navigator.push(
             context,
@@ -50,7 +53,7 @@ class _HomePageState extends State<HomePage> {
         title: 'Positions',
         subtitle: 'Pozitsiyalar',
         icon: "assets/images/positions.png",
-        color: const Color(0xFF06DF5D),
+        color: AppColors.accent,
         onTap: () {
           Navigator.push(
             context,
@@ -64,7 +67,7 @@ class _HomePageState extends State<HomePage> {
         title: "Player stats",
         subtitle: "O'yinchi statistikasi",
         icon: "assets/images/details.png",
-        color: const Color(0xFF06DF5D),
+        color: AppColors.accent,
         onTap: () {
           Navigator.push(
             context,
@@ -73,10 +76,37 @@ class _HomePageState extends State<HomePage> {
         },
         // onBlock: true, // 🔒 bloklangan
       ),
+      _GridItem(
+        badge: true,
+        title: "Booster Tavsiyalari",
+        subtitle: "Eng yaxshi boosterlar",
+        icon: "assets/images/booster_token.png",
+        color: AppColors.accent,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => const BoosterRecommendationPage()),
+          );
+        },
+      ),
+      _GridItem(
+        badge: true,
+        title: "Skill Tavsiyalari",
+        subtitle: "Pozitsiya bo'yicha",
+        icon: "assets/images/skill_token.png",
+        color: AppColors.accent,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SkillRecommendationPage()),
+          );
+        },
+      ),
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF011A0B), //0xFF06DF5D
+      backgroundColor: AppColors.background,
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: ListView(
@@ -95,22 +125,6 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(
               height: 30,
-            ),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.telegram_outlined, size: 32, color: Colors.blue),
-                Text("@eFootball_Info_Hub",
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Color(0xFF06DF5D),
-                    )),
-              ],
-            ),
-            const Text(
-              textAlign: TextAlign.center,
-              "Ilova hozirda ishlab chiqilmoqda, ko'proq ma'lumot uchun telegram kanalga obuna bo'ling",
-              style: TextStyle(fontSize: 16, color: Colors.white),
             ),
             const Text(
               "Versiya v1.0.6",
@@ -170,8 +184,8 @@ class _GridItem extends StatelessWidget {
                       SizedBox(
                           width: 60,
                           child: Image.asset(
-                            color: const Color(0xFF06DF5D),
                             icon.toString(),
+                            color: AppColors.accent,
                           )),
                       const SizedBox(height: 10),
                       Text(

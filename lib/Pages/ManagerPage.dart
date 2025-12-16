@@ -2,6 +2,7 @@ import 'package:efinfo_beta/Player/formations.dart';
 import 'package:efinfo_beta/Player/individual.dart';
 import 'package:efinfo_beta/components/newBadge.dart';
 import 'package:efinfo_beta/manager/plstyles.dart';
+import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class ManagerPage extends StatefulWidget {
@@ -21,7 +22,7 @@ class _ManagerPageState extends State<ManagerPage> {
         title: 'Team Playstyle',
         subtitle: 'Jamoa o\'yin stili',
         icon: "assets/images/team_playstyle.png",
-        color: const Color(0xFF06DF5D),
+        color: AppColors.accent,
         onTap: () {
           Navigator.push(
             context,
@@ -35,7 +36,7 @@ class _ManagerPageState extends State<ManagerPage> {
         title: 'Formations',
         subtitle: 'Taktik sxemalar',
         icon: "assets/images/formation_change.png",
-        color: const Color(0xFF06DF5D),
+        color: AppColors.accent,
         onTap: () {
           Navigator.push(
             context,
@@ -49,7 +50,7 @@ class _ManagerPageState extends State<ManagerPage> {
         title: 'Individual Instructions',
         subtitle: "Shaxsiy ko'rsatmalar",
         icon: "assets/images/individual_instruction.png",
-        color: const Color(0xFF06DF5D),
+        color: AppColors.accent,
         onTap: () {
           Navigator.push(
             context,
@@ -61,7 +62,7 @@ class _ManagerPageState extends State<ManagerPage> {
       ),
     ];
     return Scaffold(
-      backgroundColor: const Color(0xFF011A0B), //0xFF06DF5D
+      backgroundColor: AppColors.background, //0xFF06DF5D
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: ListView(
@@ -132,7 +133,7 @@ class _ListItem extends StatelessWidget {
                           width: 60,
                           child: Image.asset(
                             icon.toString(),
-                            color: const Color(0xFF06DF5D),
+                            color: AppColors.accent,
                           )),
                       const SizedBox(height: 10),
                       Text(

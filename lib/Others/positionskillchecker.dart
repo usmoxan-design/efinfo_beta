@@ -1,6 +1,4 @@
-// Flutter page: Position & Skill Selector for eFootball-style compatibility (Advanced Analysis)
-// File: lib/pages/position_skill_page.dart
-
+import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class PositionSkillPage extends StatefulWidget {
@@ -74,149 +72,269 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
     'Fighting Spirit'
   ];
 
-  // --- Advanced football logic-based compatibility ---
-  // Based on tactical roles and skill utility per position in eFootball gameplay
+  // Updated Logic map based on the provided matrix and eFootball meta
   final Map<String, Map<String, int>> compatibility = {
-    'Scissors Feint': {
-      'CF': 85,
-      'SS': 88,
+    // Top Tier for Attackers
+    'First-time Shot': {
+      'CF': 100,
+      'SS': 95,
+      'RWF': 95,
+      'LWF': 95,
+      'AMF': 90,
+      'LMF': 80,
+      'RMF': 80
+    },
+    'Long-range Shooting': {
+      'CF': 95,
+      'SS': 85,
+      'AMF': 95,
       'RWF': 90,
       'LWF': 90,
-      'AMF': 70,
-      'CMF': 50,
-      'DMF': 25,
-      'CB': 10,
+      'CMF': 85,
+      'LMF': 80,
+      'RMF': 80
+    },
+    'Long-range Curler': {
+      'CF': 95,
+      'SS': 85,
+      'RWF': 95,
+      'LWF': 95,
+      'AMF': 95,
+      'CMF': 85,
+      'LMF': 80,
+      'RMF': 80
+    },
+    'One-touch Pass': {
+      'CF': 95,
+      'SS': 95,
+      'AMF': 100,
+      'RWF': 95,
+      'LWF': 95,
+      'CMF': 100,
+      'DMF': 100,
+      'LMF': 100,
+      'RMF': 100,
+      'RB': 90,
+      'LB': 90,
+      'CB': 60
+    },
+    'Through Passing': {
+      'CF': 80,
+      'SS': 90,
+      'AMF': 95,
+      'RWF': 100,
+      'LWF': 100,
+      'CMF': 95,
+      'DMF': 95,
+      'LMF': 95,
+      'RMF': 95,
+      'RB': 90,
+      'LB': 90
+    },
+    'Outside Curler': {
+      'CF': 95,
+      'SS': 90,
+      'RWF': 90,
+      'LWF': 90,
+      'AMF': 95,
+      'CMF': 90,
+      'LMF': 90,
+      'RMF': 90,
+      'DMF': 60
+    },
+    'Fighting Spirit': {
+      'CF': 95,
+      'SS': 85,
+      'AMF': 85,
+      'RWF': 80,
+      'LWF': 80,
+      'CMF': 85,
+      'DMF': 40,
+      'CB': 40,
+      'RB': 40,
+      'LB': 40
+    }, // High for attackers, low for defenders per matrix
+    'Super-sub': {
+      'CF': 100,
+      'SS': 100,
+      'RWF': 100,
+      'LWF': 100,
+      'AMF': 100,
+      'RMF': 50,
+      'LMF': 50,
+      'CMF': 20,
+      'DMF': 0,
+      'CB': 0,
+      'RB': 0,
+      'LB': 0,
       'GK': 0
     },
-    'Double Touch': {
-      'CF': 92,
-      'SS': 95,
-      'RWF': 90,
-      'LWF': 90,
-      'AMF': 88,
-      'RMF': 80,
-      'LMF': 80,
-      'CMF': 90,
+
+    // Technical / Dribbling
+    'Chip Shot Control': {
+      'CF': 85,
+      'SS': 80,
+      'RWF': 40,
+      'LWF': 40,
+      'AMF': 60,
+      'CMF': 20
+    },
+    'Heading': {
+      'CF': 85,
+      'SS': 60,
+      'RWF': 60,
+      'LWF': 60,
+      'CB': 80,
+      'RB': 80,
+      'LB': 80,
       'DMF': 70
-    },
-    'Flip Flap': {
-      'CF': 85,
-      'SS': 90,
-      'RWF': 92,
-      'LWF': 92,
-      'AMF': 80,
-      'RMF': 80,
-      'LMF': 80
-    },
-    'Marseille Turn': {
-      'CF': 85,
-      'SS': 82,
+    }, // CF useful/low, Defenders useful
+    'Heel Trick': {
+      'CF': 80,
+      'SS': 80,
       'RWF': 70,
       'LWF': 70,
-      'AMF': 90,
-      'CMF': 90
+      'AMF': 85,
+      'CMF': 90,
+      'LMF': 90,
+      'RMF': 90
     },
-    'Sombrero': {'CF': 88, 'SS': 85, 'RWF': 85, 'LWF': 85, 'AMF': 75},
-    'Chop Turn': {
-      'CF': 85,
-      'SS': 85,
-      'RWF': 85,
-      'LWF': 85,
-      'AMF': 75,
-      'CMF': 65
-    },
-    'Cut Behind & Turn': {'CF': 80, 'SS': 88, 'RWF': 85, 'LWF': 85, 'AMF': 75},
-    'Sole Control': {'CF': 70, 'SS': 75, 'AMF': 80, 'CMF': 85, 'DMF': 90},
-    'Heading': {'CF': 95, 'SS': 85, 'CB': 90, 'LB': 65, 'RB': 65, 'DMF': 87},
-    'Long-range Curler': {
-      'CF': 90,
-      'SS': 85,
-      'AMF': 90,
-      'CMF': 88,
-      'RWF': 85,
-      'LWF': 85
-    },
-    'Chip Shot Control': {'CF': 90, 'SS': 85, 'RWF': 80, 'LWF': 80},
-    'Knuckle Shot': {'CF': 90, 'SS': 88, 'AMF': 85, 'CMF': 82, 'DMF': 70},
-    'Dipping Shot': {'CF': 85, 'SS': 85, 'AMF': 88, 'CMF': 80},
-    'Rising Shot': {'CF': 92, 'SS': 88, 'RWF': 78, 'LWF': 78},
-    'Long-range Shooting': {
+    'Acrobatic Finishing': {'CF': 80, 'SS': 70, 'RWF': 60, 'LWF': 60},
+    'Gamesmanship': {
       'CF': 75,
-      'SS': 70,
-      'AMF': 92,
-      'CMF': 88,
-      'DMF': 80
+      'SS': 75,
+      'RWF': 80,
+      'LWF': 80,
+      'AMF': 80,
+      'LMF': 80,
+      'RMF': 80
     },
-    'Acrobatic Finishing': {'CF': 95, 'SS': 90, 'RWF': 85, 'LWF': 85},
-    'Heel Trick': {'CF': 80, 'SS': 88, 'RWF': 75, 'LWF': 75, 'AMF': 70},
-    'First-time Shot': {'CF': 95, 'SS': 92, 'AMF': 88, 'RWF': 80, 'LWF': 80},
-    'One-touch Pass': {
+    'Aerial Superiority': {
       'CF': 80,
-      'SS': 85,
-      'AMF': 90,
-      'CMF': 95,
-      'DMF': 88,
-      'RB': 70,
-      'LB': 70
+      'CB': 95,
+      'RB': 90,
+      'LB': 90,
+      'DMF': 85,
+      'CMF': 70
     },
-    'Through Passing': {'SS': 88, 'AMF': 95, 'CMF': 92, 'DMF': 85},
-    'Weighted Pass': {'AMF': 90, 'CMF': 88, 'DMF': 80, 'RB': 75, 'LB': 75},
+
+    // Special Skills
     'Pinpoint Crossing': {
       'RWF': 90,
       'LWF': 90,
-      'RMF': 88,
-      'LMF': 88,
+      'RMF': 95,
+      'LMF': 95,
+      'RB': 95,
+      'LB': 95,
+      'RWB': 95,
+      'LWB': 95,
+      'AMF': 70
+    },
+    'Track Back': {
+      'RWF': 70,
+      'LWF': 70,
+      'AMF': 40,
+      'LMF': 85,
+      'RMF': 85,
+      'CMF': 80,
+      'RWB': 85,
+      'LWB': 85,
       'RB': 85,
       'LB': 85,
-      'RWB': 88,
-      'LWB': 88
+      'DMF': 20,
+      'CB': 0
     },
-    'Outside Curler': {'CF': 85, 'SS': 85, 'RWF': 90, 'LWF': 90},
-    'Rabona': {'CF': 70, 'SS': 80, 'RWF': 85, 'LWF': 85, 'AMF': 75},
-    'No Look Pass': {'AMF': 90, 'CMF': 88, 'SS': 82},
-    'Low Lofted Pass': {'CMF': 90, 'DMF': 85, 'AMF': 88, 'RB': 80, 'LB': 80},
-    'Long Throw': {'RB': 90, 'LB': 90, 'RWB': 92, 'LWB': 92},
-    'Penalty Specialist': {'CF': 95, 'SS': 90, 'AMF': 80, 'CMF': 70},
-    'Gamesmanship': {
+    'Weighted Pass': {
+      'RWF': 40,
+      'LWF': 40,
+      'AMF': 70,
+      'LMF': 40,
+      'RMF': 40,
+      'CMF': 80,
+      'DMF': 80,
+      'RB': 60,
+      'LB': 60,
+      'CB': 80
+    },
+
+    // Midfield / Defence
+    'Interception': {
+      'CMF': 95,
+      'DMF': 100,
+      'LMF': 80,
+      'RMF': 80,
+      'RB': 100,
+      'LB': 100,
+      'CB': 100
+    },
+    'Man Marking': {'DMF': 95, 'RB': 90, 'LB': 90, 'CB': 95},
+    'Blocker': {'DMF': 95, 'RB': 90, 'LB': 90, 'CB': 95},
+    'Sliding Tackle': {'CMF': 70, 'DMF': 85, 'RB': 85, 'LB': 85, 'CB': 95},
+    'Acrobatic Clearance': {'DMF': 85, 'RB': 85, 'LB': 85, 'CB': 95},
+
+    // Goalkeeper
+    'GK Low Punt': {'GK': 100},
+    'GK Long Throw': {'GK': 100},
+    'GK Penalty Saver': {'GK': 100},
+    'GK High Punt': {'GK': 80},
+
+    // Dribbling Specific
+    'Double Touch': {
+      'CF': 90,
+      'SS': 95,
+      'RWF': 95,
+      'LWF': 95,
+      'AMF': 95,
+      'RMF': 85,
+      'LMF': 85
+    },
+    'Sole Control': {
       'CF': 80,
       'SS': 85,
-      'AMF': 82,
-      'CMF': 78,
       'RWF': 85,
       'LWF': 85,
+      'AMF': 90,
+      'CMF': 85
     },
-    'Man Marking': {'CB': 95, 'DMF': 90, 'RB': 85, 'LB': 85},
-    'Track Back': {
-      'DMF': 95,
-      'CMF': 85,
-      'RB': 82,
-      'LB': 82,
-      'RWB': 80,
-      'LWB': 80
-    },
-    'Interception': {'DMF': 95, 'CB': 90, 'CMF': 88, 'RB': 80, 'LB': 80},
-    'Blocker': {'CB': 95, 'RB': 90, 'LB': 90, 'DMF': 85},
-    'Aerial Superiority': {'CB': 95, 'CF': 85, 'GK': 80, 'DMF': 78},
-    'Sliding Tackle': {'CB': 95, 'RB': 90, 'LB': 90, 'DMF': 88},
-    'Acrobatic Clearance': {'CB': 95, 'RB': 88, 'LB': 88, 'GK': 85},
-    'Captaincy': {'CB': 95, 'CMF': 92, 'GK': 88, 'DMF': 85, 'CF': 75},
-    'Super-sub': {'CF': 88, 'SS': 92, 'RWF': 85, 'LWF': 85},
-    'Fighting Spirit': {'CB': 90, 'CMF': 88, 'DMF': 90, 'GK': 88, 'CF': 75}
+    'Flip Flap': {
+      'RWF': 80,
+      'LWF': 80,
+      'SS': 80
+    }, // Only if combined for special double touch, generally lower generic value
+    'Marsielle Turn': {'AMF': 70, 'RWF': 70, 'LWF': 70},
+
+    // Other
+    'Knuckle Shot': {'CF': 60, 'SS': 50, 'AMF': 50},
+    'Dipping Shot': {'CF': 60, 'SS': 50, 'AMF': 50},
+    'Rising Shot': {'CF': 60, 'SS': 50, 'AMF': 50},
   };
 
   String? selectedPosition;
   final Set<String> selectedSkills = {};
   String validationMessage = '';
 
+  // Get compatibility percentage
   int getCompatibility(String skill, String position) {
     final map = compatibility[skill];
     if (map != null && map.containsKey(position)) return map[position]!;
 
-    // Estimate default based on type group
-    if (position == 'GK') return 10;
-    if (['CB', 'RB', 'LB', 'RWB', 'LWB', 'DMF'].contains(position)) return 40;
-    if (['CF', 'SS', 'RWF', 'LWF', 'AMF'].contains(position)) return 70;
-    return 55;
+    // Better defaults based on matrix "useful" vs "not necessary"
+    if (position == 'GK') return 0;
+
+    // Defenders
+    if (['CB', 'RB', 'LB'].contains(position)) {
+      if (['Long-range Shooting', 'Super-sub', 'Track Back'].contains(skill))
+        return 0; // Do not give
+      if (['One-touch Pass', 'Through Passing', 'Weighted Pass']
+          .contains(skill)) return 60; // Useful low
+    }
+
+    // Attackers
+    if (['CF', 'SS', 'RWF', 'LWF'].contains(skill)) {
+      if (['Man Marking', 'Interception', 'Blocker'].contains(skill)) return 10;
+    }
+
+    return 45; // Generic low-mid match
   }
 
   void toggleSkill(String skill) {
@@ -225,9 +343,9 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
         selectedSkills.remove(skill);
       } else {
         if (selectedSkills.length >= 5) {
-          validationMessage = 'Ko\'pi bilan 5 ta skill tanlash mumkin.';
+          validationMessage = 'Maksimal 5 ta skill tanlash mumkin!';
           Future.delayed(const Duration(seconds: 2), () {
-            setState(() => validationMessage = '');
+            if (mounted) setState(() => validationMessage = '');
           });
           return;
         }
@@ -236,151 +354,254 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
     });
   }
 
-  Widget buildPositionChips() => Wrap(
-        spacing: 8,
-        runSpacing: 6,
-        children: positions
-            .map((pos) => ChoiceChip(
-                  label: Text(pos),
-                  selected: pos == selectedPosition,
-                  onSelected: (_) => setState(() => selectedPosition = pos),
-                ))
-            .toList(),
-      );
-
-  Widget buildSkillChips() => Wrap(
-        spacing: 8,
-        runSpacing: 6,
-        children: skills
-            .map((s) => FilterChip(
-                  label: Text(s, overflow: TextOverflow.ellipsis),
-                  selected: selectedSkills.contains(s),
-                  onSelected: (_) => toggleSkill(s),
-                ))
-            .toList(),
-      );
-
-  Widget buildSelectedSkillStats() {
-    if (selectedPosition == null)
-      return const Text('Iltimos pozitsiyani tanlang.');
-    if (selectedSkills.isEmpty) return const Text('Kamida 2 ta skill tanlang.');
-
-    final List<Widget> rows = [];
-    for (final s in selectedSkills) {
-      final pct = getCompatibility(s, selectedPosition!);
-      rows.add(Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [Expanded(child: Text(s)), Text('$pct%')],
-          ),
-          const SizedBox(height: 6),
-          LinearProgressIndicator(value: pct / 100.0),
-          const SizedBox(height: 12),
-        ],
-      ));
-    }
-
-    final avg = selectedSkills
-            .map((s) => getCompatibility(s, selectedPosition!))
-            .fold<int>(0, (a, b) => a + b) ~/
-        selectedSkills.length;
-    rows.add(const Divider());
-    rows.add(Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Text('O\'rta moslik: $avg%',
-          style: const TextStyle(fontWeight: FontWeight.bold)),
-    ));
-
-    String interpretation;
-    if (avg >= 85)
-      interpretation =
-          'Mukammal moslik — bu skill to\'plami aynan shu pozitsiyaga juda mos.';
-    else if (avg >= 70)
-      interpretation =
-          'Yaxshi moslik — ko\'p hollarda bu skill pozitsiyaga foyda beradi.';
-    else if (avg >= 50)
-      interpretation =
-          'O\'rtacha moslik — ba\'zi skilllar mos, ba\'zilari unchalik emas.';
-    else
-      interpretation = 'Past moslik — skilllar bu pozitsiya uchun samarasiz.';
-
-    rows.add(Text(interpretation));
-    return Column(children: rows);
-  }
-
-  void onAnalyzePressed() {
+  void _clearAll() {
     setState(() {
-      if (selectedSkills.length < 2) {
-        validationMessage = 'Iltimos kamida 2 ta skill tanlang.';
-        return;
-      }
-      if (selectedPosition == null) {
-        validationMessage = 'Iltimos pozitsiyani tanlang.';
-        return;
-      }
+      selectedSkills.clear();
       validationMessage = '';
     });
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Pozitsiya va Skill tahlili')),
-        body: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: SingleChildScrollView(
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Skill Moslik Hisoblagich',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+              onPressed: _clearAll,
+              icon: const Icon(Icons.refresh, color: Colors.white70))
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Position Section
+            const Padding(
+              padding: EdgeInsets.only(left: 16, top: 16, bottom: 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('1. Pozitsiyani tanlang',
+                    style: TextStyle(
+                        color: AppColors.accent,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
+              ),
+            ),
+            SizedBox(
+              height: 60,
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                scrollDirection: Axis.horizontal,
+                itemCount: positions.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final pos = positions[index];
+                  bool isSelected = selectedPosition == pos;
+                  return ChoiceChip(
+                    label: Text(pos),
+                    selected: isSelected,
+                    onSelected: (bool selected) {
+                      setState(() {
+                        selectedPosition = pos;
+                      });
+                    },
+                    backgroundColor: AppColors.cardSurface,
+                    selectedColor: AppColors.accent,
+                    labelStyle: TextStyle(
+                        color: isSelected ? Colors.white : Colors.white70,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal),
+                    side: BorderSide.none,
+                  );
+                },
+              ),
+            ),
+
+            // Skills Section
+            Padding(
+              padding: const EdgeInsets.only(
+                  left: 16, top: 16, bottom: 8, right: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('2. Skillarni tanlang (${selectedSkills.length}/5)',
+                      style: const TextStyle(
+                          color: AppColors.accent,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold)),
+                  if (validationMessage.isNotEmpty)
+                    Text(validationMessage,
+                        style: const TextStyle(
+                            color: Colors.redAccent, fontSize: 12)),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.cardSurface,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: skills.map((s) {
+                    bool isSelected = selectedSkills.contains(s);
+                    return FilterChip(
+                      label: Text(s),
+                      selected: isSelected,
+                      onSelected: (_) => toggleSkill(s),
+                      backgroundColor: Colors.white10,
+                      selectedColor: AppColors.accent.withOpacity(0.8),
+                      checkmarkColor: Colors.white,
+                      labelStyle: TextStyle(
+                          color: isSelected ? Colors.white : Colors.white70,
+                          fontSize: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide.none),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Analysis Section
+            if (selectedPosition != null && selectedSkills.isNotEmpty)
+              _buildAnalysisResult(),
+
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnalysisResult() {
+    // Calculate Average
+    int total = selectedSkills.fold(
+        0, (sum, s) => sum + getCompatibility(s, selectedPosition!));
+    double avg = total / selectedSkills.length;
+    Color scoreColor = avg >= 90
+        ? Colors.cyanAccent
+        : (avg >= 80
+            ? Colors.green
+            : (avg >= 50 ? Colors.orange : Colors.redAccent));
+    String verdict = avg >= 90
+        ? "Mukammal Moslik! 🔥"
+        : (avg >= 80
+            ? "Juda Yaxshi Tanlov ✅"
+            : (avg >= 50 ? "O'rtacha ⚠️" : "Tavsiya etilmaydi ❌"));
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Tahlil Natijasi',
+              style: TextStyle(
+                  color: AppColors.accent,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [
+                  AppColors.accent.withOpacity(0.2),
+                  AppColors.cardSurface
+                ], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.accent.withOpacity(0.3))),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Pozitsiyalar (bitta tanlanadi):',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                buildPositionChips(),
-                const SizedBox(height: 16),
-                const Text('Skillar (2–5 ta):',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                buildSkillChips(),
-                const SizedBox(height: 12),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    ElevatedButton(
-                        onPressed: onAnalyzePressed,
-                        child: const Text('Tahlil qilish')),
-                    const SizedBox(width: 12),
-                    Text('Tanlanganlar: ${selectedSkills.length}/5'),
+                    const Text('Umumiy Reyting:',
+                        style: TextStyle(color: Colors.white70)),
+                    Text('${avg.toStringAsFixed(1)}%',
+                        style: TextStyle(
+                            color: scoreColor,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold)),
                   ],
                 ),
-                if (validationMessage.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(validationMessage,
-                      style: const TextStyle(color: Colors.red)),
-                ],
-                const SizedBox(height: 20),
-                const Text('Moslik statistikasi:',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                buildSelectedSkillStats(),
-                const SizedBox(height: 24),
-                const Text('Tahlil haqida:',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                const Text(
-                    'Bu tizim hozirda sinov tariqasida chiqarildi, bu tizim eFootball o\'yinidagi har bir skillning o\'yinchi pozitsiyasiga haqiqiy moslik darajasini matematik va futbol IQ asosida hisoblaydi. Har bir skill o\'zining foydali kontekstiga ko\'ra (dribbling, pas, himoya yoki finishing) baholanadi.'),
+                Text(verdict,
+                    style: TextStyle(
+                        color: scoreColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold)),
+                const Divider(color: Colors.white12, height: 30),
+                ...selectedSkills.map((s) {
+                  int score = getCompatibility(s, selectedPosition!);
+                  Color barColor = score >= 90
+                      ? Colors.cyanAccent
+                      : (score >= 80
+                          ? Colors.green
+                          : (score >= 50 ? Colors.orange : Colors.redAccent));
+                  String status = "Mos";
+                  if (score >= 95)
+                    status = "Must-have";
+                  else if (score <= 20)
+                    status = "Do not give";
+                  else if (score <= 50) status = "Not necessary";
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(s,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500)),
+                            Row(
+                              children: [
+                                Text(status,
+                                    style: const TextStyle(
+                                        color: Colors.white54, fontSize: 10)),
+                                const SizedBox(width: 8),
+                                Text('$score%',
+                                    style: TextStyle(
+                                        color: barColor,
+                                        fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: score / 100,
+                            backgroundColor: Colors.white10,
+                            valueColor: AlwaysStoppedAnimation(barColor),
+                            minHeight: 6,
+                          ),
+                        )
+                      ],
+                    ),
+                  );
+                }),
               ],
             ),
           ),
-        ),
-      );
+        ],
+      ),
+    );
+  }
 }
-
-
-// USAGE:
-// import 'package:your_app/pages/position_skill_page.dart';
-// MaterialApp(home: PositionSkillPage());
-
-// NOTE:
-// - Edit `compatibility` map to tune exact percent values per skill and position.
-// - The heuristic `getCompatibility` provides fallback values for skills not explicitly listed.
-// - You can extend the UI: add export, save presets, or more detailed radar charts using third-party chart packages.

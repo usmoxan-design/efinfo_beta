@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 // YANGI IMPORT
 import 'package:saver_gallery/saver_gallery.dart';
+import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/additional/downloader/downloader.dart';
 
 class ImagePreviewScreen extends StatelessWidget {
   final Uint8List imageBytes;
@@ -27,48 +29,70 @@ class ImagePreviewScreen extends StatelessWidget {
   // --- Yangilangan Saqlash Funksiyasi (Loading bilan) ---
   Future<void> _saveImageToGallery(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
+    final String fileName = 'Squad_${DateTime.now().millisecondsSinceEpoch}';
 
     // 1. Loading dialogini ko'rsatish
     _showLoadingDialog(context);
 
     try {
-      // 2. Ruxsat so'rash
-      if (!await _requestPermission()) {
-        // Ruxsat olinmasa, dialogni yopish va xabarni ko'rsatish
+      if (kIsWeb) {
+        // --- WEB UCHUN MANTIQ ---
+        // Avval Share API ni sinaydi, bo'lmasa Browser Download qiladi
+        await downloadImage(imageBytes, fileName);
+
+        // Loading dialogini yopish
         Navigator.pop(context);
+
         messenger.showSnackBar(
           const SnackBar(
-              content: Text(
-                  "Rasm saqlash uchun ruxsat berilmadi. Iltimos, sozlamalarni tekshiring."),
-              backgroundColor: Colors.red),
-        );
-        return;
-      }
-
-      // 3. SaverGallery orqali rasmni to'g'ridan-to'g'ri Gallereyaga saqlash
-      final result = await SaverGallery.saveImage(
-        imageBytes,
-        fileName: 'Squad_${DateTime.now().millisecondsSinceEpoch}',
-        androidRelativePath:
-            "Pictures/SquadBuilder", // Rasmni shu papkaga saqlaydi
-        quality: 100, skipIfExists: false, // Maksimal sifat
-      );
-
-      // 4. Loading dialogini yopish
-      Navigator.pop(context);
-
-      // 5. Natijani tekshirish va SnackBar ko'rsatish
-      if (result.isSuccess) {
-        messenger.showSnackBar(
-          const SnackBar(
-              content: Text("Rasm Galereyaga muvaffaqiyatli saqlandi! 🥳"),
-              backgroundColor: Colors.green),
+            content: Text(
+                "Jarayon yakunlandi. Agar saqlanmasa, rasm ustiga bosib saqlang."),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 4),
+          ),
         );
       } else {
-        throw Exception(result.errorMsg ?? "Noma'lum xato yuz berdi.");
+        // --- MOBIL (Android/iOS) UCHUN MANTIQ ---
+
+        // 2. Ruxsat so'rash
+        if (!await _requestPermission()) {
+          // Ruxsat olinmasa, dialogni yopish va xabarni ko'rsatish
+          Navigator.pop(context);
+          messenger.showSnackBar(
+            const SnackBar(
+                content: Text(
+                    "Rasm saqlash uchun ruxsat berilmadi. Iltimos, sozlamalarni tekshiring."),
+                backgroundColor: Colors.red),
+          );
+          return;
+        }
+
+        // 3. SaverGallery orqali rasmni to'g'ridan-to'g'ri Gallereyaga saqlash
+        final result = await SaverGallery.saveImage(
+          imageBytes,
+          fileName: fileName,
+          androidRelativePath: "Pictures/SquadBuilder",
+          quality: 100,
+          skipIfExists: false,
+        );
+
+        // 4. Loading dialogini yopish
+        Navigator.pop(context);
+
+        // 5. Natijani tekshirish va SnackBar ko'rsatish
+        if (result.isSuccess) {
+          messenger.showSnackBar(
+            const SnackBar(
+                content: Text("Rasm Galereyaga muvaffaqiyatli saqlandi! 🥳"),
+                backgroundColor: Colors.green),
+          );
+        } else {
+          // Xatoni aniqlash uchun toString ishlatamiz, chunki errorMsg har xil versiyalarda farq qilishi mumkin
+          throw Exception("Saqlashda xato: ${result.toString()}");
+        }
       }
     } catch (e) {
-      // Xato yuz berganda ham loading dialogini yopish
+      // Xato yuz berganda ham loading dialogini yopish (agar ochiq bo'lsa)
       if (Navigator.of(context).canPop()) {
         Navigator.pop(context);
       }
@@ -78,8 +102,8 @@ class ImagePreviewScreen extends StatelessWidget {
       }
       messenger.showSnackBar(
         SnackBar(
-            content:
-                Text("Saqlashda xato: ${e.toString().split(":").last.trim()}"),
+            content: Text(
+                "Xatolik yuz berdi: ${e.toString().split(":").last.trim()}"),
             backgroundColor: Colors.red),
       );
     }
@@ -91,16 +115,17 @@ class ImagePreviewScreen extends StatelessWidget {
       context: context,
       barrierDismissible: false, // Foydalanuvchi orqaga bosib yopa olmaydi
       builder: (context) {
-        return const Center(
+        return Center(
           child: SizedBox(
             width: 80,
             height: 80,
             child: Card(
-              color: Colors.black54, // Orqasini biroz shaffof qora qilish
-              child: Padding(
+              color: AppColors.cardSurface
+                  .withOpacity(0.8), // Orqasini biroz shaffof qora qilish
+              child: const Padding(
                 padding: EdgeInsets.all(20.0),
                 child: CircularProgressIndicator(
-                  color: Colors.white, // Loading rangini oq qilish
+                  color: AppColors.accent, // Loading rangini accent qilish
                   strokeWidth: 4,
                 ),
               ),
@@ -114,14 +139,14 @@ class ImagePreviewScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f1e),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF16213e),
+        backgroundColor: AppColors.background,
         title: const Text("Galereyaga Saqlash",
             style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save, color: Colors.cyan),
+            icon: const Icon(Icons.save, color: AppColors.accent),
             onPressed: () => _saveImageToGallery(context),
             tooltip: "Rasmni Gallereyaga saqlash",
           ),

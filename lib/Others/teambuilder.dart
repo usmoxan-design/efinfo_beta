@@ -1,4 +1,5 @@
 import 'package:efinfo_beta/Others/imageSaver.dart'; // Yordamchi fayl
+import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:efinfo_beta/Others/pitchpainter.dart'; // Yordamchi fayl
 import 'package:efinfo_beta/models/teamBLDRModel.dart'; // Model fayli
 import 'package:flutter/foundation.dart';
@@ -207,12 +208,13 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: Color(0xFF0f0f1e),
+        backgroundColor: Color(0xFF011A0B), // HomePage foni
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(color: Colors.cyan),
+              CircularProgressIndicator(
+                  color: Color(0xFF06DF5D)), // HomePage accent
               SizedBox(height: 20),
               Text("O'yinchilar ma'lumotlari yuklanmoqda...",
                   style: TextStyle(color: Colors.white70)),
@@ -225,23 +227,24 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
     final currentFormation = formations[selectedFormation]!;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0f0f1e),
+      backgroundColor: AppColors.background, // HomePage foni
       appBar: AppBar(
         iconTheme: const IconThemeData(
-          color: Colors.white, // Barcha ikonkalarni oq rangda qiladi
+          color: Colors.white,
         ),
-        backgroundColor: const Color(0xFF16213e),
+        backgroundColor: AppColors.background, // AppBar foni ham bir xil
         elevation: 0,
         title: const Text("SuperSquad XI",
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
           DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              dropdownColor: Colors.grey[900],
+              dropdownColor: AppColors.background,
               value: selectedFormation,
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.cyan),
+              icon: const Icon(Icons.keyboard_arrow_down,
+                  color: AppColors.accent), // Accent
               style: const TextStyle(
-                  color: Colors.cyan, fontWeight: FontWeight.bold),
+                  color: AppColors.accent, fontWeight: FontWeight.bold),
               items: formations.keys
                   .map((f) => DropdownMenuItem(value: f, child: Text(f)))
                   .toList(),
@@ -257,8 +260,10 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
             child: ElevatedButton(
               onPressed: _captureAndSave,
               style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.cyan, foregroundColor: Colors.black),
-              child: const Text("Saqlash"),
+                  backgroundColor: AppColors.accent, // Accent
+                  foregroundColor: Colors.black), // Matn qora
+              child: const Text("Saqlash",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           )
         ],
@@ -362,10 +367,14 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
           Expanded(
             flex: 4,
             child: Container(
-              decoration: const BoxDecoration(
-                color: Color(0xFF16213e),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                boxShadow: [
+              decoration: BoxDecoration(
+                color:
+                    const Color(0xFF011A0B).withOpacity(0.8), // Biroz shaffof
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
+                border: Border.all(
+                    color: const Color(0xFF06DF5D).withOpacity(0.3), width: 1),
+                boxShadow: const [
                   BoxShadow(
                       color: Colors.black54,
                       blurRadius: 10,
@@ -400,8 +409,8 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                           selected: isSelected,
                           onSelected: (val) =>
                               setState(() => selectedFilter = filter),
-                          backgroundColor: Colors.grey[800],
-                          selectedColor: Colors.cyan,
+                          backgroundColor: Colors.white10,
+                          selectedColor: AppColors.accent,
                           checkmarkColor: Colors.black,
                           labelStyle: TextStyle(
                             color: isSelected ? Colors.black : Colors.white,
@@ -411,7 +420,10 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                           ),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
-                              side: BorderSide.none),
+                              side: BorderSide(
+                                  color: isSelected
+                                      ? const Color(0xFF06DF5D)
+                                      : Colors.white24)),
                         );
                       }).toList(),
                     ),
@@ -426,14 +438,19 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                       decoration: InputDecoration(
                         hintText: "O'yinchi qidiring...",
                         hintStyle: TextStyle(color: Colors.grey[500]),
-                        prefixIcon:
-                            const Icon(Icons.search, color: Colors.grey),
+                        prefixIcon: const Icon(Icons.search,
+                            color: Colors.white54), // Grey o'rniga
                         filled: true,
-                        fillColor: Colors.black26,
+                        fillColor: Colors.white10, // Black26 o'rniga
                         contentPadding: EdgeInsets.zero,
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide.none),
+                            borderSide:
+                                const BorderSide(color: Colors.white24)),
+                        focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: const BorderSide(
+                                color: AppColors.accent)), // Accent
                       ),
                       // onChanged allaqachon initState() da o'rnatilgan
                     ),
@@ -488,9 +505,9 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
   Widget _buildEmptySlot(String title, bool isHovered) {
     return Container(
       decoration: BoxDecoration(
-        color: isHovered ? Colors.cyan.withOpacity(0.3) : Colors.black38,
+        color: isHovered ? AppColors.accent.withOpacity(0.3) : Colors.black38,
         border: Border.all(
-            color: isHovered ? Colors.cyan : Colors.white24, width: 1.5),
+            color: isHovered ? AppColors.accent : Colors.white24, width: 1.5),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -588,7 +605,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                 child: Text(
                   player.position,
                   style: const TextStyle(
-                      color: Colors.cyanAccent,
+                      color: AppColors.accent, // Cyan o'rniga
                       fontSize: 11,
                       fontWeight: FontWeight.bold),
                 ),

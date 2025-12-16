@@ -30,6 +30,7 @@ environment:
 dependencies:
   any_image_view: ^1.6.0
   cached_network_image: ^3.4.1
+  confetti: ^0.8.0
   cupertino_icons: ^1.0.8
   extended_image: ^9.1.0
   flutter:

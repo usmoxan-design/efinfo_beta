@@ -1,5 +1,8 @@
 import 'package:efinfo_beta/Others/positionskillchecker.dart';
 import 'package:efinfo_beta/Others/teambuilder.dart';
+import 'package:efinfo_beta/Player/EfootballElementsPage.dart';
+import 'package:efinfo_beta/testpage.dart';
+import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class Morepage extends StatefulWidget {
@@ -16,7 +19,7 @@ class _MorepageState extends State<Morepage> {
       _ListItem(
         title: 'Skill moslik Hisoblagich',
         icon: "assets/images/skill_calculator.png",
-        color: const Color(0xFF06DF5D),
+        color: AppColors.accent,
         onTap: () {
           Navigator.push(
             context,
@@ -28,7 +31,7 @@ class _MorepageState extends State<Morepage> {
       _ListItem(
         title: 'SuperSquad XI',
         icon: "assets/images/formations.png",
-        color: const Color(0xFF06DF5D),
+        color: AppColors.accent,
         onTap: () {
           Navigator.push(
             context,
@@ -37,9 +40,31 @@ class _MorepageState extends State<Morepage> {
         },
         // onBlock: true, // 🔒 bloklangan
       ),
+      _ListItem(
+        title: 'Training Simulator',
+        icon: "assets/images/formations.png",
+        color: AppColors.accent,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PlayerProgressPage()),
+          );
+        },
+      ),
+      _ListItem(
+        title: 'eFootball Elements',
+        icon: "assets/images/formations.png",
+        color: AppColors.accent,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const EfootballElementsPage()),
+          );
+        },
+      ),
     ];
     return Scaffold(
-      backgroundColor: const Color(0xFF011A0B), //0xFF06DF5D
+      backgroundColor: AppColors.background, //0xFF06DF5D
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: ListView(
@@ -104,7 +129,7 @@ class _ListItem extends StatelessWidget {
                         width: 60,
                         child: Image.asset(
                           icon.toString(),
-                          color: const Color(0xFF06DF5D),
+                          color: AppColors.accent,
                         )),
                     const SizedBox(height: 10),
                     Text(
