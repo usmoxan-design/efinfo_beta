@@ -26,8 +26,5 @@ Future<void> downloadImage(Uint8List bytes, String fileName) async {
 
   // Fallback: Oddiy yuklab olish
   final url = html.Url.createObjectUrlFromBlob(blob);
-  final anchor = html.AnchorElement(href: url)
-    ..setAttribute("download", "$fileName.png")
-    ..click();
   html.Url.revokeObjectUrl(url);
 }

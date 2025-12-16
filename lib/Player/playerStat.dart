@@ -194,13 +194,13 @@ class _PlayerStatPageState extends State<PlayerStatPage> {
 
   Color _getStatColor(int statValue) {
     if (statValue >= 90) {
-      return const Color(0xFF44B1FF);
+      return const Color(0xFF07FCF5);
     } else if (statValue >= 80) {
-      return Colors.green;
+      return const Color(0xFF05fd07);
     } else if (statValue >= 65) {
-      return Colors.amber.shade600;
+      return const Color(0xFFfcaa04);
     } else {
-      return Colors.red;
+      return const Color(0xFFd74233);
     }
   }
 
@@ -399,11 +399,11 @@ class _PlayerStatPageState extends State<PlayerStatPage> {
             // Asosiy Ma'lumotlar
             Container(
               padding: const EdgeInsets.all(16.0),
-              child:  Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding:  const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(8.0),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: Image.asset(

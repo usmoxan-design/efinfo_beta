@@ -80,7 +80,7 @@ class _HomePageState extends State<HomePage> {
         badge: true,
         title: "Booster Tavsiyalari",
         subtitle: "Eng yaxshi boosterlar",
-        icon: "assets/images/booster_token.png",
+        icon: "assets/images/details.png",
         color: AppColors.accent,
         onTap: () {
           Navigator.push(
@@ -94,7 +94,7 @@ class _HomePageState extends State<HomePage> {
         badge: true,
         title: "Skill Tavsiyalari",
         subtitle: "Pozitsiya bo'yicha",
-        icon: "assets/images/skill_token.png",
+        icon: "assets/images/details.png",
         color: AppColors.accent,
         onTap: () {
           Navigator.push(

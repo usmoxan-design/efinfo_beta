@@ -185,15 +185,15 @@ class BoosterRecommendationPage extends StatelessWidget {
     if (rank == 1) {
       rankColor = const Color(0xFFFFD700); // Gold
       bgColor = const Color(0xFFFFD700).withOpacity(0.15);
-      rankLabel = "1st Choice";
+      rankLabel = "1-tanlov";
     } else if (rank == 2) {
       rankColor = const Color(0xFFC0C0C0); // Silver
       bgColor = const Color(0xFFC0C0C0).withOpacity(0.15);
-      rankLabel = "2nd";
+      rankLabel = "2-tanlov";
     } else {
       rankColor = const Color(0xFFCD7F32); // Bronze
       bgColor = const Color(0xFFCD7F32).withOpacity(0.15);
-      rankLabel = "3rd";
+      rankLabel = "3-tanlov";
     }
 
     return Container(
