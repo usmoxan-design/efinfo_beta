@@ -27,11 +27,11 @@ class MyApp extends StatelessWidget {
               // fontWeight: FontWeight.bold,
               letterSpacing: 1.2),
         ),
-        cardTheme: CardTheme(
-          color: const Color(0xFF1E1E1E),
+        cardTheme: const CardThemeData(
+          color: Color(0xFF1E1E1E),
           elevation: 8,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(16))),
         ),
         useMaterial3: true,
       ),

@@ -32,26 +32,28 @@ dependencies:
   cached_network_image: ^3.4.1
   confetti: ^0.8.0
   cupertino_icons: ^1.0.8
-  extended_image: ^9.1.0
+  extended_image: ^10.0.1
   flutter:
     sdk: flutter
   flutter_markdown: ^0.7.7+1
   google_fonts: ^6.3.0
   highlight: ^0.7.0
+  html: ^0.15.6
+  http: ^1.6.0
   icons_plus: ^5.0.0
   ionicons: ^0.2.2
   path_provider: ^2.1.4
-  permission_handler: ^11.3.1
+  permission_handler: ^12.0.1
   saver_gallery: ^4.1.0
   selectable: ^0.5.2
   shared_preferences: ^2.5.3
   simple_rich_text: ^2.0.49
   url_launcher: ^6.3.1
-  vibration: ^1.7.7
+  vibration: ^3.1.5
   widgets_to_image: ^2.0.1
 
 dev_dependencies:
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
 
@@ -74,6 +76,7 @@ flutter:
     - assets/markdown/individual/
     - assets/markdown/playerskills/unical_skills/
     - assets/images/
+    - assets/images/elements/
     - assets/images/instruction/
     - assets/images/player_skills/
     - assets/images/positions/

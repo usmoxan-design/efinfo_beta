@@ -125,9 +125,12 @@ class EfootballElementsPage extends StatelessWidget {
                           color: Colors.white10,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: Colors.white24)),
-                      child: const Center(
-                        child:
-                            Icon(Icons.image, color: Colors.white38, size: 30),
+                      child: Center(
+                        child: item['image'] != null
+                            ? Image.asset(item['image']!,
+                                width: 30, height: 30, fit: BoxFit.cover)
+                            : Icon(Icons.image,
+                                color: Colors.white38, size: 30),
                       ),
                     ),
                     const SizedBox(width: 16),
