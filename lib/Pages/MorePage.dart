@@ -2,8 +2,7 @@ import 'package:efinfo_beta/Others/positionskillchecker.dart';
 import 'package:efinfo_beta/Others/teambuilder.dart';
 import 'package:efinfo_beta/Pages/CategoryPlayersPage.dart';
 import 'package:efinfo_beta/Pages/StandartPlayersPage.dart';
-import 'package:efinfo_beta/Player/EfootballElementsPage.dart';
-import 'package:efinfo_beta/Player/EfPlayersPage.dart';
+import 'package:efinfo_beta/Player/ElementsPage.dart';
 import 'package:efinfo_beta/components/newBadge.dart';
 import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -47,12 +46,12 @@ class _MorepageState extends State<Morepage> {
       ),
       _ListItem(
         title: 'eFootball Elements',
-        icon: "assets/images/details.png",
-        color: AppColors.accent,
+        icon: "assets/images/elements.png",
+        color: Colors.transparent,
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const EfootballElementsPage()),
+            MaterialPageRoute(builder: (_) => const ElementsPage()),
           );
         },
         badgeState: true,
@@ -70,7 +69,7 @@ class _MorepageState extends State<Morepage> {
       // ),
       _ListItem(
         title: 'Category Players',
-        icon: "assets/images/details.png", // Using same icon/placeholder
+        icon: "assets/images/category.png", // Using same icon/placeholder
         color: AppColors.accent,
         onTap: () {
           Navigator.push(
@@ -82,7 +81,7 @@ class _MorepageState extends State<Morepage> {
       ),
       _ListItem(
         title: 'Standart Players', // As requested: StandartPlayersPage
-        icon: "assets/images/details.png", // Using same icon/placeholder
+        icon: "assets/images/players.png", // Using same icon/placeholder
         color: AppColors.accent,
         onTap: () {
           Navigator.push(
@@ -113,6 +112,33 @@ class _MorepageState extends State<Morepage> {
               itemCount: items.length,
               itemBuilder: (context, index) => items[index],
             ),
+            const SizedBox(height: 30),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Column(
+                children: [
+                  Text(
+                    "Disclaimer",
+                    style: TextStyle(
+                      color: AppColors.accent,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    "Unofficial fan-made app. Data from public sources like pesdb.net. Not affiliated with Konami.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -151,9 +177,15 @@ class _ListItem extends StatelessWidget {
               showBadge: badgeState,
               child: Container(
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color:
+                      (color == Colors.transparent ? AppColors.accent : color)
+                          .withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: color.withOpacity(0.3)),
+                  border: Border.all(
+                      color: (color == Colors.transparent
+                              ? AppColors.accent
+                              : color)
+                          .withOpacity(0.3)),
                 ),
                 child: Center(
                   child: Column(
@@ -165,7 +197,7 @@ class _ListItem extends StatelessWidget {
                           width: 60,
                           child: Image.asset(
                             icon.toString(),
-                            color: AppColors.accent,
+                            color: color == Colors.transparent ? null : color,
                           )),
                       const SizedBox(height: 10),
                       Text(
@@ -173,7 +205,9 @@ class _ListItem extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16,
-                          color: color,
+                          color: color == Colors.transparent
+                              ? AppColors.accent
+                              : color,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

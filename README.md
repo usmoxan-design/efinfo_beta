@@ -1,6 +1,9 @@
 # efinfo_beta
 
-A new Flutter project.
+A new Flutter project for eFootball info.
+
+## Disclaimer
+**Unofficial fan-made app. Data from public sources like pesdb.net. Not affiliated with Konami.**
 
 ## Getting Started
 

@@ -1,8 +1,8 @@
 import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
-class EfootballElementsPage extends StatelessWidget {
-  const EfootballElementsPage({super.key});
+class ElementsPage extends StatelessWidget {
+  const ElementsPage({super.key});
 
   final List<Map<String, String>> elements = const [
     {
@@ -44,6 +44,13 @@ class EfootballElementsPage extends StatelessWidget {
       'image': 'assets/images/elements/skill_token.png'
     },
     {
+      'title': 'Advanced Skill Token',
+      'description': 'O\'yinchiga kategoriyadan tasodifiy skill berish uchun.',
+      'details':
+          "**• Nima uchun ishlatiladi?** O'yinchiga 'Skill Training' bo'limida tanlangan kategoriyadan (Shooting, Passing, Dribbling, Defending, Boshqa) tasodifiy skill qo'shish uchun. Mavjud qo'shimcha skillni o'chirib (Delete Overwrite), yangi skill bilan almashtirish mumkin. O'yinchi pozitsiyasiga mos skills taklif etiladi (masalan, CF uchun GK skills yo'q).\n\n• Cheklovlar: Kategoriya ichida tasodifiy (to'liq skill tanlash mumkin emas); duplicate yoki keraksiz skill chiqishi mumkin; tabiiy (innate) skills o'chirib bo'lmaydi, faqat qo'shimcha skill ustida ishlaydi; 'Random Category' yoki 'Random' variantlari mavjud.",
+      'image': 'assets/images/elements/advanced_skill_token.png'
+    },
+    {
       'title': 'Position Token',
       'description':
           'O\'yinchining yangi pozitsiyada o\'ynash qobiliyatini oshirish uchun.',
@@ -79,6 +86,20 @@ class EfootballElementsPage extends StatelessWidget {
           "• **Nima uchun ishlatiladi?** Standart o'yinchilar bazasidan tasodifiy bitta o'yinchini tekinga olish uchun chipta.",
       'image': 'assets/images/elements/ticket.png'
     },
+    {
+      'title': 'Chance Deal',
+      'description': 'O\'yinchiga tasodifiy o\'yinchi berish uchun.',
+      'details':
+          "• **Nima uchun ishlatiladi?** O\'yinchiga tasodifiy o\'yinchi imzolash uchun (Chance Deal paketidagi maxsus ro\'yxatdan biri tanlanadi, odatda 50 tagacha o\'yinchi, shu jumladan Epic yoki Showtime kartalar). Ko\'pincha kampaniyalarda bepul beriladi va yuqori reytingli o\'yinchilarni olish imkonini beradi.\n\n• **Cheklovlar:** Random; past reytingli (masalan, 1-3 yulduzli) o\'yinchilar chiqishi mumkin, hatto Epic paketlarda ham; kafolat yo\'q, ko\'p spin (21-81 ta) kerak bo\'lishi mumkin; ba\'zi kampaniyalarda Selection Contract bilan birga beriladi.",
+      'image': 'assets/images/elements/chance_deal.png'
+    },
+    {
+      'title': 'Selection Contract',
+      'description': 'O\'yinchiga tanlangan o\'yinchi berish uchun.',
+      'details':
+          "**• Nima uchun ishlatiladi?** O'yinchiga maxsus ro'yxatdan (odatda Epic, POTW yoki Showtime kartalar) bir o'yinchini tanlab imzolash imkonini beradi. Kampaniyalarda bepul yoki Chance Deal bilan birga beriladi va yuqori reytingli o'yinchilarni kafolatli olish uchun ishlatiladi.",
+      'image': 'assets/images/elements/selection_contract.png'
+    }
   ];
 
   @override
@@ -199,7 +220,10 @@ class _DetailPopup extends StatelessWidget {
                   decoration: BoxDecoration(
                       color: Colors.white10,
                       borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.image, color: Colors.white70),
+                  child: item['image'] != null
+                      ? Image.asset(item['image']!,
+                          width: 30, height: 30, fit: BoxFit.cover)
+                      : Icon(Icons.image, color: Colors.white38, size: 30),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

@@ -80,8 +80,8 @@ class _HomePageState extends State<HomePage> {
         badge: true,
         title: "Booster Tavsiyalari",
         subtitle: "Eng yaxshi boosterlar",
-        icon: "assets/images/details.png",
-        color: AppColors.accent,
+        icon: "assets/images/booster.png",
+        color: Colors.transparent,
         onTap: () {
           Navigator.push(
             context,
@@ -94,8 +94,8 @@ class _HomePageState extends State<HomePage> {
         badge: true,
         title: "Skill Tavsiyalari",
         subtitle: "Pozitsiya bo'yicha",
-        icon: "assets/images/details.png",
-        color: AppColors.accent,
+        icon: "assets/images/skill.png",
+        color: Colors.transparent,
         onTap: () {
           Navigator.push(
             context,
@@ -171,9 +171,15 @@ class _GridItem extends StatelessWidget {
               opacity: onBlock ? 0.5 : 1.0, // 🔒 blok bo‘lsa hiraroq
               child: Container(
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color:
+                      (color == Colors.transparent ? AppColors.accent : color)
+                          .withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: color.withOpacity(0.3)),
+                  border: Border.all(
+                      color: (color == Colors.transparent
+                              ? AppColors.accent
+                              : color)
+                          .withOpacity(0.3)),
                 ),
                 child: Center(
                   child: Column(
@@ -185,7 +191,7 @@ class _GridItem extends StatelessWidget {
                           width: 60,
                           child: Image.asset(
                             icon.toString(),
-                            color: AppColors.accent,
+                            color: color == Colors.transparent ? null : color,
                           )),
                       const SizedBox(height: 10),
                       Text(
@@ -193,7 +199,9 @@ class _GridItem extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16,
-                          color: color,
+                          color: color == Colors.transparent
+                              ? AppColors.accent
+                              : color,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -205,7 +213,9 @@ class _GridItem extends StatelessWidget {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 13,
-                            color: color,
+                            color: color == Colors.transparent
+                                ? AppColors.accent
+                                : color,
                             fontWeight: FontWeight.w600,
                           ),
                         ),

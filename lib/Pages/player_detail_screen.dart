@@ -576,7 +576,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                     if (_isMaxLevel) ...[
                       if (detail.suggestedPoints.isNotEmpty)
                         _buildSuggestedPoints(detail.suggestedPoints),
-                      _buildTrainingControls(),
+                      // _buildTrainingControls(),
                     ],
                     const SizedBox(height: 16),
                     _buildStatsGridWithSim(detail),
@@ -630,9 +630,27 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                "Yoshi: ${detail.age} Bo'yi: ${detail.height}cm Vazni: ${detail.stats['Weight'] ?? '-'}kg ${detail.foot}",
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    "Yoshi: ${detail.age} Bo'yi: ${detail.height}cm Vazni: ${detail.stats['Weight'] ?? '-'}kg",
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                  const SizedBox(width: 8),
+                  if (detail.foot.toLowerCase().contains('right'))
+                    Image.asset('assets/images/right_foot.png',
+                        width: 20, height: 20)
+                  else if (detail.foot.toLowerCase().contains('left'))
+                    Image.asset('assets/images/left_foot.png',
+                        width: 20, height: 20)
+                  else
+                    Text(
+                      detail.foot,
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
+                ],
               ),
             ],
           ),
@@ -1443,80 +1461,87 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "Tavsiya etilgan training",
+            "To'g'ri kuchaytirish:",
             style: TextStyle(
                 color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: entries.map((e) {
-                bool isTotal = e.key.toLowerCase().contains('total') ||
-                    e.key.toLowerCase().contains('progression points');
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+              childAspectRatio: 1.5,
+            ),
+            itemCount: entries.length,
+            itemBuilder: (context, index) {
+              final e = entries[index];
+              bool isTotal = e.key.toLowerCase().contains('total') ||
+                  e.key.toLowerCase().contains('progression points');
 
-                String displayKey = e.key;
-                if (isTotal) {
-                  displayKey = "Max Progress Points";
-                }
+              String displayKey = e.key;
+              if (isTotal) {
+                displayKey = "Max Progress Points";
+              }
 
-                return Container(
-                  margin: const EdgeInsets.only(right: 12),
-                  padding: const EdgeInsets.all(12),
-                  width: 100,
-                  decoration: BoxDecoration(
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isTotal
+                      ? const Color(0xFF005929)
+                      : const Color(0xFF0D2418),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
                     color: isTotal
-                        ? const Color(0xFF005929)
-                        : const Color(0xFF0D2418),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isTotal
-                          ? const Color(0xFF06DF5D)
-                          : Colors.white.withOpacity(0.1),
-                      width: 1,
-                    ),
+                        ? const Color(0xFF06DF5D)
+                        : Colors.white.withOpacity(0.1),
+                    width: 1,
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        displayKey,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: isTotal
-                              ? const Color(0xFF06DF5D)
-                              : Colors.white70,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      displayKey.replaceAll('Progression Points', '').trim(),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color:
+                            isTotal ? const Color(0xFF06DF5D) : Colors.white70,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(height: 8),
-                      Row(
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             _getStatIcon(e.key),
                             color: Colors.white,
-                            size: 18,
+                            size: 14,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 4),
                           Text(
                             '${e.value}',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 20,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),

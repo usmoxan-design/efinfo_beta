@@ -33,11 +33,64 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
   String _selectedPosition = ""; // "cf", "ss", etc.
   String _sort = "overall_at_max_level";
   String _order = "d"; // d=desc, a=asc
+  String _selectedPlayerType = "Standard Players";
+
+  // Featured Dropdown State
+  List<PesFeaturedOption> _featuredOptions = [];
+  String? _selectedFeaturedId; // Null means "None"
 
   @override
   void initState() {
     super.initState();
+    // Initialize filter state from initialUrl if present
+    if (widget.initialUrl != null) {
+      try {
+        final uri = Uri.parse(widget.initialUrl!);
+        final qp = uri.queryParameters;
+
+        if (qp.containsKey('name')) _nameFilter = qp['name']!;
+        if (qp.containsKey('pos')) _selectedPosition = qp['pos']!;
+        if (qp.containsKey('sort')) _sort = qp['sort']!;
+        if (qp.containsKey('order')) _order = qp['order']!;
+
+        // Determine Player Type & Featured
+        if (qp.containsKey('featured') && qp['featured'] != '0') {
+          _selectedFeaturedId = qp['featured'];
+        }
+
+        if (qp['all'] == '1') {
+          _selectedPlayerType = "Show All Players";
+        } else if (qp['availability'] == '0') {
+          _selectedPlayerType = "Unavailable players";
+        } else if (qp['featured'] == '0') {
+          _selectedPlayerType = "Standard Players";
+        } else {
+          // Default to Standard if no specific type is found and no featured ID
+          if (_selectedFeaturedId == null) {
+            _selectedPlayerType = "Standard Players";
+          } else {
+            // If we have a featured ID, it could be "Show All" or "Standard"
+            // Usually, if all=1 is missing, it's not "Show All".
+            _selectedPlayerType = "Standard Players";
+          }
+        }
+      } catch (e) {
+        print("Error parsing initialUrl: $e");
+      }
+    }
+
+    // Load Featured Options
+    _loadFeaturedOptions();
     _loadPlayers();
+  }
+
+  Future<void> _loadFeaturedOptions() async {
+    final options = await _pesService.fetchFeaturedOptions();
+    if (mounted) {
+      setState(() {
+        _featuredOptions = options;
+      });
+    }
   }
 
   Future<void> _loadPlayers({int retryCount = 0}) async {
@@ -56,6 +109,19 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
       if (_selectedPosition.isNotEmpty) filters['pos'] = _selectedPosition;
       filters['sort'] = _sort;
       filters['order'] = _order;
+
+      // Apply Player Type & Featured Filters
+      if (_selectedPlayerType == "Show All Players") {
+        filters['all'] = "1";
+      } else if (_selectedPlayerType == "Unavailable players") {
+        filters['availability'] = "0";
+      }
+
+      if (_selectedFeaturedId != null) {
+        filters['featured'] = _selectedFeaturedId!;
+      } else if (_selectedPlayerType == "Standard Players") {
+        filters['featured'] = "0";
+      }
 
       final newPlayers = await _pesService.fetchPlayers(
         page: _currentPage,
@@ -105,6 +171,8 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
   }
 
   void _showFilterModal() {
+    bool isCategoryView = widget.initialUrl != null;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -146,6 +214,104 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                   ),
                   const SizedBox(height: 16),
 
+                  // Player Type Filter - Only show if strict search not active
+                  if (!isCategoryView)
+                    Row(
+                      children: [
+                        const Text(
+                          "Filter: ",
+                          style: TextStyle(color: Colors.white70, fontSize: 16),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.black12,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: DropdownButton<String>(
+                              value: _selectedPlayerType,
+                              dropdownColor: AppColors.cardSurface,
+                              isExpanded: true,
+                              underline: const SizedBox(),
+                              style: const TextStyle(color: Colors.white),
+                              items: const [
+                                DropdownMenuItem(
+                                  value: "Standard Players",
+                                  child: Text("Standard Players"),
+                                ),
+                                DropdownMenuItem(
+                                  value: "Show All Players",
+                                  child: Text("Show All Players"),
+                                ),
+                                DropdownMenuItem(
+                                  value: "Unavailable players",
+                                  child: Text("Unavailable players"),
+                                ),
+                              ],
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setModalState(
+                                      () => _selectedPlayerType = val);
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (!isCategoryView) const SizedBox(height: 16),
+
+                  // Featured Players Dropdown - Show IF options exist AND not in restricted category view
+                  // Or if user WANTS to see it? The request said: "Featured Player filter ko'rinmayapti".
+                  // This means it was hidden or empty.
+                  if (!isCategoryView && _featuredOptions.isNotEmpty) ...[
+                    const Text(
+                      "Featured Players:",
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.black12,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButton<String?>(
+                        value: _selectedFeaturedId,
+                        dropdownColor: AppColors.cardSurface,
+                        isExpanded: true,
+                        underline: const SizedBox(),
+                        style: const TextStyle(color: Colors.white),
+                        hint: const Text("None",
+                            style: TextStyle(color: Colors.white60)),
+                        items: [
+                          const DropdownMenuItem<String?>(
+                            value: null,
+                            child: Text("None"),
+                          ),
+                          ..._featuredOptions.map((opt) {
+                            return DropdownMenuItem<String?>(
+                              value: opt.id,
+                              child: Text(
+                                opt.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }),
+                        ],
+                        onChanged: (val) {
+                          setModalState(() {
+                            _selectedFeaturedId = val;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
                   // Name Filter
                   TextField(
                     decoration: InputDecoration(
@@ -168,33 +334,34 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Position Filter
-                  const Text("Position",
-                      style: TextStyle(color: Colors.white70, fontSize: 14)),
-                  const SizedBox(height: 8),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildPositionChip("All", "", setModalState),
-                        _buildPositionChip("CF", "cf", setModalState),
-                        _buildPositionChip("SS", "ss", setModalState),
-                        _buildPositionChip("LWF", "lwf", setModalState),
-                        _buildPositionChip("RWF", "rwf", setModalState),
-                        _buildPositionChip("AMF", "amf", setModalState),
-                        _buildPositionChip("CMF", "cmf", setModalState),
-                        _buildPositionChip("DMF", "dmf", setModalState),
-                        _buildPositionChip("LMF", "lmf", setModalState),
-                        _buildPositionChip("RMF", "rmf", setModalState),
-                        _buildPositionChip("LB", "lb", setModalState),
-                        _buildPositionChip("RB", "rb", setModalState),
-                        _buildPositionChip("CB", "cb", setModalState),
-                        _buildPositionChip("GK", "gk", setModalState),
-                      ],
+                  // Position Filter - Hide if in category view
+                  if (!isCategoryView) ...[
+                    const Text("Position",
+                        style: TextStyle(color: Colors.white70, fontSize: 14)),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildPositionChip("All", "", setModalState),
+                          _buildPositionChip("CF", "cf", setModalState),
+                          _buildPositionChip("SS", "ss", setModalState),
+                          _buildPositionChip("LWF", "lwf", setModalState),
+                          _buildPositionChip("RWF", "rwf", setModalState),
+                          _buildPositionChip("AMF", "amf", setModalState),
+                          _buildPositionChip("CMF", "cmf", setModalState),
+                          _buildPositionChip("DMF", "dmf", setModalState),
+                          _buildPositionChip("LMF", "lmf", setModalState),
+                          _buildPositionChip("RMF", "rmf", setModalState),
+                          _buildPositionChip("LB", "lb", setModalState),
+                          _buildPositionChip("RB", "rb", setModalState),
+                          _buildPositionChip("CB", "cb", setModalState),
+                          _buildPositionChip("GK", "gk", setModalState),
+                        ],
+                      ),
                     ),
-                  ),
-
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
+                  ],
 
                   // Sort & Order
                   Row(
@@ -294,7 +461,12 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                           onPressed: () {
                             setModalState(() {
                               _nameFilter = "";
-                              _selectedPosition = "";
+                              // Only clear context-aware filters if allowed
+                              if (!isCategoryView) {
+                                _selectedPosition = "";
+                                _selectedPlayerType = "Standard Players";
+                                _selectedFeaturedId = null;
+                              }
                               _sort = "overall_at_max_level";
                               _order = "d";
                             });
@@ -341,7 +513,21 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
     if (_selectedPosition.isNotEmpty) {
       queryParams.add("pos=${Uri.encodeComponent(_selectedPosition)}");
     }
-    // Only include sort/order if they are not default or if explicitly needed
+
+    // Player Type / Featured construction
+    if (_selectedPlayerType == "Show All Players") {
+      queryParams.add("all=1");
+    } else if (_selectedPlayerType == "Unavailable players") {
+      queryParams.add("availability=0");
+    }
+
+    if (_selectedFeaturedId != null) {
+      queryParams.add("featured=${Uri.encodeComponent(_selectedFeaturedId!)}");
+    } else if (_selectedPlayerType == "Standard Players") {
+      queryParams.add("featured=0");
+    }
+
+    // Sort/Order
     queryParams.add("sort=${Uri.encodeComponent(_sort)}");
     queryParams.add("order=${Uri.encodeComponent(_order)}");
 

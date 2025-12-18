@@ -59,3 +59,10 @@ class PesPlayerListResult {
 
   PesPlayerListResult({required this.players, required this.totalPages});
 }
+
+class PesFeaturedOption {
+  final String name;
+  final String id;
+
+  PesFeaturedOption({required this.name, required this.id});
+}

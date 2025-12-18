@@ -3,8 +3,10 @@ import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as parser;
 import 'package:html/dom.dart';
 import '../models/pes_models.dart';
+import 'database_service.dart';
 
 class PesService {
+  final DatabaseService _dbService = DatabaseService();
   final String listingUrl = 'https://pesdb.net/efootball/';
   final String detailBaseUrl = 'https://pesdb.net/efootball/';
 
@@ -28,6 +30,8 @@ class PesService {
     'Sec-Fetch-User': '?1',
   };
 
+  static DateTime? _lastRequestTime;
+
   static Map<String, String> get headers {
     final h = Map<String, String>.from(_baseHeaders);
     if (_cookies != null) {
@@ -39,14 +43,21 @@ class PesService {
   void _updateCookies(http.Response response) {
     String? rawCookie = response.headers['set-cookie'];
     if (rawCookie != null) {
-      if (_cookies != null && _cookies != rawCookie) {
-        // Simple merge: semi-colon separated.
-        // Note: Real cookie management is complex, but this often suffices for scraping.
-        _cookies = rawCookie;
-      } else {
-        _cookies = rawCookie;
+      _cookies = rawCookie;
+    }
+  }
+
+  Future<http.Response> _makeRequest(Uri uri) async {
+    if (_lastRequestTime != null) {
+      final diff = DateTime.now().difference(_lastRequestTime!);
+      if (diff.inMilliseconds < 800) {
+        await Future.delayed(Duration(milliseconds: 800 - diff.inMilliseconds));
       }
     }
+    final response = await _client.get(uri, headers: headers);
+    _lastRequestTime = DateTime.now();
+    _updateCookies(response);
+    return response;
   }
 
   Future<List<PesCategory>> fetchCategories() async {
@@ -57,8 +68,7 @@ class PesService {
             )
           : Uri.parse(detailBaseUrl);
 
-      final response = await _client.get(uri, headers: headers);
-      _updateCookies(response);
+      final response = await _makeRequest(uri);
 
       if (response.statusCode == 200) {
         var document = parser.parse(response.body);
@@ -84,6 +94,47 @@ class PesService {
     } catch (e) {
       print('Error fetching categories: $e');
       rethrow;
+    }
+  }
+
+  Future<List<PesFeaturedOption>> fetchFeaturedOptions() async {
+    try {
+      final uri = kIsWeb
+          ? Uri.parse(
+              'https://corsproxy.io/?${Uri.encodeComponent(listingUrl)}',
+            )
+          : Uri.parse(listingUrl);
+
+      final response = await _makeRequest(uri);
+
+      if (response.statusCode == 200) {
+        var document = parser.parse(response.body);
+        List<PesFeaturedOption> options = [];
+
+        // Find the select element with id="featured" or name="featured"
+        var select = document.getElementById('featured') ??
+            document.querySelector('select[name="featured"]');
+        if (select != null) {
+          var optionElements = select.querySelectorAll('option');
+          for (var option in optionElements) {
+            String name = option.text.trim();
+            String value = option.attributes['value'] ?? '';
+            // Skip "All Players" or empty values if they mean "reset"
+            // Usually value="" or value="0" is default/none.
+            // On pesdb, value might be empty for default.
+            if (name.isNotEmpty && value.isNotEmpty && value != "0") {
+              options.add(PesFeaturedOption(name: name, id: value));
+            }
+          }
+        }
+        return options;
+      } else {
+        throw Exception('Failed to load featured options');
+      }
+    } catch (e) {
+      print('Error fetching featured options: $e');
+      // Return empty list instead of crashing, as this is auxiliary
+      return [];
     }
   }
 
@@ -130,8 +181,7 @@ class PesService {
           ? Uri.parse('https://corsproxy.io/?${Uri.encodeComponent(url)}')
           : Uri.parse(url);
 
-      final response = await _client.get(uri, headers: headers);
-      _updateCookies(response);
+      final response = await _makeRequest(uri);
 
       if (response.statusCode == 200) {
         var document = parser.parse(response.body);
@@ -189,12 +239,20 @@ class PesService {
             );
           }
         }
+        if (players.isNotEmpty) {
+          await _dbService.savePlayers(players);
+        }
         return players;
       } else {
+        // Try to load from DB if offline
+        final cached = await _dbService.getPlayers();
+        if (cached.isNotEmpty) return cached;
         throw Exception('Failed to load page: ${response.statusCode}');
       }
     } catch (e) {
       print('Error fetching players: $e');
+      final cached = await _dbService.getPlayers();
+      if (cached.isNotEmpty) return cached;
       rethrow;
     }
   }
@@ -213,8 +271,7 @@ class PesService {
           ? Uri.parse('https://corsproxy.io/?${Uri.encodeComponent(url)}')
           : Uri.parse(url);
       print(uri);
-      final response = await _client.get(uri, headers: headers);
-      _updateCookies(response);
+      final response = await _makeRequest(uri);
 
       if (response.statusCode == 200) {
         var document = parser.parse(response.body);
@@ -393,7 +450,7 @@ class PesService {
           description = bottomDesc.text.trim();
         }
 
-        return PesPlayerDetail(
+        final result = PesPlayerDetail(
           player: player,
           position: position,
           height: height,
@@ -406,13 +463,19 @@ class PesService {
           suggestedPoints: suggestedPoints,
           description: description,
         );
+        await _dbService.savePlayerDetail(result);
+        return result;
       } else {
+        final cached = await _dbService.getPlayerDetail(player.id);
+        if (cached != null) return cached;
         throw Exception(
           'Failed to load player details: ${response.statusCode}',
         );
       }
     } catch (e) {
       print('Error fetching player details: $e');
+      final cached = await _dbService.getPlayerDetail(player.id);
+      if (cached != null) return cached;
       rethrow;
     }
   }
