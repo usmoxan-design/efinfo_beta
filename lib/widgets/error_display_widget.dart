@@ -95,10 +95,10 @@ class ErrorDisplayWidget extends StatelessWidget {
         title = 'Internet aloqasi yo\'q';
         break;
       case ErrorType.serverBusy:
-        title = 'Server vaqtincha band';
+        title = 'Server vaqtincha ishlamayapti';
         break;
       default:
-        title = 'Xatolik yuz berdi';
+        title = 'Server vaqtincha ishlamayapti, keyinroq urining!';
     }
 
     return Text(
