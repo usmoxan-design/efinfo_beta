@@ -88,5 +88,11 @@
         "description": "Willpower — bu eFootball Mobile o‘yinidagi yangi hujum skili bo‘lib, futbolchiga har zarba (shot) berganda shooting qobiliyatlarini asta-sekin oshirish imkonini beradi.",
         "image": "assets/images/player_skills/willpower.jpg",
         "full_description": "assets/markdown/playerskills/unical_skills/15.md"
+    },
+    {
+        "title": "GK Spirit Roar",
+        "description": "GK Spirit Roar — bu eFootball Mobile o‘yinidagi yangi himoya skili bo‘lib, GK (darvozabon) faol bo‘lganda ikkinchi taym boshida jamoangiz oldinda bo‘lsa, himoyachilarning physical qobiliyatlarini oshirish imkonini beradi",
+        "image": "assets/images/player_skills/gk_spirit_roar.jpg",
+        "full_description": "assets/markdown/playerskills/unical_skills/16.md"
     }
 ]
