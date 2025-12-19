@@ -4,6 +4,12 @@ import 'package:html/parser.dart' as parser;
 import 'package:html/dom.dart';
 import '../models/pes_models.dart';
 
+class _CachedResponse {
+  final http.Response response;
+  final DateTime timestamp;
+  _CachedResponse(this.response, this.timestamp);
+}
+
 class PesService {
   final String listingUrl = 'https://pesdb.net/efootball/';
   final String detailBaseUrl = 'https://pesdb.net/efootball/';
@@ -29,6 +35,7 @@ class PesService {
   };
 
   static DateTime? _lastRequestTime;
+  static final Map<String, _CachedResponse> _cache = {};
 
   static Map<String, String> get headers {
     final h = Map<String, String>.from(_baseHeaders);
@@ -41,11 +48,9 @@ class PesService {
   void _updateCookies(http.Response response) {
     String? rawCookie = response.headers['set-cookie'];
     if (rawCookie != null) {
-      // Basic cookie merging
       final List<String> newCookies = rawCookie.split(',');
       final Map<String, String> cookieMap = {};
 
-      // Parse existing cookies
       if (_cookies != null) {
         for (var c in _cookies!.split(';')) {
           final parts = c.split('=');
@@ -55,7 +60,6 @@ class PesService {
         }
       }
 
-      // Parse and merge new cookies
       for (var c in newCookies) {
         final parts = c.split(';')[0].split('=');
         if (parts.length >= 2) {
@@ -67,13 +71,24 @@ class PesService {
     }
   }
 
-  Future<http.Response> _makeRequest(Uri uri, {int retryCount = 0}) async {
-    // Throttling: Ensure at least 1 second between requests
+  Future<http.Response> _makeRequest(Uri uri,
+      {int retryCount = 0, bool forceRefresh = false}) async {
+    final String cacheKey = uri.toString();
+
+    // Check cache first
+    if (!forceRefresh && _cache.containsKey(cacheKey)) {
+      final cached = _cache[cacheKey]!;
+      if (DateTime.now().difference(cached.timestamp).inMinutes < 10) {
+        return cached.response;
+      }
+    }
+
+    // Throttling: Ensure at least 1.5 seconds between requests
     if (_lastRequestTime != null) {
       final diff = DateTime.now().difference(_lastRequestTime!);
-      if (diff.inMilliseconds < 1000) {
+      if (diff.inMilliseconds < 1500) {
         await Future.delayed(
-          Duration(milliseconds: 1000 - diff.inMilliseconds),
+          Duration(milliseconds: 1500 - diff.inMilliseconds),
         );
       }
     }
@@ -83,19 +98,24 @@ class PesService {
       _lastRequestTime = DateTime.now();
       _updateCookies(response);
 
-      if (response.statusCode == 429 && retryCount < 3) {
-        // Wait longer on 429 before retrying
-        print(
-            'Rate limited (429). Retrying in ${2 * (retryCount + 1)} seconds...');
-        await Future.delayed(Duration(seconds: 2 * (retryCount + 1)));
-        return _makeRequest(uri, retryCount: retryCount + 1);
+      if (response.statusCode == 200) {
+        _cache[cacheKey] = _CachedResponse(response, DateTime.now());
+        return response;
+      }
+
+      if (response.statusCode == 429 && retryCount < 2) {
+        print('Rate limited (429). Waiting 3s...');
+        await Future.delayed(const Duration(seconds: 3));
+        return _makeRequest(uri,
+            retryCount: retryCount + 1, forceRefresh: true);
       }
 
       return response;
     } catch (e) {
-      if (retryCount < 2) {
-        await Future.delayed(const Duration(seconds: 1));
-        return _makeRequest(uri, retryCount: retryCount + 1);
+      if (retryCount < 1) {
+        await Future.delayed(const Duration(seconds: 2));
+        return _makeRequest(uri,
+            retryCount: retryCount + 1, forceRefresh: true);
       }
       rethrow;
     }
@@ -152,7 +172,6 @@ class PesService {
         var document = parser.parse(response.body);
         List<PesFeaturedOption> options = [];
 
-        // Find the select element with id="featured" or name="featured"
         var select = document.getElementById('featured') ??
             document.querySelector('select[name="featured"]');
         if (select != null) {
@@ -160,9 +179,6 @@ class PesService {
           for (var option in optionElements) {
             String name = option.text.trim();
             String value = option.attributes['value'] ?? '';
-            // Skip "All Players" or empty values if they mean "reset"
-            // Usually value="" or value="0" is default/none.
-            // On pesdb, value might be empty for default.
             if (name.isNotEmpty && value.isNotEmpty && value != "0") {
               options.add(PesFeaturedOption(name: name, id: value));
             }
@@ -174,7 +190,6 @@ class PesService {
       }
     } catch (e) {
       print('Error fetching featured options: $e');
-      // Return empty list instead of crashing, as this is auxiliary
       return [];
     }
   }
@@ -183,28 +198,21 @@ class PesService {
       {String? customUrl, int page = 1, Map<String, String>? filters}) async {
     try {
       String baseUrlToUse = customUrl ?? listingUrl;
-
-      // Robust URL construction
       Uri parsedBase = Uri.parse(baseUrlToUse);
       Map<String, String> currentQuery = Map.from(parsedBase.queryParameters);
 
-      // Get the base excluding query
       String cleanBaseUrl = parsedBase.replace(query: null).toString();
-      // Remove trailing ? if exist
       if (cleanBaseUrl.endsWith('?'))
         cleanBaseUrl = cleanBaseUrl.substring(0, cleanBaseUrl.length - 1);
 
-      // 1. Merge filters
       if (filters != null) {
         currentQuery.addAll(filters);
       }
 
-      // 2. Add page param
       if (page > 1) {
         currentQuery['page'] = page.toString();
       }
 
-      // 3. Reconstruct
       currentQuery.removeWhere((k, v) => v.isEmpty);
 
       String finalUrl = cleanBaseUrl;
@@ -215,7 +223,6 @@ class PesService {
       }
 
       String url = finalUrl;
-
       print('Fetching URL: $url');
 
       final uri = kIsWeb
@@ -227,7 +234,6 @@ class PesService {
       if (response.statusCode == 200) {
         var document = parser.parse(response.body);
         List<PesPlayer> players = [];
-
         var rows = document.querySelectorAll('tr');
 
         for (var row in rows) {
@@ -237,7 +243,6 @@ class PesService {
           String? nationality;
 
           var links = row.querySelectorAll('a');
-
           for (var link in links) {
             String href = link.attributes['href'] ?? '';
             String text = link.text.trim();
@@ -254,7 +259,6 @@ class PesService {
                       'http://fake.com/${href.startsWith('/') ? href.substring(1) : href}',
                     );
                   }
-
                   if (uri.queryParameters.containsKey('id')) {
                     id = uri.queryParameters['id'];
                   }
@@ -349,7 +353,6 @@ class PesService {
                     .toList();
                 skills.addAll(skillsList);
               }
-
               if (skills.isEmpty) {
                 for (var node in td.nodes) {
                   if (node.nodeType == Node.TEXT_NODE) {
@@ -363,7 +366,6 @@ class PesService {
             } else if (header == 'ai playing styles') {
               String aiStylesText = td.text.trim();
               List<String> styles = [];
-
               if (aiStylesText.isNotEmpty) {
                 styles = aiStylesText
                     .split('\n')
@@ -371,7 +373,6 @@ class PesService {
                     .where((s) => s.isNotEmpty)
                     .toList();
               }
-
               if (styles.isEmpty) {
                 for (var node in td.nodes) {
                   if (node.nodeType == Node.TEXT_NODE) {
@@ -382,13 +383,10 @@ class PesService {
                   }
                 }
               }
-
               if (styles.isNotEmpty) {
                 info[headerOriginal] = styles.join('\n');
               }
             } else {
-              // More permissive check: match number or number with parens text
-              // Clean spaces first
               String valClean = value.replaceAll(RegExp(r'\s+'), '');
               if (RegExp(r'^(\(\+\d+\))?\d+$').hasMatch(valClean)) {
                 stats[headerOriginal] = value;
@@ -399,11 +397,7 @@ class PesService {
           }
         }
 
-        // Robust parsing for Suggested Points
         try {
-          // Find the specific header div "Suggested points for Level X"
-          // usage of 'contains' instead of 'startsWith' to be safer
-          // check that it has NO div children to ensure we have the inner header
           var allDivs = document.querySelectorAll('div');
           var suggestedHeader = allDivs.firstWhere(
             (d) =>
@@ -415,10 +409,8 @@ class PesService {
           if (suggestedHeader.text.isNotEmpty &&
               suggestedHeader.parent != null) {
             var container = suggestedHeader.parent!;
-
             for (var child in container.children) {
               if (child == suggestedHeader) continue;
-
               if (child.localName == 'div' && child.text.contains(':')) {
                 var span = child.querySelector('span');
                 if (span != null) {
@@ -430,7 +422,6 @@ class PesService {
                         .replaceAll(RegExp(r'[•\u2022]'), '')
                         .replaceAll('&bull;', '')
                         .trim();
-
                     String valStr = span.text.trim();
                     int? val = int.tryParse(valStr);
                     if (val != null) {
@@ -449,7 +440,6 @@ class PesService {
         if (playingStylesTable != null) {
           var styleRows = playingStylesTable.querySelectorAll('tr');
           String currentSection = '';
-
           for (var row in styleRows) {
             var th = row.querySelector('th');
             if (th != null) {

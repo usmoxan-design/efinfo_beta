@@ -141,13 +141,6 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
         });
       }
     } catch (e) {
-      // 429 Retry Logic
-      if (e.toString().contains('429') && retryCount < 3) {
-        int delayInSeconds = 2 * (retryCount + 1);
-        await Future.delayed(Duration(seconds: delayInSeconds));
-        return _loadPlayers(retryCount: retryCount + 1);
-      }
-
       if (mounted) {
         setState(() {
           _isLoading = false;

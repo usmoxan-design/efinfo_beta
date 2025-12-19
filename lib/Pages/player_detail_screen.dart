@@ -5,6 +5,8 @@ import 'package:efinfo_beta/models/pes_models.dart';
 import 'package:efinfo_beta/services/pes_service.dart';
 import 'package:efinfo_beta/widgets/pes_player_card_widget.dart';
 import 'package:efinfo_beta/widgets/error_display_widget.dart';
+import 'package:icons_plus/icons_plus.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'level_toggle_header_delegate.dart';
 
 class PesPlayerDetailScreen extends StatefulWidget {
@@ -930,8 +932,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                               color: AppColors.textDim,
                               fontSize: 11,
                               fontWeight: FontWeight.w500),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
                         ),
                       ),
                       Text(
@@ -1184,7 +1185,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Icon(_getStatIcon(key), color: Colors.white30, size: 16)
+                    _buildStatSvgIcon(key, size: 16)
                   ],
                 ),
               );
@@ -1255,23 +1256,45 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     );
   }
 
-  IconData _getStatIcon(String key) {
+  Widget _buildStatSvgIcon(String key, {double size = 16}) {
     final k = key.toLowerCase();
-    if (k.contains('shooting') || k.contains('finishing'))
-      return Icons.sports_soccer;
-    if (k.contains('passing') || k.contains('pass'))
-      return Icons.compare_arrows;
-    if (k.contains('dribbling') || k.contains('ball control'))
-      return Icons.directions_run;
-    if (k.contains('speed') || k.contains('acceleration')) return Icons.speed;
-    if (k.contains('defending') || k.contains('awareness')) return Icons.shield;
-    if (k.contains('gk')) return Icons.front_hand;
-    if (k.contains('strength') || k.contains('physical'))
-      return Icons.fitness_center;
-    if (k.contains('aerial') || k.contains('jump'))
-      return Icons.unfold_more_rounded;
-    if (k.contains('total') || k.contains('pts')) return Icons.summarize;
-    return Icons.star_border;
+    String assetPath = 'assets/images/shooting.svg';
+
+    if (k.contains('shooting') || k.contains('finishing')) {
+      assetPath = 'assets/images/shooting.svg';
+    } else if (k.contains('passing') || k.contains('pass')) {
+      assetPath = 'assets/images/passing.svg';
+    } else if (k.contains('dribbling') || k.contains('ball control')) {
+      assetPath = 'assets/images/dribbling.svg';
+    } else if (k.contains('dexterity') ||
+        k.contains('speed') ||
+        k.contains('acceleration')) {
+      assetPath = 'assets/images/dexterity.svg';
+    } else if (k.contains('defending') || k.contains('awareness')) {
+      assetPath = 'assets/images/defending.svg';
+    } else if (k.contains('gk')) {
+      assetPath = 'assets/images/goalkeepeing.svg';
+    } else if (k.contains('lower body') ||
+        k.contains('strength') ||
+        k.contains('physical')) {
+      assetPath = 'assets/images/lower_body_strength.svg';
+    } else if (k.contains('aerial') || k.contains('jump')) {
+      assetPath = 'assets/images/aerial_strength.svg';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+      ),
+      child: SvgPicture.asset(
+        assetPath,
+        width: size,
+        height: size,
+        colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+      ),
+    );
   }
 
   int _parseStatValue(String value) {
@@ -1443,11 +1466,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(_getStatIcon(e.key),
-                              color: isTotal
-                                  ? AppColors.accentPink
-                                  : AppColors.textDim,
-                              size: 16),
+                          _buildStatSvgIcon(e.key, size: 14),
                           const SizedBox(height: 6),
                           Text(
                               displayKey
