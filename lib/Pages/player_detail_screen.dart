@@ -564,7 +564,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     children: [
                       _buildHeaderSection(detail),

@@ -55,7 +55,7 @@ class _ManagerPageState extends State<ManagerPage> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(16),
           children: [
             _buildHeader(),
             const SizedBox(height: 32),
