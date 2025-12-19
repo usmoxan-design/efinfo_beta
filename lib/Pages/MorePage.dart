@@ -68,7 +68,7 @@ class _MorepageState extends State<Morepage> {
       //   },
       // ),
       _ListItem(
-        title: 'Category Players',
+        title: 'Players Category',
         icon: "assets/images/category.png", // Using same icon/placeholder
         color: AppColors.accent,
         onTap: () {

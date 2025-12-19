@@ -3,6 +3,7 @@ import 'package:efinfo_beta/widgets/pes_player_card_widget.dart';
 import 'package:flutter/material.dart';
 import '../services/pes_service.dart';
 import '../models/pes_models.dart';
+import '../widgets/error_display_widget.dart';
 import 'player_detail_screen.dart';
 
 class StandartPlayersPage extends StatefulWidget {
@@ -27,6 +28,8 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
   int _currentPage = 1;
   final int _totalPages = 10; // Estimation
   bool _isLoading = false;
+  ErrorType? _errorType;
+  String? _errorMessage;
 
   // Filter State
   String _nameFilter = "";
@@ -99,6 +102,8 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
     if (mounted) {
       setState(() {
         _isLoading = true;
+        _errorType = null;
+        _errorMessage = null;
       });
     }
 
@@ -146,13 +151,17 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
       if (mounted) {
         setState(() {
           _isLoading = false;
+          final errorStr = e.toString().toLowerCase();
+          if (errorStr.contains('429')) {
+            _errorType = ErrorType.serverBusy;
+          } else if (errorStr.contains('socketexception') ||
+              errorStr.contains('failed host lookup')) {
+            _errorType = ErrorType.noInternet;
+          } else {
+            _errorType = ErrorType.other;
+          }
+          _errorMessage = e.toString();
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading players: $e'),
-            backgroundColor: Colors.red.shade900,
-          ),
-        );
       }
     }
   }
@@ -633,22 +642,30 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
               ? const SliverFillRemaining(
                   child: Center(child: CircularProgressIndicator()),
                 )
-              : SliverPadding(
-                  padding: const EdgeInsets.all(16),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.65,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
+              : (_errorType != null)
+                  ? SliverFillRemaining(
+                      child: ErrorDisplayWidget(
+                        errorType: _errorType!,
+                        errorMessage: _errorMessage,
+                        onRetry: _loadPlayers,
+                      ),
+                    )
+                  : SliverPadding(
+                      padding: const EdgeInsets.all(16),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.65,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final player = _players[index];
+                          return _buildModernPlayerCard(player);
+                        }, childCount: _players.length),
+                      ),
                     ),
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final player = _players[index];
-                      return _buildModernPlayerCard(player);
-                    }, childCount: _players.length),
-                  ),
-                ),
 
           // Bottom spacing for comfortable scrolling
           const SliverToBoxAdapter(child: SizedBox(height: 50)),

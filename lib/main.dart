@@ -2,13 +2,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:efinfo_beta/Pages/SplashPage.dart';
 import 'package:flutter/material.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  }
   runApp(const MyApp());
 }
 

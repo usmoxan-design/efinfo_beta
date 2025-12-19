@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:efinfo_beta/models/pes_models.dart';
 import 'package:efinfo_beta/services/pes_service.dart';
 import 'package:efinfo_beta/widgets/pes_player_card_widget.dart';
+import 'package:efinfo_beta/widgets/error_display_widget.dart';
 import 'level_toggle_header_delegate.dart';
 
 class PesPlayerDetailScreen extends StatefulWidget {
@@ -22,7 +23,8 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
   PesPlayerDetail? _level1Data;
   PesPlayerDetail? _maxLevelData;
   bool _isLoading = true;
-  String? _error;
+  ErrorType? _errorType;
+  String? _errorMessage;
 
   // UI State
   bool _isFlipped = false;
@@ -154,7 +156,8 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
-      _error = null;
+      _errorType = null;
+      _errorMessage = null;
     });
 
     try {
@@ -174,6 +177,8 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
 
       setState(() {
         _isLoading = false;
+        _errorType = null;
+        _errorMessage = null;
       });
 
       // Initialize Simulation State AFTER setState to avoid nested setState
@@ -181,10 +186,21 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
         _initializeTrainingState(auto: true);
       }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          final errorStr = e.toString().toLowerCase();
+          if (errorStr.contains('429')) {
+            _errorType = ErrorType.serverBusy;
+          } else if (errorStr.contains('socketexception') ||
+              errorStr.contains('failed host lookup')) {
+            _errorType = ErrorType.noInternet;
+          } else {
+            _errorType = ErrorType.other;
+          }
+          _errorMessage = e.toString();
+        });
+      }
     }
   }
 
@@ -521,32 +537,12 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (_error != null && (_level1Data == null)) {
+          if (_errorType != null && (_level1Data == null)) {
             return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Error: $_error",
-                      style: const TextStyle(color: Colors.redAccent),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        _loadData();
-                      },
-                      icon: const Icon(Icons.refresh),
-                      label: const Text("Retry"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF06DF5D),
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
+              child: ErrorDisplayWidget(
+                errorType: _errorType!,
+                errorMessage: _errorMessage,
+                onRetry: _loadData,
               ),
             );
           }
@@ -1190,11 +1186,11 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Flexible(
+          Expanded(
             child: Text(
               label,
               style: const TextStyle(color: Colors.white70, fontSize: 13),
-              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
             ),
           ),
           Row(
@@ -1392,7 +1388,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
       return const Color(0xFF07FCF5);
     } else if (val >= 80) {
       return const Color(0xFF05fd07);
-    } else if (val >= 65) {
+    } else if (val >= 70) {
       return const Color(0xFFfcaa04);
     } else {
       return const Color(0xFFd74233);
@@ -1466,80 +1462,86 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                 color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              childAspectRatio: 1.5,
-            ),
-            itemCount: entries.length,
-            itemBuilder: (context, index) {
-              final e = entries[index];
-              bool isTotal = e.key.toLowerCase().contains('total') ||
-                  e.key.toLowerCase().contains('progression points');
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const double spacing = 8;
+              final double itemWidth =
+                  (constraints.maxWidth - (spacing * 3)) / 4;
 
-              String displayKey = e.key;
-              if (isTotal) {
-                displayKey = "Max Progress Points";
-              }
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: entries.map((e) {
+                  bool isTotal = e.key.toLowerCase().contains('total') ||
+                      e.key.toLowerCase().contains('progression points');
 
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isTotal
-                      ? const Color(0xFF005929)
-                      : const Color(0xFF0D2418),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isTotal
-                        ? const Color(0xFF06DF5D)
-                        : Colors.white.withOpacity(0.1),
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      displayKey.replaceAll('Progression Points', '').trim(),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color:
-                            isTotal ? const Color(0xFF06DF5D) : Colors.white70,
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _getStatIcon(e.key),
-                            color: Colors.white,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${e.value}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                  String displayKey = e.key;
+                  if (isTotal) {
+                    displayKey = "Max Progress Points";
+                  }
+
+                  return Container(
+                    width: itemWidth,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isTotal
+                          ? const Color(0xFF005929)
+                          : const Color(0xFF0D2418),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isTotal
+                            ? const Color(0xFF06DF5D)
+                            : Colors.white.withOpacity(0.1),
+                        width: 1,
                       ),
                     ),
-                  ],
-                ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          displayKey
+                              .replaceAll('Progression Points', '')
+                              .trim(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: isTotal
+                                ? const Color(0xFF06DF5D)
+                                : Colors.white70,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                _getStatIcon(e.key),
+                                color: Colors.white,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${e.value}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
               );
             },
           ),

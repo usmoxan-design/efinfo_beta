@@ -32,8 +32,8 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
         "type": "must_have",
         "skills": [
           "First-time Shot",
-          "Long-Range Shooting",
-          "Long-Range Curler",
+          "Long-range Shooting",
+          "Long-range Curler",
           "One-touch Pass",
           "Outside Curler",
           "Fighting Spirit"
@@ -42,21 +42,24 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
       {
         "type": "special",
         "skills": ["Super-sub"]
-      }, // Orange
+      },
       {
         "type": "useful",
-        "skills": ["Through Passing", "Chip Shot Control"]
+        "skills": [
+          "Through Passing",
+          "Chip Shot Control",
+          "Heading",
+          "Heel Trick"
+        ]
       },
       {
         "type": "useful_low",
-        "skills": [
-          "Heading",
-          "Heel Trick",
-          "Acrobatic Finishing",
-          "Gamesmanship",
-          "Aerial Superiority"
-        ]
+        "skills": ["Acrobatic Finishing", "Gamesmanship", "Aerial Superiority"]
       },
+      {
+        "type": "not_necessary",
+        "skills": ["Track Back", "Weighted Pass"]
+      }
     ],
     "L/RWF": [
       {
@@ -79,17 +82,15 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
           "Pinpoint Crossing",
           "Outside Curler",
           "Heel Trick",
-          "Gamesmanship"
+          "Gamesmanship",
+          "Weighted Pass",
+          "Chip Shot Control"
         ]
       },
       {
         "type": "useful_low",
         "skills": ["Fighting Spirit", "Track Back"]
-      },
-      {
-        "type": "not_necessary",
-        "skills": ["Weighted Pass", "Chip Shot Control"]
-      },
+      }
     ],
     "AMF": [
       {
@@ -111,18 +112,18 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
         "skills": [
           "First-time Shot",
           "Heel Trick",
-          "Fighting Spirit",
-          "Gamesmanship"
+          "Gamesmanship",
+          "Fighting Spirit"
         ]
       },
       {
         "type": "useful_low",
-        "skills": ["Pinpoint Crossing", "Weighted Pass", "Chip Shot Control"]
+        "skills": ["Pinpoint Crossing", "Weighted Pass"]
       },
       {
         "type": "not_necessary",
-        "skills": ["Track Back"]
-      },
+        "skills": ["Track Back", "Chip Shot Control"]
+      }
     ],
     "L/RMF": [
       {
@@ -136,37 +137,33 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
       },
       {
         "type": "useful",
-        "skills": ["Heel Trick", "Track Back", "Interception", "Gamesmanship"]
+        "skills": ["Heel Trick", "Track Back", "Interception"]
       },
       {
         "type": "useful_low",
         "skills": [
+          "Gamesmanship",
           "Fighting Spirit",
-          "Long-Range Shooting",
-          "Long-range Curler",
-          "First-time Shot"
+          "Long-range Shooting",
+          "Long-range Curler"
         ]
       },
       {
-        "type": "not_necessary",
-        "skills": ["Weighted Pass"]
-      },
+        "type": "do_not_give",
+        "skills": ["First-time Shot", "Weighted Pass"]
+      }
     ],
     "CMF": [
       {
         "type": "must_have",
-        "skills": [
-          "One-touch Pass",
-          "Through Passing",
-          "Interception",
-          "Outside Curler",
-          "Heel Trick"
-        ]
+        "skills": ["One-touch Pass", "Through Passing", "Interception"]
       },
       {
         "type": "useful",
         "skills": [
-          "Long-Range Shooting",
+          "Outside Curler",
+          "Heel Trick",
+          "Long-range Shooting",
           "Long-range Curler",
           "Weighted Pass",
           "Track Back"
@@ -184,7 +181,7 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
       {
         "type": "not_necessary",
         "skills": ["Super-sub"]
-      },
+      }
     ],
     "DMF": [
       {
@@ -203,21 +200,22 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
           "Sliding Tackle",
           "Acrobatic Clearance",
           "Aerial Superiority",
-          "Weighted Pass"
+          "Weighted Pass",
+          "Heading"
         ]
       },
       {
         "type": "useful_low",
-        "skills": ["Heading", "Outside Curler"]
+        "skills": ["Track Back", "Outside Curler"]
       },
       {
         "type": "not_necessary",
-        "skills": ["Track Back", "Fighting Spirit"]
+        "skills": ["Fighting Spirit"]
       },
       {
         "type": "do_not_give",
         "skills": ["Super-sub"]
-      },
+      }
     ],
     "Attacking L/RB": [
       {
@@ -226,32 +224,31 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
           "Interception",
           "One-touch Pass",
           "Pinpoint Crossing",
-          "Through Passing",
-          "Blocker"
+          "Through Passing"
         ]
       },
       {
         "type": "useful",
         "skills": [
+          "Blocker",
           "Man Marking",
-          "Acrobatic Clearance",
           "Track Back",
           "Sliding Tackle",
-          "Aerial Superiority"
+          "Fighting Spirit"
         ]
       },
       {
         "type": "useful_low",
-        "skills": ["Heading"]
+        "skills": ["Aerial Superiority", "Heading", "Weighted Pass"]
       },
       {
         "type": "not_necessary",
-        "skills": ["Weighted Pass", "Fighting Spirit"]
+        "skills": ["Fighting Spirit"]
       },
       {
         "type": "do_not_give",
         "skills": ["Super-sub"]
-      },
+      }
     ],
     "Defensive L/RB": [
       {
@@ -271,7 +268,8 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
           "Heading",
           "One-touch Pass",
           "Through Passing",
-          "Weighted Pass"
+          "Weighted Pass",
+          "Low Lofted Pass"
         ]
       },
       {
@@ -285,7 +283,7 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
       {
         "type": "do_not_give",
         "skills": ["Track Back", "Super-sub"]
-      },
+      }
     ],
     "CB": [
       {
@@ -296,12 +294,13 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
           "Blocker",
           "Aerial Superiority",
           "Acrobatic Clearance",
-          "Sliding Tackle"
+          "Sliding Tackle",
+          "Heading"
         ]
       },
       {
         "type": "useful",
-        "skills": ["Heading", "Weighted Pass"]
+        "skills": ["Weighted Pass"]
       },
       {
         "type": "useful_low",
@@ -314,7 +313,7 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
       {
         "type": "do_not_give",
         "skills": ["Track Back", "Super-sub"]
-      },
+      }
     ],
     "GK": [
       {
@@ -336,8 +335,8 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
       {
         "type": "do_not_give",
         "skills": ["Super-sub"]
-      },
-    ],
+      }
+    ]
   };
 
   @override

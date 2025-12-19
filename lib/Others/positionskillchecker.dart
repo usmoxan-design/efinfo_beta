@@ -845,17 +845,16 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
         'Long-range Curler',
         'First-time Shot',
         'Super-sub',
-        'Pinpoint Crossing',
-        'Outside Curler'
       ],
       useful: [
-        'Heel Trick',
+        'Pinpoint Crossing',
+        'Outside Curler'
+            'Heel Trick',
         'Gamesmanship',
-        'Fighting Spirit',
-        'Track Back', // Yellow/Red area in image, but useful for wingers usually
         'Weighted Pass',
         'Chip Shot Control'
       ],
+      usefulNotNecessary: ['Fighting Spirit', 'Track Back'],
     );
 
     final sideMidLogic = _buildScores(
@@ -864,18 +863,19 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
         'Through Passing',
         'Pinpoint Crossing',
         'Outside Curler',
-        'Heel Trick',
-        'Track Back'
       ],
       useful: [
-        'Interception',
+        'Heel Trick',
+        'Track Back'
+            'Interception',
+      ],
+      usefulNotNecessary: [
         'Gamesmanship',
         'Fighting Spirit',
         'Long-range Shooting',
         'Long-range Curler'
       ],
-      usefulNotNecessary: ['First-time Shot', 'Weighted Pass'],
-      doNotGive: ['Super-sub'],
+      doNotGive: ['First-time Shot', 'Weighted Pass'],
     );
 
     final attDefLogic = _buildScores(
@@ -884,18 +884,24 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
         'One-touch Pass',
         'Pinpoint Crossing',
         'Through Passing',
-        'Blocker'
       ],
       useful: [
-        'Aerial Superiority',
-        'Acrobatic Clearance',
+        'Blocker'
+            'Acrobatic Clearance',
         'Man Marking',
+        'Track Back',
         'Sliding Tackle',
-        'Heading',
-        'Weighted Pass',
         'Fighting Spirit'
       ],
-      doNotGive: ['Track Back', 'Super-sub'],
+      usefulNotNecessary: [
+        'Aerial Superiority',
+        'Heading',
+        'Weighted Pass',
+      ],
+      notNecessary: [
+        'Fighting Spirit',
+      ],
+      doNotGive: ['Super-sub'],
     );
 
     final defDefLogic = _buildScores(
@@ -906,14 +912,16 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
         'Aerial Superiority',
         'Acrobatic Clearance',
         'Sliding Tackle',
-        'Heading'
       ],
       useful: [
+        'Heading',
         'One-touch Pass',
         'Through Passing',
         'Weighted Pass',
-        'Pinpoint Crossing',
         'Low Lofted Pass'
+      ],
+      usefulNotNecessary: [
+        'Pinpoint Crossing',
       ],
       notNecessary: ['Fighting Spirit'],
       doNotGive: ['Track Back', 'Super-sub'],
@@ -940,11 +948,12 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
           'Heel Trick',
           'Gamesmanship',
           'Fighting Spirit',
+        ],
+        usefulNotNecessary: [
           'Pinpoint Crossing',
           'Weighted Pass',
-          'Chip Shot Control'
         ],
-        notNecessary: ['Track Back'],
+        notNecessary: ['Track Back', 'Chip Shot Control'],
       ),
 
       'LMF': sideMidLogic,
@@ -955,19 +964,21 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
           'One-touch Pass',
           'Through Passing',
           'Interception',
-          'Outside Curler',
-          'Heel Trick'
         ],
         useful: [
+          'Outside Curler',
+          'Heel Trick',
           'Long-range Shooting',
           'Long-range Curler',
           'Weighted Pass',
           'Track Back',
+        ],
+        usefulNotNecessary: [
           'Fighting Spirit',
           'Sliding Tackle',
-          'Aerial Superiority'
+          'Aerial Superiority',
+          'First-time Shot'
         ],
-        usefulNotNecessary: ['First-time Shot'],
         notNecessary: ['Super-sub'],
       ),
 
@@ -985,9 +996,11 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
           'Aerial Superiority',
           'Weighted Pass',
           'Heading',
-          'Outside Curler'
         ],
-        usefulNotNecessary: ['Track Back'], // Anchor Man note in image
+        usefulNotNecessary: [
+          'Track Back',
+          'Outside Curler'
+        ], // Anchor Man note in image
         notNecessary: ['Fighting Spirit'],
         doNotGive: ['Super-sub'],
       ),
@@ -1009,6 +1022,8 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
         ],
         useful: [
           'Weighted Pass',
+        ],
+        usefulNotNecessary: [
           'One-touch Pass',
           'Through Passing',
           'Low Lofted Pass'

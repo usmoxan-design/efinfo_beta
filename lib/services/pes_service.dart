@@ -3,10 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as parser;
 import 'package:html/dom.dart';
 import '../models/pes_models.dart';
-import 'database_service.dart';
 
 class PesService {
-  final DatabaseService _dbService = DatabaseService();
   final String listingUrl = 'https://pesdb.net/efootball/';
   final String detailBaseUrl = 'https://pesdb.net/efootball/';
 
@@ -43,21 +41,64 @@ class PesService {
   void _updateCookies(http.Response response) {
     String? rawCookie = response.headers['set-cookie'];
     if (rawCookie != null) {
-      _cookies = rawCookie;
+      // Basic cookie merging
+      final List<String> newCookies = rawCookie.split(',');
+      final Map<String, String> cookieMap = {};
+
+      // Parse existing cookies
+      if (_cookies != null) {
+        for (var c in _cookies!.split(';')) {
+          final parts = c.split('=');
+          if (parts.length >= 2) {
+            cookieMap[parts[0].trim()] = parts.sublist(1).join('=').trim();
+          }
+        }
+      }
+
+      // Parse and merge new cookies
+      for (var c in newCookies) {
+        final parts = c.split(';')[0].split('=');
+        if (parts.length >= 2) {
+          cookieMap[parts[0].trim()] = parts.sublist(1).join('=').trim();
+        }
+      }
+
+      _cookies = cookieMap.entries.map((e) => '${e.key}=${e.value}').join('; ');
     }
   }
 
-  Future<http.Response> _makeRequest(Uri uri) async {
+  Future<http.Response> _makeRequest(Uri uri, {int retryCount = 0}) async {
+    // Throttling: Ensure at least 1 second between requests
     if (_lastRequestTime != null) {
       final diff = DateTime.now().difference(_lastRequestTime!);
-      if (diff.inMilliseconds < 800) {
-        await Future.delayed(Duration(milliseconds: 800 - diff.inMilliseconds));
+      if (diff.inMilliseconds < 1000) {
+        await Future.delayed(
+          Duration(milliseconds: 1000 - diff.inMilliseconds),
+        );
       }
     }
-    final response = await _client.get(uri, headers: headers);
-    _lastRequestTime = DateTime.now();
-    _updateCookies(response);
-    return response;
+
+    try {
+      final response = await _client.get(uri, headers: headers);
+      _lastRequestTime = DateTime.now();
+      _updateCookies(response);
+
+      if (response.statusCode == 429 && retryCount < 3) {
+        // Wait longer on 429 before retrying
+        print(
+            'Rate limited (429). Retrying in ${2 * (retryCount + 1)} seconds...');
+        await Future.delayed(Duration(seconds: 2 * (retryCount + 1)));
+        return _makeRequest(uri, retryCount: retryCount + 1);
+      }
+
+      return response;
+    } catch (e) {
+      if (retryCount < 2) {
+        await Future.delayed(const Duration(seconds: 1));
+        return _makeRequest(uri, retryCount: retryCount + 1);
+      }
+      rethrow;
+    }
   }
 
   Future<List<PesCategory>> fetchCategories() async {
@@ -239,20 +280,12 @@ class PesService {
             );
           }
         }
-        if (players.isNotEmpty) {
-          await _dbService.savePlayers(players);
-        }
         return players;
       } else {
-        // Try to load from DB if offline
-        final cached = await _dbService.getPlayers();
-        if (cached.isNotEmpty) return cached;
         throw Exception('Failed to load page: ${response.statusCode}');
       }
     } catch (e) {
       print('Error fetching players: $e');
-      final cached = await _dbService.getPlayers();
-      if (cached.isNotEmpty) return cached;
       rethrow;
     }
   }
@@ -450,7 +483,7 @@ class PesService {
           description = bottomDesc.text.trim();
         }
 
-        final result = PesPlayerDetail(
+        return PesPlayerDetail(
           player: player,
           position: position,
           height: height,
@@ -463,19 +496,13 @@ class PesService {
           suggestedPoints: suggestedPoints,
           description: description,
         );
-        await _dbService.savePlayerDetail(result);
-        return result;
       } else {
-        final cached = await _dbService.getPlayerDetail(player.id);
-        if (cached != null) return cached;
         throw Exception(
           'Failed to load player details: ${response.statusCode}',
         );
       }
     } catch (e) {
       print('Error fetching player details: $e');
-      final cached = await _dbService.getPlayerDetail(player.id);
-      if (cached != null) return cached;
       rethrow;
     }
   }
