@@ -588,41 +588,45 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          // AppBar with Filter
           SliverAppBar(
             pinned: true,
             backgroundColor: AppColors.background,
+            surfaceTintColor: Colors.transparent,
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   widget.title,
                   style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18),
+                    color: AppColors.textWhite,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
                 ),
                 if (!_isLoading)
                   Text(
-                    "${_players.length} players shown",
-                    style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
-                        fontSize: 12,
-                        fontWeight: FontWeight.normal),
+                    "Bu sahifada ${_players.length} ta o'yinchi topildi",
+                    style: const TextStyle(
+                      color: AppColors.textDim,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
               ],
             ),
             actions: [
               IconButton(
                 onPressed: _showFilterModal,
-                icon: const Icon(Icons.filter_list, color: AppColors.accent),
+                icon: const Icon(Icons.tune_rounded, color: AppColors.accent),
                 tooltip: 'Filter',
               ),
               IconButton(
                 onPressed: _refresh,
-                icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+                icon: const Icon(Icons.refresh_rounded,
+                    color: AppColors.textGrey),
                 tooltip: 'Refresh',
               ),
+              const SizedBox(width: 8),
             ],
           ),
 
@@ -709,79 +713,60 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.cardSurface.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(16),
+          color: AppColors.cardSurface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withOpacity(0.2),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
+          borderRadius: BorderRadius.circular(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Card content
-              PesPlayerCardWidget(player: player),
-
-              // Overlay gradient
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withOpacity(0.8),
-                      ],
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    PesPlayerCardWidget(player: player),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: const BoxDecoration(
+                  color: AppColors.surface,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      player.name,
+                      style: const TextStyle(
+                        color: AppColors.textWhite,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        player.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: 4),
+                    Text(
+                      player.club,
+                      style: const TextStyle(
+                        color: AppColors.textDim,
+                        fontSize: 10,
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.shield_outlined,
-                            size: 12,
-                            color: Colors.white.withOpacity(0.7),
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              player.club,
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
-                                fontSize: 11,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -820,7 +805,7 @@ class _PaginationHeaderDelegate extends SliverPersistentHeaderDelegate {
             TextButton.icon(
               onPressed: (page > 1 && !isLoading) ? onPrev : null,
               icon: const Icon(Icons.chevron_left),
-              label: const Text("Prev"),
+              label: const Text("Oldingi"),
               style: TextButton.styleFrom(
                   foregroundColor: Colors.white,
                   disabledForegroundColor: Colors.white24),
@@ -828,7 +813,7 @@ class _PaginationHeaderDelegate extends SliverPersistentHeaderDelegate {
 
             // Info
             Text(
-              "Page $page",
+              "Sahifa: $page",
               style: const TextStyle(
                   color: AppColors.accent, fontWeight: FontWeight.bold),
             ),
@@ -839,7 +824,7 @@ class _PaginationHeaderDelegate extends SliverPersistentHeaderDelegate {
                   ? onNext
                   : null, // Assuming standard max
               icon: const Icon(Icons.chevron_right),
-              label: const Text("Next"),
+              label: const Text("Keyingi"),
               style: TextButton.styleFrom(
                   iconAlignment: IconAlignment.end,
                   foregroundColor: Colors.white,

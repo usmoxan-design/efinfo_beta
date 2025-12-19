@@ -4,6 +4,7 @@ import 'package:efinfo_beta/components/newBadge.dart';
 import 'package:efinfo_beta/manager/plstyles.dart';
 import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ManagerPage extends StatefulWidget {
   const ManagerPage({super.key});
@@ -15,175 +16,190 @@ class ManagerPage extends StatefulWidget {
 class _ManagerPageState extends State<ManagerPage> {
   @override
   Widget build(BuildContext context) {
-    final List<_ListItem> items = [
-      _ListItem(
-        badge: false,
-
-        title: 'Team Playstyle',
-        subtitle: 'Jamoa o\'yin stili',
-        icon: "assets/images/team_playstyle.png",
-        color: AppColors.accent,
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ManagerStylesPage()),
-          );
-        },
-        // onBlock: true, // 🔒 bloklangan
-      ),
-      _ListItem(
-        badge: false,
-        title: 'Formations',
-        subtitle: 'Taktik sxemalar',
-        icon: "assets/images/formation_change.png",
-        color: AppColors.accent,
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const FormationsListScreen()),
-          );
-        },
-        // onBlock: true, // 🔒 bloklangan
-      ),
-      _ListItem(
-        badge: false,
-        title: 'Individual Instructions',
-        subtitle: "Shaxsiy ko'rsatmalar",
-        icon: "assets/images/individual_instruction.png",
-        color: AppColors.accent,
-        onTap: () {
-          Navigator.push(
+    final List<Map<String, dynamic>> managerData = [
+      {
+        'title': 'Team Playstyle',
+        'subtitle': "Jamoa o'yin stili",
+        'icon': "assets/images/team_playstyle.png",
+        'accent': AppColors.accentGreen,
+        'badge': false,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const ManagerStylesPage())),
+      },
+      {
+        'title': 'Formations',
+        'subtitle': 'Taktik sxemalar',
+        'icon': "assets/images/formation_change.png",
+        'accent': AppColors.accentBlue,
+        'badge': false,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const FormationsListScreen())),
+      },
+      {
+        'title': 'Individual Instructions',
+        'subtitle': "Shaxsiy ko'rsatmalar",
+        'icon': "assets/images/individual_instruction.png",
+        'accent': AppColors.accentPink,
+        'badge': false,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (_) => const ModernInstructionsListPage()),
-          );
-        },
-        // onBlock: true, // 🔒 bloklangan
-      ),
+                builder: (_) => const ModernInstructionsListPage())),
+      },
     ];
+
     return Scaffold(
-      backgroundColor: AppColors.background, //0xFF06DF5D
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
+      backgroundColor: AppColors.background,
+      body: SafeArea(
         child: ListView(
+          padding: const EdgeInsets.all(24.0),
           children: [
+            _buildHeader(),
+            const SizedBox(height: 32),
             GridView.builder(
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                mainAxisSpacing: 20,
-                crossAxisSpacing: 20,
-                childAspectRatio: 1,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 0.9,
               ),
-              itemCount: items.length,
-              itemBuilder: (context, index) => items[index],
+              itemCount: managerData.length,
+              itemBuilder: (context, index) {
+                final item = managerData[index];
+                return _ManagerItem(
+                  title: item['title'],
+                  subtitle: item['subtitle'],
+                  icon: item['icon'],
+                  accent: item['accent'],
+                  badge: item['badge'],
+                  isColoredIcon: item['isColoredIcon'] ?? false,
+                  onTap: item['onTap'],
+                );
+              },
             ),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Manager Hub,",
+          style: GoogleFonts.outfit(
+            fontSize: 16,
+            color: AppColors.textDim,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          "Strategy Center",
+          style: GoogleFonts.outfit(
+            fontSize: 28,
+            color: AppColors.textWhite,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
-class _ListItem extends StatelessWidget {
+class _ManagerItem extends StatelessWidget {
   final String title;
   final String subtitle;
   final String icon;
-  final Color color;
-  final VoidCallback? onTap;
-  final bool onBlock;
+  final Color accent;
   final bool badge;
+  final bool isColoredIcon;
+  final VoidCallback? onTap;
 
-  const _ListItem({
+  const _ManagerItem({
     required this.title,
     required this.subtitle,
     required this.icon,
-    required this.color,
-    this.onTap,
-    this.onBlock = false,
+    required this.accent,
     required this.badge,
+    this.isColoredIcon = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onBlock ? null : onTap, // 🔒 bosilmaydi
+      onTap: onTap,
       child: NewBadgeWrapper(
         showBadge: badge,
-        child: Stack(
-          children: [
-            // Orqa fon
-            AnimatedOpacity(
-              duration: const Duration(milliseconds: 300),
-              opacity: onBlock ? 0.5 : 1.0, // 🔒 blok bo‘lsa hiraroq
-              child: Container(
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: color.withOpacity(0.3)),
+        child: SizedBox.expand(
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.cardSurface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.border, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
-                child: Center(
+              ],
+            ),
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      SizedBox(
-                          width: 60,
-                          child: Image.asset(
-                            icon.toString(),
-                            color: AppColors.accent,
-                          )),
-                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: accent.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Image.asset(
+                          icon,
+                          width: 48,
+                          height: 48,
+                          color: isColoredIcon ? null : accent,
+                        ),
+                      ),
+                      const Spacer(),
                       Text(
                         title,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: color,
-                          fontWeight: FontWeight.w600,
+                        style: GoogleFonts.outfit(
+                          fontSize: 15,
+                          color: AppColors.textWhite,
+                          fontWeight: FontWeight.bold,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 5),
-                      Opacity(
-                        opacity: .7,
-                        child: Text(
-                          subtitle,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: color,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // 🔒 Agar block bo‘lsa lock icon
-            if (onBlock)
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: const Color.fromARGB(45, 0, 0, 0)),
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.lock, color: Colors.white60, size: 40),
+                      const SizedBox(height: 4),
                       Text(
-                        "Tez kunda...",
-                        style: TextStyle(color: Colors.white60, fontSize: 16),
-                      )
+                        subtitle,
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          color: AppColors.textDim,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );

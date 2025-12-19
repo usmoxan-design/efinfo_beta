@@ -1,3 +1,4 @@
+import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class LevelToggleHeaderDelegate extends SliverPersistentHeaderDelegate {
@@ -12,19 +13,16 @@ class LevelToggleHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    // Determine background color based on shrinkOffset if transition needed,
-    // but a solid color ensures content behind is hidden.
     return Container(
-      color: const Color(0xFF011A0B), // Matches AppColors.background
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      color: AppColors.background,
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Center(
         child: Container(
-          padding: const EdgeInsets.all(4),
+          padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            // Matches the dark container style
-            color: const Color(0xFF0D2418),
-            borderRadius: BorderRadius.circular(25),
-            border: Border.all(color: Colors.white12),
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: AppColors.border, width: 1),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -42,19 +40,27 @@ class LevelToggleHeaderDelegate extends SliverPersistentHeaderDelegate {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF06DF5D)
-              : Colors.transparent, // Green accent
-          borderRadius: BorderRadius.circular(20),
+          color: isSelected ? AppColors.accent : Colors.transparent,
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.accent.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [],
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.black : Colors.white70,
-            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.white : AppColors.textDim,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
           ),
         ),
       ),
@@ -62,10 +68,10 @@ class LevelToggleHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 70.0;
+  double get maxExtent => 80.0;
 
   @override
-  double get minExtent => 70.0;
+  double get minExtent => 80.0;
 
   @override
   bool shouldRebuild(covariant LevelToggleHeaderDelegate oldDelegate) {

@@ -1,5 +1,5 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:efinfo_beta/Pages/SplashPage.dart';
 import 'package:flutter/material.dart';
 
@@ -14,26 +14,36 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'eFootball Info Hub',
+      title: 'eFootball Hub',
       theme: ThemeData(
-        // colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF117340)),
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF121212),
-        primaryColor: const Color(0xFF06DF5D),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
+        scaffoldBackgroundColor: AppColors.background,
+        primaryColor: AppColors.accent,
+        fontFamily: GoogleFonts.outfit().fontFamily,
+        appBarTheme: AppBarTheme(
+          backgroundColor: AppColors.surface,
           elevation: 0,
+          centerTitle: false,
           titleTextStyle: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              // fontWeight: FontWeight.bold,
-              letterSpacing: 1.2),
+            color: AppColors.textWhite,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            fontFamily: GoogleFonts.outfit().fontFamily,
+          ),
+          iconTheme: const IconThemeData(color: AppColors.textWhite),
         ),
-        cardTheme: const CardThemeData(
-          color: Color(0xFF1E1E1E),
-          elevation: 8,
+        cardTheme: CardThemeData(
+          color: AppColors.cardSurface,
+          elevation: 0,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(16))),
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: AppColors.border, width: 1),
+          ),
+        ),
+        textTheme:
+            GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme).copyWith(
+          bodyLarge: const TextStyle(color: AppColors.textWhite),
+          bodyMedium: const TextStyle(color: AppColors.textGrey),
         ),
         useMaterial3: true,
       ),

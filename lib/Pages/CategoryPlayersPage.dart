@@ -65,7 +65,8 @@ class _CategoryPlayersPageState extends State<CategoryPlayersPage> {
     Widget content;
 
     if (_isLoading) {
-      content = const Center(child: CircularProgressIndicator());
+      content = const Center(
+          child: CircularProgressIndicator(color: AppColors.accent));
     } else if (_errorType != null) {
       content = ErrorDisplayWidget(
         errorType: _errorType!,
@@ -74,16 +75,25 @@ class _CategoryPlayersPageState extends State<CategoryPlayersPage> {
       );
     } else {
       content = GridView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 1.5,
+          childAspectRatio: 1.4,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
         ),
         itemCount: _categories.length,
         itemBuilder: (context, index) {
           final category = _categories[index];
+          // Use different accent colors for variety
+          final accents = [
+            AppColors.accent,
+            AppColors.accentGreen,
+            AppColors.accentOrange,
+            AppColors.accentBlue
+          ];
+          final color = accents[index % accents.length];
+
           return GestureDetector(
             onTap: () {
               Navigator.push(
@@ -92,39 +102,67 @@ class _CategoryPlayersPageState extends State<CategoryPlayersPage> {
                   builder: (context) => StandartPlayersPage(
                     initialUrl: category.url,
                     title: category.name,
-                    showPagination: false, // Hide pagination
+                    showPagination: false,
                   ),
                 ),
               );
             },
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.cardSurface.withOpacity(0.8),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                color: AppColors.cardSurface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.border, width: 1),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
-                    blurRadius: 10,
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Center(
-                  child: Text(
-                    category.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+              child: Stack(
+                children: [
+                  // Positioned(
+                  //   top: -10,
+                  //   right: -10,
+                  //   child: Container(
+                  //     width: 50,
+                  //     height: 50,
+                  //     decoration: BoxDecoration(
+                  //       color: color.withOpacity(0.1),
+                  //       shape: BoxShape.circle,
+                  //     ),
+                  //   ),
+                  // ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child:
+                              Icon(Icons.bolt_rounded, color: color, size: 20),
+                        ),
+                        const Spacer(),
+                        Text(
+                          category.name,
+                          style: const TextStyle(
+                            color: AppColors.textWhite,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
+                ],
               ),
             ),
           );
@@ -138,12 +176,14 @@ class _CategoryPlayersPageState extends State<CategoryPlayersPage> {
         title: const Text('Categories'),
         backgroundColor: AppColors.background,
         elevation: 0,
+        centerTitle: false,
         actions: [
           IconButton(
             onPressed: _loadCategories,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(Icons.refresh_rounded, color: AppColors.textGrey),
             tooltip: 'Refresh Categories',
-          )
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: content,

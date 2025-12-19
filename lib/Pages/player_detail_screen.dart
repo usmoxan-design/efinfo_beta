@@ -1,5 +1,5 @@
-// ignore_for_file: curly_braces_in_flow_control_structures
-
+import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:efinfo_beta/models/pes_models.dart';
 import 'package:efinfo_beta/services/pes_service.dart';
@@ -488,12 +488,6 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
         "DEBUG OVR: weightedAverage = $weightedAverage, boost = $boost, final OVR = $_dynamicOvr");
   }
 
-  void _toggleFlip() {
-    setState(() {
-      _isFlipped = !_isFlipped;
-    });
-  }
-
   void _toggleLevel(bool isMax) {
     if (_isMaxLevel != isMax) {
       setState(() {
@@ -517,24 +511,31 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF011A0B), // AppColors.background
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
           widget.player.name,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
+          style: TextStyle(
+            color: AppColors.textWhite,
+            fontSize: 18,
+            fontFamily: GoogleFonts.outfit().fontFamily,
+          ),
         ),
-        backgroundColor: const Color(0xFF1A1A1A), // AppColors.surface
-        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        centerTitle: false,
+        iconTheme: const IconThemeData(color: AppColors.textWhite),
       ),
       body: Builder(
         builder: (context) {
           if (_isLoading && (_level1Data == null && !_isMaxLevel)) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+                child: CircularProgressIndicator(color: AppColors.accent));
           }
 
-          // If max level but data missing, showing loading until data arrives
           if (_isLoading && _isMaxLevel && _maxLevelData == null) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+                child: CircularProgressIndicator(color: AppColors.accent));
           }
 
           if (_errorType != null && (_level1Data == null)) {
@@ -552,6 +553,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
               : _level1Data!;
 
           return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
             slivers: [
               SliverPersistentHeader(
                 pinned: true,
@@ -561,27 +563,27 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                 ),
               ),
               SliverToBoxAdapter(
-                  child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    _buildHeaderSection(detail),
-                    const SizedBox(height: 16),
-                    _buildProgressionBar(detail),
-                    const SizedBox(height: 16),
-                    if (_isMaxLevel) ...[
-                      if (detail.suggestedPoints.isNotEmpty)
-                        _buildSuggestedPoints(detail.suggestedPoints),
-                      // _buildTrainingControls(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
+                      _buildHeaderSection(detail),
+                      const SizedBox(height: 24),
+                      _buildProgressionBar(detail),
+                      const SizedBox(height: 24),
+                      if (_isMaxLevel) ...[
+                        if (detail.suggestedPoints.isNotEmpty)
+                          _buildSuggestedPoints(detail.suggestedPoints),
+                        const SizedBox(height: 24),
+                      ],
+                      _buildStatsGridWithSim(detail),
+                      const SizedBox(height: 24),
+                      _buildSkillsSection(detail),
+                      const SizedBox(height: 50),
                     ],
-                    const SizedBox(height: 16),
-                    _buildStatsGridWithSim(detail),
-                    const SizedBox(height: 24),
-                    _buildSkillsSection(detail),
-                    const SizedBox(height: 50),
-                  ],
+                  ),
                 ),
-              )),
+              ),
             ],
           );
         },
@@ -591,76 +593,359 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
 
   Widget _buildHeaderSection(PesPlayerDetail detail) {
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D2418), // AppColors.cardSurface
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFF06DF5D),
-          width: 1,
-        ),
+        color: AppColors.cardSurface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border, width: 1),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Center(
-            child: SizedBox(
-              height: 200,
-              child: PesPlayerCardWidget(
-                player: widget.player,
-                detail: detail,
-                onFlip: _toggleFlip,
-                isFlipped: _isFlipped,
-                isMaxLevel: _isMaxLevel,
-              ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Hero(
+                  tag: 'player_${widget.player.id}',
+                  child: Container(
+                    width: 120,
+                    height: 180,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: PesPlayerCardWidget(
+                      player: widget.player,
+                      isFlipped: _isFlipped,
+                      isMaxLevel: _isMaxLevel,
+                      detail: detail,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInfoTile(
+                        'Pozitsiyasi:', detail.position, AppColors.accentPink),
+                    const SizedBox(height: 12),
+                    _buildInfoTile('Yoshi:', detail.age, AppColors.accentGreen),
+                    const SizedBox(height: 12),
+                    _buildInfoTile(
+                        'Bo\'yi',
+                        detail.height.contains('sm')
+                            ? detail.height
+                            : '${detail.height} sm',
+                        AppColors.accentOrange),
+                    const SizedBox(height: 12),
+                    _buildFootTile(detail.foot),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 15),
-          Text(
-            widget.player.name,
-            style: const TextStyle(
-                color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
+          if (detail.playingStyle != 'Unknown') ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+              decoration: const BoxDecoration(
+                color: AppColors.surface,
+                borderRadius:
+                    BorderRadius.vertical(bottom: Radius.circular(24)),
+              ),
+              child: Row(
                 children: [
-                  Text(
-                    "Yoshi: ${detail.age} Bo'yi: ${detail.height}cm Vazni: ${detail.stats['Weight'] ?? '-'}kg",
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
+                  const Icon(Icons.style_rounded,
+                      color: AppColors.textDim, size: 16),
                   const SizedBox(width: 8),
-                  if (detail.foot.toLowerCase().contains('right'))
-                    Image.asset('assets/images/right_foot.png',
-                        width: 20, height: 20)
-                  else if (detail.foot.toLowerCase().contains('left'))
-                    Image.asset('assets/images/left_foot.png',
-                        width: 20, height: 20)
-                  else
-                    Text(
-                      detail.foot,
-                      style:
-                          const TextStyle(color: Colors.white70, fontSize: 13),
+                  const Text(
+                    'Playing Style: ',
+                    style: TextStyle(color: AppColors.textDim, fontSize: 13),
+                  ),
+                  Expanded(
+                    child: Text(
+                      detail.playingStyle,
+                      style: const TextStyle(
+                          color: AppColors.textWhite,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis,
                     ),
+                  ),
                 ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoTile(String label, String value, Color accent) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+              color: AppColors.textDim,
+              fontSize: 11,
+              fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: accent.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: accent.withOpacity(0.2), width: 1),
+          ),
+          child: Text(
+            value,
+            style: TextStyle(
+                color: accent, fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFootTile(String foot) {
+    final bool isRight = foot.toLowerCase().contains('right');
+    final String asset = isRight
+        ? 'assets/images/right_foot.png'
+        : 'assets/images/left_foot.png';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Oyoq:',
+          style: TextStyle(
+              color: AppColors.textDim,
+              fontSize: 11,
+              fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.accentBlue.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+                color: AppColors.accentBlue.withOpacity(0.2), width: 1),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(asset, width: 20, height: 20),
+              const SizedBox(width: 6),
+              Text(
+                foot,
+                style: const TextStyle(
+                    color: AppColors.accentBlue,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold),
               ),
             ],
           ),
-          const SizedBox(height: 5),
-          Text(
-            detail.playingStyle,
-            style: const TextStyle(
-                color: Color(0xFF06DF5D), fontSize: 13), // AppColors.accent
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatsGridWithSim(PesPlayerDetail detail) {
+    return Column(
+      children: [
+        _buildStatCategory(
+          'Attacking',
+          [
+            'Offensive Awareness',
+            'Ball Control',
+            'Dribbling',
+            'Tight Possession',
+            'Low Pass',
+            'Lofted Pass',
+            'Finishing',
+            'Heading',
+            'Place Kicking',
+            'Curl'
+          ],
+          detail,
+          AppColors.accentPink,
+          Icons.sports_soccer_rounded,
+        ),
+        const SizedBox(height: 16),
+        _buildStatCategory(
+          'Defending',
+          [
+            'Defensive Awareness',
+            'Tackling',
+            'Aggression',
+            'Defensive Engagement'
+          ],
+          detail,
+          AppColors.accentBlue,
+          Icons.shield_rounded,
+        ),
+        const SizedBox(height: 16),
+        _buildStatCategory(
+          'Physical & Speed',
+          [
+            'Speed',
+            'Acceleration',
+            'Kicking Power',
+            'Jump',
+            'Physical Contact',
+            'Balance',
+            'Stamina'
+          ],
+          detail,
+          AppColors.accentOrange,
+          Icons.bolt_rounded,
+        ),
+        const SizedBox(height: 16),
+        _buildStatCategory(
+          'Goalkeeping',
+          [
+            'GK Awareness',
+            'GK Catching',
+            'GK Parrying',
+            'GK Reflexes',
+            'GK Reach'
+          ],
+          detail,
+          AppColors.accentGreen,
+          Icons.pan_tool_rounded,
+        ),
+        const SizedBox(height: 16),
+        _buildStatCategory(
+          'Other Stats',
+          [
+            'Weak Foot Usage',
+            'Weak Foot Accuracy',
+            'Form',
+            'Injury Resistance',
+            'Condition'
+          ],
+          detail,
+          AppColors.accentGreen,
+          Icons.tune_rounded,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatCategory(String title, List<String> groupKeys,
+      PesPlayerDetail detail, Color themeColor, IconData icon) {
+    // Collect stats from both stats and info maps
+    final Map<String, String> categoryData = {};
+    for (var key in groupKeys) {
+      if (detail.stats.containsKey(key)) {
+        categoryData[key] = detail.stats[key]!;
+      } else if (detail.info.containsKey(key)) {
+        categoryData[key] = detail.info[key]!;
+      }
+    }
+
+    if (categoryData.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardSurface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            child: Row(
+              children: [
+                Icon(icon, color: themeColor, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(
+                      color: AppColors.textWhite,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 5),
-          Text(
-            detail.position,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 3.5,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+              ),
+              itemCount: categoryData.length,
+              itemBuilder: (context, index) {
+                final key = categoryData.keys.elementAt(index);
+                final valueStr = categoryData[key]!;
+                final value = _parseStatValue(valueStr);
+                final color = _getStatColor(value);
+
+                return Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border, width: 1),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 4,
+                        decoration: BoxDecoration(
+                          color: value > 0
+                              ? color
+                              : AppColors.textDim.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          key,
+                          style: const TextStyle(
+                              color: AppColors.textDim,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Text(
+                        valueStr,
+                        style: TextStyle(
+                            color: value > 0 ? color : AppColors.textWhite,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -668,146 +953,98 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
   }
 
   Widget _buildProgressionBar(PesPlayerDetail detail) {
-    // 1. Level 1 Mode: Show only Data OVR
     if (!_isMaxLevel) {
       int ovr = int.tryParse(detail.stats['Overall Rating'] ?? '0') ?? 0;
       Color bg = _getStatColor(ovr);
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        color: const Color(0xFF011A0B),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border, width: 1),
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                      color: Colors.orange,
-                      borderRadius: BorderRadius.circular(4)),
-                  child: const Text("Level 1",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12)),
-                )
+                const Text("Current Level",
+                    style: TextStyle(color: AppColors.textDim, fontSize: 11)),
+                const SizedBox(height: 2),
+                const Text("Level 1",
+                    style: TextStyle(
+                        color: AppColors.textWhite,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14)),
               ],
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                  color: bg, borderRadius: BorderRadius.circular(4)),
-              child: Text("OVR: $ovr",
-                  style: const TextStyle(
-                      color: Colors.black, fontWeight: FontWeight.bold)),
-            )
+                color: bg.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: bg.withOpacity(0.3), width: 1),
+              ),
+              child: Text(
+                "OVR: $ovr",
+                style: TextStyle(
+                    color: bg, fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
           ],
         ),
       );
     }
 
-    // 2. Max Level Mode: Show Pts + Dual OVR (Max & Sim)
     int dynamicOvr = _dynamicOvr;
-    // Base Max is the OVR from the max level data (the "Potential" or "suggested" OVR)
-    // This should always be the Max Level OVR from the data, not the simulated one
-    // Base Max is the OVR from the max level data (the "Potential" or "suggested" OVR)
-    // This should always be the Max Level OVR from the data, not the simulated one
     int baseMaxOvr = _getOvrFromData(_maxLevelData);
-
-    // Remaining points
     int remaining = _totalPoints - _usedPoints;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: const Color(0xFF011A0B),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.cardSurface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Column(
         children: [
-          // Left: Points & Toggle Label
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Pts: $remaining / $_totalPoints",
-                    style: const TextStyle(
-                        color: Color(0xFF06DF5D),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13)),
-                const SizedBox(height: 4),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.orange,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Text(
-                    "Max Level",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Right: OVRs
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Static Max OVR (The target/reference from data)
-
               Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Max Rated",
-                      style: TextStyle(color: Colors.white54, fontSize: 10)),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: _getStatColor(baseMaxOvr),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text("$baseMaxOvr",
-                        style: const TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16)),
-                  ),
+                  const Text("Progression Points",
+                      style: TextStyle(color: AppColors.textDim, fontSize: 11)),
+                  const SizedBox(height: 4),
+                  Text("$remaining / $_totalPoints",
+                      style: const TextStyle(
+                          color: AppColors.textWhite,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
                 ],
               ),
-
-              const SizedBox(width: 12),
-
-              // Dynamic Simulated OVR
-              // Column(
-              //   crossAxisAlignment: CrossAxisAlignment.end,
-              //   children: [
-              //     const Text("Simulated",
-              //         style: TextStyle(color: Color(0xFF06DF5D), fontSize: 10)),
-              //     Container(
-              //       padding:
-              //           const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              //       decoration: BoxDecoration(
-              //         color: _getStatColor(dynamicOvr),
-              //         borderRadius: BorderRadius.circular(4),
-              //       ),
-              //       child: Text(
-              //         "$dynamicOvr",
-              //         style: const TextStyle(
-              //             color: Colors.black,
-              //             fontWeight: FontWeight.bold,
-              //             fontSize: 16),
-              //       ),
-              //     ),
-              //   ],
-              // ),
+              Row(
+                children: [
+                  _buildOvrBadge("Max", baseMaxOvr, isSmall: true),
+                  const SizedBox(width: 8),
+                  _buildOvrBadge("Sim", dynamicOvr),
+                ],
+              ),
             ],
-          )
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: _totalPoints > 0 ? _usedPoints / _totalPoints : 0,
+              backgroundColor: AppColors.background,
+              color: AppColors.accent,
+              minHeight: 6,
+            ),
+          ),
         ],
       ),
     );
@@ -958,406 +1195,94 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     );
   }
 
-  Widget _buildStatsGridWithSim(PesPlayerDetail detail) {
-    if (!_isMaxLevel) {
-      return _buildStatsGrid(detail);
-    }
-
-    Map<String, String> simulatedStats = Map.from(detail.stats);
-    _currentStats.forEach((k, v) {
-      simulatedStats[k] = v.toString();
-    });
-
-    PesPlayerDetail simDetail = PesPlayerDetail(
-        player: detail.player,
-        position: detail.position,
-        height: detail.height,
-        age: detail.age,
-        foot: detail.foot,
-        stats: simulatedStats,
-        info: detail.info,
-        playingStyle: detail.playingStyle,
-        skills: detail.skills,
-        suggestedPoints: detail.suggestedPoints,
-        description: detail.description);
-
-    return _buildStatsGrid(simDetail);
-  }
-
-  Widget _buildStatsGrid(PesPlayerDetail detail) {
-    final Map<String, List<String>> categories = {
-      'Attacking': [
-        'Offensive Awareness',
-        'Ball Control',
-        'Dribbling',
-        'Tight Possession',
-        'Low Pass',
-        'Lofted Pass',
-        'Finishing',
-        'Heading',
-        'Place Kicking',
-        'Curl'
-      ],
-      'Defending': [
-        'Defensive Awareness',
-        'Tackling',
-        'Aggression',
-        'Defensive Engagement'
-      ],
-      'Physical': [
-        'Speed',
-        'Acceleration',
-        'Kicking Power',
-        'Jump',
-        'Physical Contact',
-        'Balance',
-        'Stamina'
-      ],
-      'Goalkeeping': [
-        'GK Awareness',
-        'GK Catching',
-        'GK Parrying',
-        'GK Reflexes',
-        'GK Reach'
-      ]
-    };
-
-    List<Widget> categoryWidgets = [];
-    Set<String> shownStats = {};
-    final excludedKeys = [
-      'Squad Number',
-      'Weight',
-      'Maximum Level',
-      'Age',
-      'Height',
-      'Overall Rating',
-      'Position',
-      'Foot'
-    ];
-
-    categories.forEach((title, keys) {
-      List<MapEntry<String, String>> groupStats = [];
-      for (var k in keys) {
-        if (detail.stats.containsKey(k)) {
-          groupStats.add(MapEntry(k, detail.stats[k]!));
-          shownStats.add(k);
-        } else if (detail.info.containsKey(k)) {
-          String val = detail.info[k]!;
-          if (RegExp(r'\d+').hasMatch(val)) {
-            groupStats.add(MapEntry(k, val));
-            shownStats.add(k);
-          }
-        }
-      }
-
-      if (groupStats.isNotEmpty) {
-        categoryWidgets.add(_buildStatCategory(title, groupStats));
-      }
-    });
-
-    List<MapEntry<String, String>> others = [];
-    detail.stats.forEach((k, v) {
-      if (!shownStats.contains(k) && !excludedKeys.contains(k)) {
-        others.add(MapEntry(k, v));
-      }
-    });
-
-    if (others.isNotEmpty) {
-      categoryWidgets.add(_buildStatCategory('Other Stats', others));
-    }
-
-    categoryWidgets.add(const SizedBox(height: 10));
-    categoryWidgets.add(Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0D2418),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          children: [
-            _buildGenericStatRow(
-                "Weak Foot Usage",
-                detail.info['Weak Foot Usage'],
-                "Weak Foot Accuracy",
-                detail.info['Weak Foot Accuracy']),
-            const Divider(color: Colors.white10),
-            _buildGenericStatRow("Form", detail.info['Form'],
-                "Injury Resistance", detail.info['Injury Resistance']),
-          ],
-        )));
-
-    return Column(children: categoryWidgets);
-  }
-
-  Widget _buildStatCategory(
-      String title, List<MapEntry<String, String>> stats) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4.0, bottom: 8.0, top: 8.0),
-          child: Text(
-            title,
-            style: const TextStyle(
-                color: Color(0xFF06DF5D),
-                fontWeight: FontWeight.bold,
-                fontSize: 16),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: const Color(0xFF0D2418), // Card surface
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.white12),
-          ),
-          child: Column(
-            children: _buildGridRows(stats),
-          ),
-        ),
-      ],
-    );
-  }
-
-  List<Widget> _buildGridRows(List<MapEntry<String, String>> stats) {
-    List<Widget> rows = [];
-    for (int i = 0; i < stats.length; i += 2) {
-      if (i + 1 >= stats.length) {
-        var e = stats[i];
-        rows.add(Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Row(
-            children: [
-              Expanded(child: _buildStatItemWithComparison(e.key, e.value)),
-              const SizedBox(width: 10),
-              const Spacer(),
-            ],
-          ),
-        ));
-        break;
-      }
-      var e1 = stats[i];
-      var e2 = stats[i + 1];
-
-      rows.add(Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          children: [
-            Expanded(child: _buildStatItemWithComparison(e1.key, e1.value)),
-            const SizedBox(width: 10),
-            Expanded(child: _buildStatItemWithComparison(e2.key, e2.value)),
-          ],
-        ),
-      ));
-    }
-    return rows;
-  }
-
-  Widget _buildStatItemWithComparison(String label, String valueStr) {
-    String? augmentation;
-    int value = _parseStatValue(valueStr);
-
-    if (_isMaxLevel && _level1Data != null) {
-      String? l1ValStr = _level1Data?.stats[label];
-      if (l1ValStr != null) {
-        int l1Value = _parseStatValue(l1ValStr);
-        int diff = value - l1Value;
-        if (diff > 0) {
-          augmentation = "+$diff";
-        }
-      }
-    }
-
-    if (augmentation == null) {
-      final augMatch = RegExp(r'\(\+(\d+)\)\s*(\d+)').firstMatch(valueStr);
-      if (augMatch != null) {
-        augmentation = "+${augMatch.group(1)}";
-      }
-    }
-
-    Color bg = _getStatColor(value);
+  Widget _buildSkillsSection(PesPlayerDetail detail) {
+    if (detail.skills.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(8),
+        color: AppColors.cardSurface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border, width: 1),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(color: Colors.white70, fontSize: 13),
-              maxLines: 2,
-            ),
-          ),
-          Row(
-            children: [
-              if (augmentation != null)
-                Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: Text(
-                    augmentation,
-                    style: const TextStyle(
-                      color: Color(0xFF06DF5D),
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              Container(
-                width: 35,
-                height: 25,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: bg,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  "$value",
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGenericStatRow(String l1, String? v1, String l2, String? v2) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            child: Row(
               children: [
-                Text(l1,
-                    style:
-                        const TextStyle(color: Colors.white70, fontSize: 12)),
-                Text(v1 ?? "-",
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
+                const Icon(Icons.bolt_rounded,
+                    color: AppColors.accentBlue, size: 20),
+                const SizedBox(width: 8),
+                const Text(
+                  "Player Skills",
+                  style: TextStyle(
+                      color: AppColors.textWhite,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
+                ),
               ],
             ),
           ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(l2,
-                    style:
-                        const TextStyle(color: Colors.white70, fontSize: 12)),
-                Text(v2 ?? "-",
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSkillsSection(PesPlayerDetail detail) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("Player Skills",
-            style: TextStyle(color: Colors.white70, fontSize: 14)),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: detail.skills
-              .map((s) => Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0D2418),
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: Colors.white12),
-                    ),
-                    child: Text(s,
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 12)),
-                  ))
-              .toList(),
-        ),
-        if (detail.info.containsKey("AI Playing Styles")) ...[
           const SizedBox(height: 16),
-          const Text("AI Playing Styles",
-              style: TextStyle(color: Colors.white70, fontSize: 14)),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(12),
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFF0D2418),
-              borderRadius: BorderRadius.circular(8),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: detail.skills.map((skill) {
+                return Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.border, width: 1),
+                  ),
+                  child: Text(
+                    skill,
+                    style: const TextStyle(
+                        color: AppColors.textWhite,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500),
+                  ),
+                );
+              }).toList(),
             ),
-            child: Text(detail.info["AI Playing Styles"]!,
-                style: const TextStyle(color: Colors.white70, fontSize: 13)),
-          )
-        ]
-      ],
+          ),
+        ],
+      ),
     );
   }
 
   IconData _getStatIcon(String key) {
-    key = key.toLowerCase();
-    if (key.contains('total') || key.contains('progression')) {
-      return Icons.circle;
-    }
-    if (key.contains('shooting')) return Icons.gps_fixed;
-    if (key.contains('passing')) return Icons.sports_soccer;
-    if (key.contains('dribbling')) return Icons.change_history;
-    if (key.contains('dexterity')) return Icons.compare_arrows;
-    if (key.contains('lower body')) return Icons.directions_run;
-    if (key.contains('aerial') ||
-        key.contains('defending') ||
-        key.contains('physical')) return Icons.shield;
-    if (key.contains('gk')) return Icons.pan_tool;
-    return Icons.circle;
+    final k = key.toLowerCase();
+    if (k.contains('shooting') || k.contains('finishing'))
+      return Icons.sports_soccer;
+    if (k.contains('passing') || k.contains('pass'))
+      return Icons.compare_arrows;
+    if (k.contains('dribbling') || k.contains('ball control'))
+      return Icons.directions_run;
+    if (k.contains('speed') || k.contains('acceleration')) return Icons.speed;
+    if (k.contains('defending') || k.contains('awareness')) return Icons.shield;
+    if (k.contains('gk')) return Icons.front_hand;
+    if (k.contains('strength') || k.contains('physical'))
+      return Icons.fitness_center;
+    if (k.contains('aerial') || k.contains('jump'))
+      return Icons.unfold_more_rounded;
+    if (k.contains('total') || k.contains('pts')) return Icons.summarize;
+    return Icons.star_border;
   }
 
   int _parseStatValue(String value) {
-    // Determine if value contains a number
-    // "100" -> 100
-    // "103" -> 103
-    // "85 (+3)" -> 85 (or 88? Usually we want the base value if + is boost, but here we want the main value)
-
-    // If the string is purely digits:
-    if (RegExp(r'^\d+$').hasMatch(value)) {
-      return int.tryParse(value) ?? 0;
-    }
-
-    // If it has format "100 (+3)", we typically want the first number?
-    // PesService puts standard stats as just number.
-    // Let's extract all digits and take the first group if separated?
-
-    // Safer: Remove non-digits and parse? No, "100 (+3)" -> 1003.
-    // Take the first sequence of digits.
     final match = RegExp(r'^(\d+)').firstMatch(value);
     if (match != null) {
       return int.tryParse(match.group(1)!) ?? 0;
     }
-
-    // Fallback to original logic (digits at end)
     final matchEnd = RegExp(r'(\d+)$').firstMatch(value);
     if (matchEnd != null) {
       return int.tryParse(matchEnd.group(1)!) ?? 0;
     }
-
     return 0;
   }
 
@@ -1365,7 +1290,6 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     if (data == null) return 0;
     String? val = data.stats['Overall Rating'];
     if (val == null) {
-      // Case-insensitive fallback
       for (final key in data.stats.keys) {
         if (key.toLowerCase() == 'overall rating') {
           val = data.stats[key];
@@ -1376,29 +1300,45 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     return _parseStatValue(val ?? '0');
   }
 
-  // Color _getStatColor(int val) {
-  //   if (val >= 90) return Colors.cyanAccent;
-  //   if (val >= 80) return Colors.lightGreenAccent;
-  //   if (val < 70) return Colors.redAccent;
-  //   return Colors.white; // 70-79
-  // }
-
   Color _getStatColor(int val) {
-    if (val >= 90) {
-      return const Color(0xFF07FCF5);
-    } else if (val >= 80) {
-      return const Color(0xFF05fd07);
-    } else if (val >= 70) {
-      return const Color(0xFFfcaa04);
-    } else {
-      return const Color(0xFFd74233);
-    }
+    if (val >= 90) return const Color(0xFF07FCF5);
+    if (val >= 80) return const Color(0xFF05fd07);
+    if (val >= 70) return const Color(0xFFfcaa04);
+    return const Color(0xFFd74233);
+  }
+
+  Widget _buildOvrBadge(String label, int ovr, {bool isSmall = false}) {
+    Color bg = _getStatColor(ovr);
+    return Container(
+      padding: EdgeInsets.symmetric(
+          horizontal: isSmall ? 10 : 14, vertical: isSmall ? 4 : 8),
+      decoration: BoxDecoration(
+        color: isSmall ? AppColors.background : bg.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+            color: isSmall ? AppColors.border : bg.withOpacity(0.3), width: 1),
+      ),
+      child: Column(
+        children: [
+          Text(label,
+              style: TextStyle(
+                  color: isSmall ? AppColors.textDim : bg,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500)),
+          Text(
+            ovr.toString(),
+            style: TextStyle(
+                color: isSmall ? AppColors.textWhite : bg,
+                fontWeight: FontWeight.bold,
+                fontSize: isSmall ? 14 : 18),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildSuggestedPoints(Map<String, int> points) {
-    if (points.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (points.isEmpty) return const SizedBox.shrink();
 
     final List<String> standardCategories = [
       'Shooting',
@@ -1414,7 +1354,6 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     ];
 
     Map<String, int> mergedPoints = {};
-
     points.forEach((k, v) {
       if (!k.toLowerCase().contains('suggested points for level')) {
         mergedPoints[k] = v;
@@ -1424,13 +1363,10 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     for (var cat in standardCategories) {
       bool exists =
           mergedPoints.keys.any((k) => k.toLowerCase() == cat.toLowerCase());
-      if (!exists) {
-        mergedPoints[cat] = 0;
-      }
+      if (!exists) mergedPoints[cat] = 0;
     }
 
     var entries = mergedPoints.entries.toList();
-
     entries.sort((a, b) {
       bool aIsTotal = a.key.toLowerCase().contains('total') ||
           a.key.toLowerCase().contains('progression points');
@@ -1447,103 +1383,100 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
       if (idxA != -1 && idxB != -1) return idxA.compareTo(idxB);
       if (idxA != -1) return -1;
       if (idxB != -1) return 1;
-
       return a.key.compareTo(b.key);
     });
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppColors.cardSurface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "To'g'ri kuchaytirish:",
-            style: TextStyle(
-                color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            child: Row(
+              children: [
+                const Icon(Icons.auto_awesome_rounded,
+                    color: AppColors.accentOrange, size: 20),
+                const SizedBox(width: 8),
+                const Text("Suggested Training",
+                    style: TextStyle(
+                        color: AppColors.textWhite,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
+              ],
+            ),
           ),
-          const SizedBox(height: 10),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              const double spacing = 8;
-              final double itemWidth =
-                  (constraints.maxWidth - (spacing * 3)) / 4;
-
-              return Wrap(
-                spacing: spacing,
-                runSpacing: spacing,
-                children: entries.map((e) {
-                  bool isTotal = e.key.toLowerCase().contains('total') ||
-                      e.key.toLowerCase().contains('progression points');
-
-                  String displayKey = e.key;
-                  if (isTotal) {
-                    displayKey = "Max Progress Points";
-                  }
-
-                  return Container(
-                    width: itemWidth,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isTotal
-                          ? const Color(0xFF005929)
-                          : const Color(0xFF0D2418),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                const double spacing = 8;
+                final double itemWidth =
+                    (constraints.maxWidth - (spacing * 3)) / 4;
+                return Wrap(
+                  spacing: spacing,
+                  runSpacing: spacing,
+                  children: entries.map((e) {
+                    bool isTotal = e.key.toLowerCase().contains('total') ||
+                        e.key.toLowerCase().contains('progression points');
+                    String displayKey = isTotal ? "Total Pts" : e.key;
+                    return Container(
+                      width: itemWidth,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
                         color: isTotal
-                            ? const Color(0xFF06DF5D)
-                            : Colors.white.withOpacity(0.1),
-                        width: 1,
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          displayKey
-                              .replaceAll('Progression Points', '')
-                              .trim(),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
+                            ? AppColors.accentPink.withOpacity(0.1)
+                            : AppColors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
                             color: isTotal
-                                ? const Color(0xFF06DF5D)
-                                : Colors.white70,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                _getStatIcon(e.key),
-                                color: Colors.white,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${e.value}',
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                ? AppColors.accentPink.withOpacity(0.3)
+                                : AppColors.border,
+                            width: 1),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(_getStatIcon(e.key),
+                              color: isTotal
+                                  ? AppColors.accentPink
+                                  : AppColors.textDim,
+                              size: 16),
+                          const SizedBox(height: 6),
+                          Text(
+                              displayKey
+                                  .replaceAll('Progression Points', '')
+                                  .trim(),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: isTotal
+                                      ? AppColors.accentPink
+                                      : AppColors.textDim,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
+                          const SizedBox(height: 4),
+                          Text('${e.value}',
+                              style: TextStyle(
+                                  color: isTotal
+                                      ? AppColors.accentPink
+                                      : AppColors.textWhite,
                                   fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              );
-            },
+                                  fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
           ),
         ],
       ),
