@@ -47,7 +47,7 @@ class _MainPageState extends State<MainPage> {
             ),
             SizedBox(width: 15),
             Text(
-              "Version 1.0.6",
+              "Version 1.0.7",
               textAlign: TextAlign.center,
               style: GoogleFonts.outfit(
                 fontSize: 14,

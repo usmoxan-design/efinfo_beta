@@ -16,7 +16,7 @@ class PesService {
   // SETTINGS
   // 1. If you have a backend proxy, put it here (e.g., 'https://your-api.vercel.app/api')
   // 2. If null, it will use the default Scraper mode.
-  static const String? _apiBaseUrl = null;
+  static const String? _apiBaseUrl = 'https://efinfohub.vercel.app/api/';
 
   final String listingUrl = 'https://pesdb.net/efootball/';
   final String detailBaseUrl = 'https://pesdb.net/efootball/';
@@ -167,9 +167,13 @@ class PesService {
 
   Future<List<PesCategory>> fetchCategories() async {
     if (_apiBaseUrl != null) {
-      final resp = await http.get(Uri.parse('$_apiBaseUrl/categories'));
+      final baseUrl = _apiBaseUrl!.endsWith('/')
+          ? _apiBaseUrl!.substring(0, _apiBaseUrl!.length - 1)
+          : _apiBaseUrl;
+      final resp = await http.get(Uri.parse('$baseUrl/categories'));
       if (resp.statusCode == 200) {
         List data = jsonDecode(resp.body);
+        print(resp.body);
         return data.map((e) => PesCategory.fromJson(e)).toList();
       }
     }
@@ -195,7 +199,10 @@ class PesService {
 
   Future<List<PesFeaturedOption>> fetchFeaturedOptions() async {
     if (_apiBaseUrl != null) {
-      final resp = await http.get(Uri.parse('$_apiBaseUrl/featured-options'));
+      final baseUrl = _apiBaseUrl!.endsWith('/')
+          ? _apiBaseUrl!.substring(0, _apiBaseUrl!.length - 1)
+          : _apiBaseUrl;
+      final resp = await http.get(Uri.parse('$baseUrl/featured-options'));
       if (resp.statusCode == 200) {
         List data = jsonDecode(resp.body);
         return data.map((e) => PesFeaturedOption.fromJson(e)).toList();
@@ -224,7 +231,10 @@ class PesService {
   Future<List<PesPlayer>> fetchPlayers(
       {String? customUrl, int page = 1, Map<String, String>? filters}) async {
     if (_apiBaseUrl != null) {
-      String url = '$_apiBaseUrl/players?page=$page';
+      final baseUrl = _apiBaseUrl!.endsWith('/')
+          ? _apiBaseUrl!.substring(0, _apiBaseUrl!.length - 1)
+          : _apiBaseUrl;
+      String url = '$baseUrl/players?page=$page';
       if (customUrl != null) url += '&url=${Uri.encodeComponent(customUrl)}';
       filters?.forEach((k, v) => url += '&$k=$v');
       final resp = await http.get(Uri.parse(url));
@@ -271,8 +281,11 @@ class PesService {
   Future<PesPlayerDetail> fetchPlayerDetail(PesPlayer player,
       {String mode = 'level1', bool forceRefresh = false}) async {
     if (_apiBaseUrl != null) {
-      final resp = await http
-          .get(Uri.parse('$_apiBaseUrl/player/${player.id}?mode=$mode'));
+      final baseUrl = _apiBaseUrl!.endsWith('/')
+          ? _apiBaseUrl!.substring(0, _apiBaseUrl!.length - 1)
+          : _apiBaseUrl;
+      final resp =
+          await http.get(Uri.parse('$baseUrl/player/${player.id}?mode=$mode'));
       if (resp.statusCode == 200) {
         return PesPlayerDetail.fromJson(jsonDecode(resp.body), player);
       }
