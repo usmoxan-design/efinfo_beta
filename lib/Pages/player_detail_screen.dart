@@ -5,7 +5,6 @@ import 'package:efinfo_beta/models/pes_models.dart';
 import 'package:efinfo_beta/services/pes_service.dart';
 import 'package:efinfo_beta/widgets/pes_player_card_widget.dart';
 import 'package:efinfo_beta/widgets/error_display_widget.dart';
-import 'package:icons_plus/icons_plus.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'level_toggle_header_delegate.dart';
 
@@ -155,7 +154,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     _loadData();
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData({bool forceRefresh = false}) async {
     setState(() {
       _isLoading = true;
       _errorType = null;
@@ -164,16 +163,20 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
 
     try {
       // Always fetch level 1 first as base
-      _level1Data ??= await _pesService.fetchPlayerDetail(
-        widget.player,
-        mode: 'level1',
-      );
+      if (forceRefresh || _level1Data == null) {
+        _level1Data = await _pesService.fetchPlayerDetail(
+          widget.player,
+          mode: 'level1',
+          forceRefresh: forceRefresh,
+        );
+      }
 
       // If max level is selected, fetch max level data if needed
-      if (_isMaxLevel && _maxLevelData == null) {
+      if (_isMaxLevel && (forceRefresh || _maxLevelData == null)) {
         _maxLevelData = await _pesService.fetchPlayerDetail(
           widget.player,
           mode: 'max_level',
+          forceRefresh: forceRefresh,
         );
       }
 
@@ -545,7 +548,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
               child: ErrorDisplayWidget(
                 errorType: _errorType!,
                 errorMessage: _errorMessage,
-                onRetry: _loadData,
+                onRetry: () => _loadData(forceRefresh: true),
               ),
             );
           }
@@ -779,7 +782,6 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
             'Lofted Pass',
             'Finishing',
             'Heading',
-            'Place Kicking',
             'Curl'
           ],
           detail,
@@ -806,7 +808,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
             'Speed',
             'Acceleration',
             'Kicking Power',
-            'Jump',
+            'Jumping',
             'Physical Contact',
             'Balance',
             'Stamina'
@@ -833,6 +835,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
         _buildStatCategory(
           'Other Stats',
           [
+            'Set Piece Taking',
             'Weak Foot Usage',
             'Weak Foot Accuracy',
             'Form',
@@ -849,13 +852,21 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
 
   Widget _buildStatCategory(String title, List<String> groupKeys,
       PesPlayerDetail detail, Color themeColor, IconData icon) {
-    // Collect stats from both stats and info maps
+    // Collect stats from both stats and info maps with robust matching
     final Map<String, String> categoryData = {};
-    for (var key in groupKeys) {
-      if (detail.stats.containsKey(key)) {
-        categoryData[key] = detail.stats[key]!;
-      } else if (detail.info.containsKey(key)) {
-        categoryData[key] = detail.info[key]!;
+
+    // Normalize maps for easier lookup
+    final normalizedStats =
+        detail.stats.map((k, v) => MapEntry(k.toLowerCase().trim(), v));
+    final normalizedInfo =
+        detail.info.map((k, v) => MapEntry(k.toLowerCase().trim(), v));
+
+    for (var originalKey in groupKeys) {
+      final lookupKey = originalKey.toLowerCase().trim();
+      if (normalizedStats.containsKey(lookupKey)) {
+        categoryData[originalKey] = normalizedStats[lookupKey]!;
+      } else if (normalizedInfo.containsKey(lookupKey)) {
+        categoryData[originalKey] = normalizedInfo[lookupKey]!;
       }
     }
 
@@ -927,7 +938,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          key,
+                          PesService.formatStatName(key),
                           style: const TextStyle(
                               color: AppColors.textDim,
                               fontSize: 11,
@@ -1274,12 +1285,12 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
       assetPath = 'assets/images/defending.svg';
     } else if (k.contains('gk')) {
       assetPath = 'assets/images/goalkeepeing.svg';
+    } else if (k.contains('aerial') || k.contains('jumping')) {
+      assetPath = 'assets/images/aerial_strength.svg';
     } else if (k.contains('lower body') ||
         k.contains('strength') ||
         k.contains('physical')) {
       assetPath = 'assets/images/lower_body_strength.svg';
-    } else if (k.contains('aerial') || k.contains('jump')) {
-      assetPath = 'assets/images/aerial_strength.svg';
     }
 
     return Container(
@@ -1426,7 +1437,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                 const Icon(Icons.auto_awesome_rounded,
                     color: AppColors.accentOrange, size: 20),
                 const SizedBox(width: 8),
-                const Text("Suggested Training",
+                const Text("To'g'ri kuchaytirish",
                     style: TextStyle(
                         color: AppColors.textWhite,
                         fontSize: 16,

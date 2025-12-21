@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as parser;
@@ -14,10 +15,20 @@ class PesService {
   final String listingUrl = 'https://pesdb.net/efootball/';
   final String detailBaseUrl = 'https://pesdb.net/efootball/';
 
+  final List<String> _proxies = [
+    'https://corsproxy.io/?',
+    'https://api.allorigins.win/raw?url=',
+    'https://cors-anywhere.herokuapp.com/',
+  ];
+  int _proxyIndex = 0;
+  bool _isRequesting = false;
+
   static final http.Client _client = http.Client();
   static String? _cookies;
+  static DateTime? _lastRequestTime;
+  static final Map<String, _CachedResponse> _cache = {};
+  static const Duration _cacheTTL = Duration(minutes: 60);
 
-  // Headers to mimic a real browser and avoid 429 errors
   static final Map<String, String> _baseHeaders = {
     'User-Agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -25,23 +36,12 @@ class PesService {
         'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.9',
     'Connection': 'keep-alive',
-    'Upgrade-Insecure-Requests': '1',
-    'Cache-Control': 'max-age=0',
     'Referer': 'https://pesdb.net/',
-    'Sec-Fetch-Dest': 'document',
-    'Sec-Fetch-Mode': 'navigate',
-    'Sec-Fetch-Site': 'none',
-    'Sec-Fetch-User': '?1',
   };
-
-  static DateTime? _lastRequestTime;
-  static final Map<String, _CachedResponse> _cache = {};
 
   static Map<String, String> get headers {
     final h = Map<String, String>.from(_baseHeaders);
-    if (_cookies != null) {
-      h['Cookie'] = _cookies!;
-    }
+    if (_cookies != null) h['Cookie'] = _cookies!;
     return h;
   }
 
@@ -50,51 +50,46 @@ class PesService {
     if (rawCookie != null) {
       final List<String> newCookies = rawCookie.split(',');
       final Map<String, String> cookieMap = {};
-
       if (_cookies != null) {
         for (var c in _cookies!.split(';')) {
           final parts = c.split('=');
-          if (parts.length >= 2) {
+          if (parts.length >= 2)
             cookieMap[parts[0].trim()] = parts.sublist(1).join('=').trim();
-          }
         }
       }
-
       for (var c in newCookies) {
         final parts = c.split(';')[0].split('=');
-        if (parts.length >= 2) {
+        if (parts.length >= 2)
           cookieMap[parts[0].trim()] = parts.sublist(1).join('=').trim();
-        }
       }
-
       _cookies = cookieMap.entries.map((e) => '${e.key}=${e.value}').join('; ');
     }
   }
 
-  Future<http.Response> _makeRequest(Uri uri,
+  Future<http.Response> _safeRequest(Uri uri,
       {int retryCount = 0, bool forceRefresh = false}) async {
     final String cacheKey = uri.toString();
-
-    // Check cache first
     if (!forceRefresh && _cache.containsKey(cacheKey)) {
       final cached = _cache[cacheKey]!;
-      if (DateTime.now().difference(cached.timestamp).inMinutes < 10) {
+      if (DateTime.now().difference(cached.timestamp) < _cacheTTL)
         return cached.response;
-      }
     }
 
-    // Throttling: Ensure at least 1.5 seconds between requests
+    while (_isRequesting)
+      await Future.delayed(const Duration(milliseconds: 300));
+    _isRequesting = true;
+
     if (_lastRequestTime != null) {
       final diff = DateTime.now().difference(_lastRequestTime!);
-      if (diff.inMilliseconds < 1500) {
+      if (diff.inMilliseconds < 1500)
         await Future.delayed(
-          Duration(milliseconds: 1500 - diff.inMilliseconds),
-        );
-      }
+            Duration(milliseconds: 1500 - diff.inMilliseconds));
     }
 
     try {
-      final response = await _client.get(uri, headers: headers);
+      final response = await _client
+          .get(uri, headers: headers)
+          .timeout(const Duration(seconds: 15));
       _lastRequestTime = DateTime.now();
       _updateCookies(response);
 
@@ -103,397 +98,228 @@ class PesService {
         return response;
       }
 
-      if (response.statusCode == 429 && retryCount < 2) {
-        print('Rate limited (429). Waiting 3s...');
-        await Future.delayed(const Duration(seconds: 3));
-        return _makeRequest(uri,
+      if (response.statusCode == 429 && retryCount < 3) {
+        await Future.delayed(Duration(seconds: 4 + retryCount));
+        _isRequesting = false;
+        return _safeRequest(uri,
             retryCount: retryCount + 1, forceRefresh: true);
       }
 
+      if (kIsWeb && retryCount < _proxies.length - 1) {
+        _proxyIndex++;
+        _isRequesting = false;
+        return _safeRequest(uri,
+            retryCount: retryCount + 1, forceRefresh: true);
+      }
+
+      if (_cache.containsKey(cacheKey)) return _cache[cacheKey]!.response;
       return response;
     } catch (e) {
-      if (retryCount < 1) {
-        await Future.delayed(const Duration(seconds: 2));
-        return _makeRequest(uri,
+      if (_cache.containsKey(cacheKey)) return _cache[cacheKey]!.response;
+      if (retryCount < 2) {
+        await Future.delayed(Duration(seconds: 2 + retryCount));
+        _isRequesting = false;
+        return _safeRequest(uri,
             retryCount: retryCount + 1, forceRefresh: true);
       }
       rethrow;
+    } finally {
+      _isRequesting = false;
+    }
+  }
+
+  Uri _buildUri(String url) {
+    if (!kIsWeb) return Uri.parse(url);
+    final proxy = _proxies[_proxyIndex % _proxies.length];
+    return Uri.parse('$proxy${Uri.encodeComponent(url)}');
+  }
+
+  static String formatStatName(String name) {
+    switch (name) {
+      case 'Place Kicking':
+        return 'Set Piece Taking';
+      case 'Jump':
+        return 'Jumping';
+      case 'GK Reflexes':
+        return 'GK Reflex';
+      case 'Offensive Awareness':
+        return 'Attacking Awareness';
+      default:
+        return name;
     }
   }
 
   Future<List<PesCategory>> fetchCategories() async {
-    try {
-      final uri = kIsWeb
-          ? Uri.parse(
-              'https://corsproxy.io/?${Uri.encodeComponent(detailBaseUrl)}',
-            )
-          : Uri.parse(detailBaseUrl);
-
-      final response = await _makeRequest(uri);
-
-      if (response.statusCode == 200) {
-        var document = parser.parse(response.body);
-        List<PesCategory> categories = [];
-
-        var shortcuts = document.querySelector('div.shortcuts');
-        if (shortcuts != null) {
-          var links = shortcuts.querySelectorAll('a');
-          for (var link in links) {
-            String name = link.text.trim();
-            String href = link.attributes['href'] ?? '';
-            if (name.isNotEmpty && href.isNotEmpty) {
-              String fullUrl =
-                  href.startsWith('http') ? href : '$detailBaseUrl$href';
-              categories.add(PesCategory(name: name, url: fullUrl));
-            }
-          }
+    final uri = _buildUri(detailBaseUrl);
+    final response = await _safeRequest(uri);
+    final document = parser.parse(response.body);
+    final List<PesCategory> list = [];
+    final shortcuts = document.querySelector('div.shortcuts');
+    if (shortcuts != null) {
+      for (var a in shortcuts.querySelectorAll('a')) {
+        final name = a.text.trim();
+        final href = a.attributes['href'];
+        if (name.isNotEmpty && href != null) {
+          list.add(PesCategory(
+              name: name,
+              url: href.startsWith('http') ? href : '$detailBaseUrl$href'));
         }
-        return categories;
-      } else {
-        throw Exception('Failed to load categories');
       }
-    } catch (e) {
-      print('Error fetching categories: $e');
-      rethrow;
     }
+    return list;
   }
 
   Future<List<PesFeaturedOption>> fetchFeaturedOptions() async {
-    try {
-      final uri = kIsWeb
-          ? Uri.parse(
-              'https://corsproxy.io/?${Uri.encodeComponent(listingUrl)}',
-            )
-          : Uri.parse(listingUrl);
-
-      final response = await _makeRequest(uri);
-
-      if (response.statusCode == 200) {
-        var document = parser.parse(response.body);
-        List<PesFeaturedOption> options = [];
-
-        var select = document.getElementById('featured') ??
-            document.querySelector('select[name="featured"]');
-        if (select != null) {
-          var optionElements = select.querySelectorAll('option');
-          for (var option in optionElements) {
-            String name = option.text.trim();
-            String value = option.attributes['value'] ?? '';
-            if (name.isNotEmpty && value.isNotEmpty && value != "0") {
-              options.add(PesFeaturedOption(name: name, id: value));
-            }
-          }
+    final uri = _buildUri(listingUrl);
+    final response = await _safeRequest(uri);
+    final List<PesFeaturedOption> options = [];
+    if (response.statusCode == 200) {
+      final document = parser.parse(response.body);
+      final select = document.getElementById('featured') ??
+          document.querySelector('select[name="featured"]');
+      if (select != null) {
+        for (var opt in select.querySelectorAll('option')) {
+          final name = opt.text.trim();
+          final val = opt.attributes['value'] ?? '';
+          if (name.isNotEmpty && val != "0")
+            options.add(PesFeaturedOption(name: name, id: val));
         }
-        return options;
-      } else {
-        throw Exception('Failed to load featured options');
       }
-    } catch (e) {
-      print('Error fetching featured options: $e');
-      return [];
     }
+    return options;
   }
 
   Future<List<PesPlayer>> fetchPlayers(
       {String? customUrl, int page = 1, Map<String, String>? filters}) async {
-    try {
-      String baseUrlToUse = customUrl ?? listingUrl;
-      Uri parsedBase = Uri.parse(baseUrlToUse);
-      Map<String, String> currentQuery = Map.from(parsedBase.queryParameters);
+    String base = customUrl ?? listingUrl;
+    final uriBase = Uri.parse(base);
+    final query = Map<String, String>.from(uriBase.queryParameters);
+    if (filters != null) query.addAll(filters);
+    if (page > 1) query['page'] = '$page';
+    final finalUrl = uriBase.replace(queryParameters: query).toString();
 
-      String cleanBaseUrl = parsedBase.replace(query: null).toString();
-      if (cleanBaseUrl.endsWith('?'))
-        cleanBaseUrl = cleanBaseUrl.substring(0, cleanBaseUrl.length - 1);
+    final response = await _safeRequest(_buildUri(finalUrl));
+    final document = parser.parse(response.body);
+    final List<PesPlayer> players = [];
 
-      if (filters != null) {
-        currentQuery.addAll(filters);
-      }
-
-      if (page > 1) {
-        currentQuery['page'] = page.toString();
-      }
-
-      currentQuery.removeWhere((k, v) => v.isEmpty);
-
-      String finalUrl = cleanBaseUrl;
-      if (currentQuery.isNotEmpty) {
-        finalUrl = Uri.parse(cleanBaseUrl)
-            .replace(queryParameters: currentQuery)
-            .toString();
-      }
-
-      String url = finalUrl;
-      print('Fetching URL: $url');
-
-      final uri = kIsWeb
-          ? Uri.parse('https://corsproxy.io/?${Uri.encodeComponent(url)}')
-          : Uri.parse(url);
-
-      final response = await _makeRequest(uri);
-
-      if (response.statusCode == 200) {
-        var document = parser.parse(response.body);
-        List<PesPlayer> players = [];
-        var rows = document.querySelectorAll('tr');
-
-        for (var row in rows) {
-          String? name;
-          String? id;
-          String? club;
-          String? nationality;
-
-          var links = row.querySelectorAll('a');
-          for (var link in links) {
-            String href = link.attributes['href'] ?? '';
-            String text = link.text.trim();
-
-            if (href.contains('id=')) {
-              if (text.isNotEmpty) {
-                name = text;
-                Uri uri;
-                try {
-                  if (href.startsWith('http')) {
-                    uri = Uri.parse(href);
-                  } else {
-                    uri = Uri.parse(
-                      'http://fake.com/${href.startsWith('/') ? href.substring(1) : href}',
-                    );
-                  }
-                  if (uri.queryParameters.containsKey('id')) {
-                    id = uri.queryParameters['id'];
-                  }
-                } catch (e) {
-                  print('Error parsing ID uri: $href');
-                }
-              }
-            } else if (href.contains('club_team=')) {
-              club = text;
-            } else if (href.contains('nationality=')) {
-              nationality = text;
-            }
-          }
-
-          if (id != null && name != null) {
-            players.add(
-              PesPlayer(
-                id: id,
-                name: name,
-                club: club ?? 'Free Agent',
-                nationality: nationality ?? 'Unknown',
-              ),
-            );
-          }
+    for (var row in document.querySelectorAll('tr')) {
+      String? id, name, club, nation;
+      for (var a in row.querySelectorAll('a')) {
+        final href = a.attributes['href'] ?? '';
+        final text = a.text.trim();
+        if (href.contains('id=') && text.isNotEmpty) {
+          id = Uri.tryParse('https://fake.com/$href')?.queryParameters['id'];
+          name = text;
+        } else if (href.contains('club_team=')) {
+          club = text;
+        } else if (href.contains('nationality=')) {
+          nation = text;
         }
-        return players;
-      } else {
-        throw Exception('Failed to load page: ${response.statusCode}');
       }
-    } catch (e) {
-      print('Error fetching players: $e');
-      rethrow;
+      if (id != null && name != null) {
+        players.add(PesPlayer(
+            id: id,
+            name: name,
+            club: club ?? 'Free Agent',
+            nationality: nation ?? 'Unknown'));
+      }
     }
+    return players;
   }
 
-  Future<PesPlayerDetail> fetchPlayerDetail(
-    PesPlayer player, {
-    String mode = 'level1',
-  }) async {
-    try {
-      String url = '$detailBaseUrl?id=${player.id}';
-      if (mode == 'max_level') {
-        url += '&mode=max_level';
-      }
+  Future<PesPlayerDetail> fetchPlayerDetail(PesPlayer player,
+      {String mode = 'level1', bool forceRefresh = false}) async {
+    String url = '$detailBaseUrl?id=${player.id}';
+    if (mode == 'max_level') url += '&mode=max_level';
 
-      final uri = kIsWeb
-          ? Uri.parse('https://corsproxy.io/?${Uri.encodeComponent(url)}')
-          : Uri.parse(url);
-      print(uri);
-      final response = await _makeRequest(uri);
+    final response =
+        await _safeRequest(_buildUri(url), forceRefresh: forceRefresh);
+    final document = parser.parse(response.body);
 
-      if (response.statusCode == 200) {
-        var document = parser.parse(response.body);
+    final Map<String, String> stats = {};
+    final Map<String, String> info = {};
+    final List<String> skills = [];
+    Map<String, int> suggestedPoints = {};
+    String position = 'Unknown',
+        height = 'Unknown',
+        age = 'Unknown',
+        foot = 'Unknown',
+        playingStyle = 'Unknown',
+        description = '';
 
-        String position = 'Unknown';
-        String height = 'Unknown';
-        String age = 'Unknown';
-        String foot = 'Unknown';
-        String playingStyle = 'Unknown';
-        List<String> skills = [];
-        Map<String, String> stats = {};
-        Map<String, String> info = {};
-        Map<String, int> suggestedPoints = {};
+    for (var row in document.querySelectorAll('tr')) {
+      final th = row.querySelector('th'), td = row.querySelector('td');
+      if (th == null || td == null) continue;
 
-        var rows = document.querySelectorAll('tr');
-        for (var row in rows) {
-          var th = row.querySelector('th');
-          var td = row.querySelector('td');
+      final originalKey = th.text.replaceAll(':', '').trim();
+      final lowKey = originalKey.toLowerCase();
+      final value = td.text.trim();
+      final formattedKey = formatStatName(originalKey);
 
-          if (th != null && td != null) {
-            String headerOriginal = th.text.trim().replaceAll(':', '').trim();
-            String header = headerOriginal.toLowerCase();
-            String value = td.text.trim();
-
-            if (header == 'position') {
-              position = value;
-            } else if (header == 'height') {
-              height = value;
-            } else if (header == 'age') {
-              age = value;
-            } else if (header == 'foot') {
-              foot = value;
-            } else if (header == 'playing_styles') {
-              playingStyle = value;
-            } else if (header == 'player skills') {
-              String skillsText = td.text.trim();
-              if (skillsText.isNotEmpty) {
-                var skillsList = skillsText
-                    .split('\n')
-                    .map((s) => s.trim())
-                    .where((s) => s.isNotEmpty)
-                    .toList();
-                skills.addAll(skillsList);
-              }
-              if (skills.isEmpty) {
-                for (var node in td.nodes) {
-                  if (node.nodeType == Node.TEXT_NODE) {
-                    var val = node.text?.trim();
-                    if (val != null && val.isNotEmpty) {
-                      skills.add(val);
-                    }
-                  }
-                }
-              }
-            } else if (header == 'ai playing styles') {
-              String aiStylesText = td.text.trim();
-              List<String> styles = [];
-              if (aiStylesText.isNotEmpty) {
-                styles = aiStylesText
-                    .split('\n')
-                    .map((s) => s.trim())
-                    .where((s) => s.isNotEmpty)
-                    .toList();
-              }
-              if (styles.isEmpty) {
-                for (var node in td.nodes) {
-                  if (node.nodeType == Node.TEXT_NODE) {
-                    var val = node.text?.trim();
-                    if (val != null && val.isNotEmpty) {
-                      styles.add(val);
-                    }
-                  }
-                }
-              }
-              if (styles.isNotEmpty) {
-                info[headerOriginal] = styles.join('\n');
-              }
-            } else {
-              String valClean = value.replaceAll(RegExp(r'\s+'), '');
-              if (RegExp(r'^(\(\+\d+\))?\d+$').hasMatch(valClean)) {
-                stats[headerOriginal] = value;
-              } else {
-                info[headerOriginal] = value;
-              }
-            }
-          }
-        }
-
-        try {
-          var allDivs = document.querySelectorAll('div');
-          var suggestedHeader = allDivs.firstWhere(
-            (d) =>
-                d.text.trim().contains('Suggested points for Level') &&
-                d.children.where((c) => c.localName == 'div').isEmpty,
-            orElse: () => Element.tag('div'),
-          );
-
-          if (suggestedHeader.text.isNotEmpty &&
-              suggestedHeader.parent != null) {
-            var container = suggestedHeader.parent!;
-            for (var child in container.children) {
-              if (child == suggestedHeader) continue;
-              if (child.localName == 'div' && child.text.contains(':')) {
-                var span = child.querySelector('span');
-                if (span != null) {
-                  String fullText = child.text.trim();
-                  int colonIndex = fullText.indexOf(':');
-                  if (colonIndex > 0) {
-                    String keyRaw = fullText.substring(0, colonIndex);
-                    String key = keyRaw
-                        .replaceAll(RegExp(r'[•\u2022]'), '')
-                        .replaceAll('&bull;', '')
-                        .trim();
-                    String valStr = span.text.trim();
-                    int? val = int.tryParse(valStr);
-                    if (val != null) {
-                      suggestedPoints[key] = val;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        } catch (e) {
-          print('Error parsing suggested points: $e');
-        }
-
-        var playingStylesTable = document.querySelector('table.playing_styles');
-        if (playingStylesTable != null) {
-          var styleRows = playingStylesTable.querySelectorAll('tr');
-          String currentSection = '';
-          for (var row in styleRows) {
-            var th = row.querySelector('th');
-            if (th != null) {
-              String header = th.text.trim().toLowerCase();
-              if (header == 'playing style') {
-                currentSection = 'playing_style';
-              } else if (header == 'player skills') {
-                currentSection = 'player_skills';
-              } else {
-                currentSection = '';
-              }
-            } else {
-              var td = row.querySelector('td');
-              if (td != null) {
-                String value = td.text.trim();
-                if (value.isNotEmpty) {
-                  if (currentSection == 'playing_style') {
-                    playingStyle = value;
-                  } else if (currentSection == 'player_skills') {
-                    skills.add(value);
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        String description = '';
-        var bottomDesc = document.querySelector('.bottom-description h2');
-        if (bottomDesc != null) {
-          description = bottomDesc.text.trim();
-        }
-
-        return PesPlayerDetail(
-          player: player,
-          position: position,
-          height: height,
-          age: age,
-          foot: foot,
-          stats: stats,
-          info: info,
-          playingStyle: playingStyle,
-          skills: skills,
-          suggestedPoints: suggestedPoints,
-          description: description,
-        );
+      if (lowKey == 'position')
+        position = value;
+      else if (lowKey == 'height')
+        height = value;
+      else if (lowKey == 'age')
+        age = value;
+      else if (lowKey == 'foot')
+        foot = value;
+      else if (lowKey == 'playing styles')
+        playingStyle = value;
+      else if (lowKey == 'player skills') {
+        skills.addAll(
+            value.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty));
+      } else if (lowKey == 'ai playing styles') {
+        info[originalKey] = value
+            .split('\n')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .join('\n');
       } else {
-        throw Exception(
-          'Failed to load player details: ${response.statusCode}',
-        );
+        if (RegExp(r'\d').hasMatch(value))
+          stats[formattedKey] = value;
+        else
+          info[formattedKey] = value;
       }
-    } catch (e) {
-      print('Error fetching player details: $e');
-      rethrow;
     }
+
+    try {
+      final allDivs = document.querySelectorAll('div');
+      final head = allDivs.firstWhere(
+          (d) => d.text.trim().contains('Suggested points for Level'),
+          orElse: () => Element.tag('div'));
+      if (head.text.isNotEmpty && head.parent != null) {
+        for (var child in head.parent!.children) {
+          if (child.localName == 'div' && child.text.contains(':')) {
+            final span = child.querySelector('span');
+            if (span != null) {
+              final key = child.text
+                  .split(':')[0]
+                  .replaceAll(RegExp(r'[•\u2022]'), '')
+                  .trim();
+              final val = int.tryParse(span.text.trim());
+              if (val != null) suggestedPoints[key] = val;
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    final bottom = document.querySelector('.bottom-description h2');
+    if (bottom != null) description = bottom.text.trim();
+
+    return PesPlayerDetail(
+      player: player,
+      position: position,
+      height: height,
+      age: age,
+      foot: foot,
+      stats: stats,
+      info: info,
+      playingStyle: playingStyle,
+      skills: skills,
+      suggestedPoints: suggestedPoints,
+      description: description,
+    );
   }
 }
