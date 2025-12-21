@@ -161,211 +161,216 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
         backgroundColor: const Color(0xFF1A1A1A),
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Turnir Nomi
-            TextField(
-              controller: _tournamentNameController,
-              decoration: const InputDecoration(
-                labelText: 'Turnir Nomi',
-                labelStyle: TextStyle(color: Colors.grey),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Turnir Nomi
+              TextField(
+                controller: _tournamentNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Turnir Nomi',
+                  labelStyle: TextStyle(color: Colors.grey),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blue),
+                  ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue),
-                ),
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, color: Colors.white),
               ),
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-            const SizedBox(height: 20),
-
-            // Turnir Turi
-            if (!_isDrawLocked) ...[
-              const Text(
-                "Turnir Formatini Tanlang:",
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTypeCard(
-                      TournamentType.knockout,
-                      "Knockout",
-                      BoxIcons.bx_bracket,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildTypeCard(
-                      TournamentType.league,
-                      "League (LaLiga)",
-                      BoxIcons.bx_table,
-                    ),
-                  ),
-                ],
-              ),
-              if (_selectedType == TournamentType.league) ...[
-                const SizedBox(height: 10),
-                CheckboxListTile(
-                  title: const Text("Uy-Mehmon o'yinlari (2 davra)",
-                      style: TextStyle(color: Colors.white)),
-                  value: _isDoubleRound,
-                  onChanged: (val) {
-                    setState(() {
-                      _isDoubleRound = val ?? false;
-                    });
-                  },
-                  activeColor: Colors.blue,
-                  checkColor: Colors.white,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                CheckboxListTile(
-                  title: const Text("O'yin vaqtini avtomatik belgilash",
-                      style: TextStyle(color: Colors.white)),
-                  value: _isAutoSchedule,
-                  onChanged: (val) {
-                    setState(() {
-                      _isAutoSchedule = val ?? false;
-                    });
-                  },
-                  activeColor: Colors.blue,
-                  checkColor: Colors.white,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                if (_isAutoSchedule) ...[
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text("Sozlamalar:",
-                        style: TextStyle(
-                            color: Colors.blue, fontWeight: FontWeight.bold)),
-                  ),
-                  _buildSliderSetting(
-                    "Kunlar oralig'i (interval)",
-                    _daysInterval.toDouble(),
-                    1,
-                    7,
-                    (val) => setState(() => _daysInterval = val.toInt()),
-                    "${_daysInterval} kun",
-                  ),
-                  _buildSliderSetting(
-                    "O'yinlar boshlanish soati",
-                    _startHour.toDouble(),
-                    0,
-                    23,
-                    (val) => setState(() => _startHour = val.toInt()),
-                    "${_startHour}:00 dan",
-                  ),
-                  _buildSliderSetting(
-                    "O'yinlar tugash soati",
-                    _endHour.toDouble(),
-                    0,
-                    23,
-                    (val) => setState(() {
-                      _endHour = val.toInt();
-                      if (_endHour < _startHour) _startHour = _endHour;
-                    }),
-                    "${_endHour}:00 gacha",
-                  ),
-                ],
-              ],
               const SizedBox(height: 20),
-            ],
 
-            // Jamoa Qo'shish
-            if (!_isDrawLocked)
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _teamController,
-                      decoration: const InputDecoration(
-                        labelText: 'Qatnashchi nomini kiriting',
-                        labelStyle: TextStyle(color: Colors.grey),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.green),
-                        ),
+              // Turnir Turi
+              if (!_isDrawLocked) ...[
+                const Text(
+                  "Turnir Formatini Tanlang:",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTypeCard(
+                        TournamentType.knockout,
+                        "Knockout",
+                        BoxIcons.bx_bracket,
                       ),
-                      style: const TextStyle(color: Colors.white),
-                      onSubmitted: (_) => _addTeam(),
                     ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildTypeCard(
+                        TournamentType.league,
+                        "League (LaLiga)",
+                        BoxIcons.bx_table,
+                      ),
+                    ),
+                  ],
+                ),
+                if (_selectedType == TournamentType.league) ...[
+                  const SizedBox(height: 10),
+                  CheckboxListTile(
+                    title: const Text("Uy-Mehmon o'yinlari (2 davra)",
+                        style: TextStyle(color: Colors.white)),
+                    value: _isDoubleRound,
+                    onChanged: (val) {
+                      setState(() {
+                        _isDoubleRound = val ?? false;
+                      });
+                    },
+                    activeColor: Colors.blue,
+                    checkColor: Colors.white,
+                    contentPadding: EdgeInsets.zero,
                   ),
-                  const SizedBox(width: 8),
-                  FloatingActionButton(
-                    onPressed: _addTeam,
-                    mini: true,
-                    backgroundColor: Colors.green,
-                    child: const Icon(BoxIcons.bx_plus, color: Colors.white),
+                  CheckboxListTile(
+                    title: const Text("O'yin vaqtini avtomatik belgilash",
+                        style: TextStyle(color: Colors.white)),
+                    value: _isAutoSchedule,
+                    onChanged: (val) {
+                      setState(() {
+                        _isAutoSchedule = val ?? false;
+                      });
+                    },
+                    activeColor: Colors.blue,
+                    checkColor: Colors.white,
+                    contentPadding: EdgeInsets.zero,
                   ),
+                  if (_isAutoSchedule) ...[
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                      child: Text("Sozlamalar:",
+                          style: TextStyle(
+                              color: Colors.blue, fontWeight: FontWeight.bold)),
+                    ),
+                    _buildSliderSetting(
+                      "Kunlar oralig'i (interval)",
+                      _daysInterval.toDouble(),
+                      1,
+                      7,
+                      (val) => setState(() => _daysInterval = val.toInt()),
+                      "${_daysInterval} kun",
+                    ),
+                    _buildSliderSetting(
+                      "O'yinlar boshlanish soati",
+                      _startHour.toDouble(),
+                      0,
+                      23,
+                      (val) => setState(() => _startHour = val.toInt()),
+                      "${_startHour}:00 dan",
+                    ),
+                    _buildSliderSetting(
+                      "O'yinlar tugash soati",
+                      _endHour.toDouble(),
+                      0,
+                      23,
+                      (val) => setState(() {
+                        _endHour = val.toInt();
+                        if (_endHour < _startHour) _startHour = _endHour;
+                      }),
+                      "${_endHour}:00 gacha",
+                    ),
+                  ],
                 ],
-              )
-            else
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.redAccent),
+                const SizedBox(height: 20),
+              ],
+
+              // Jamoa Qo'shish
+              if (!_isDrawLocked)
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _teamController,
+                        decoration: const InputDecoration(
+                          labelText: 'Qatnashchi nomini kiriting',
+                          labelStyle: TextStyle(color: Colors.grey),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.grey),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.green),
+                          ),
+                        ),
+                        style: const TextStyle(color: Colors.white),
+                        onSubmitted: (_) => _addTeam(),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FloatingActionButton(
+                      onPressed: _addTeam,
+                      mini: true,
+                      backgroundColor: Colors.green,
+                      child: const Icon(BoxIcons.bx_plus, color: Colors.white),
+                    ),
+                  ],
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.redAccent),
+                  ),
+                  child: const Text(
+                    "Qura tashlangan. Jamoalar ro'yxatini va turini o'zgartirish mumkin emas.",
+                    style: TextStyle(color: Colors.redAccent),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                child: const Text(
-                  "Qura tashlangan. Jamoalar ro'yxatini va turini o'zgartirish mumkin emas.",
-                  style: TextStyle(color: Colors.redAccent),
-                  textAlign: TextAlign.center,
-                ),
+
+              const SizedBox(height: 15),
+
+              Text(
+                'Qatnashchilar: ${_teams.length} ta jamoa',
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white),
               ),
+              const Divider(color: Colors.grey),
 
-            const SizedBox(height: 15),
-
-            Text(
-              'Qatnashchilar: ${_teams.length} ta jamoa',
-              style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white),
-            ),
-            const Divider(color: Colors.grey),
-
-            // Jamoalar Ro'yxati
-            Expanded(
-              child: ListView.builder(
+              // Jamoalar Ro'yxati
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: _teams.length,
                 itemBuilder: (context, index) {
                   return _buildTeamListItem(_teams[index]);
                 },
               ),
-            ),
 
-            // Saqlash Tugmasi
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _saveTournament,
-                icon: const Icon(BoxIcons.bx_save, color: Colors.white),
-                label: const Text(
-                  "Saqlash",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  textStyle: const TextStyle(fontSize: 18),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+              const SizedBox(height: 20),
+
+              // Saqlash Tugmasi
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _saveTournament,
+                  icon: const Icon(BoxIcons.bx_save, color: Colors.white),
+                  label: const Text(
+                    "Saqlash",
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    textStyle: const TextStyle(fontSize: 18),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

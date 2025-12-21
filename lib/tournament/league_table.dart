@@ -23,6 +23,7 @@ class LeagueTableWidget extends StatefulWidget {
 
 class _LeagueTableWidgetState extends State<LeagueTableWidget> {
   String _currentTab = 'all'; // all, home, away
+  String _tableMode = 'min'; // min, max, form
   int _currentRound = 1;
   final LeagueService _leagueService = LeagueService();
 
@@ -73,44 +74,86 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
   }
 
   Widget _buildTabs() {
-    return Row(
+    return Column(
       children: [
-        _buildTabButton('all', 'All'),
-        const SizedBox(width: 8),
-        _buildTabButton('home', 'Home'),
-        const SizedBox(width: 8),
-        _buildTabButton('away', 'Away'),
-        const Spacer(),
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    LeagueTournamentChartsPage(tournament: widget.tournament),
+        Row(
+          children: [
+            _buildTabButton('all', 'Barchasi'),
+            const SizedBox(width: 8),
+            _buildTabButton('home', 'Uyda'),
+            const SizedBox(width: 8),
+            _buildTabButton('away', 'Mehmon'),
+            const Spacer(),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LeagueTournamentChartsPage(
+                        tournament: widget.tournament),
+                  ),
+                );
+              },
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.blue[700],
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.show_chart, color: Colors.white, size: 16),
+                    SizedBox(width: 4),
+                    Text("Statistika",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13)),
+                  ],
+                ),
               ),
-            );
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.blue[700],
-              borderRadius: BorderRadius.circular(20),
             ),
-            child: Row(
-              children: const [
-                Icon(Icons.show_chart, color: Colors.white, size: 16),
-                SizedBox(width: 4),
-                Text("Chart",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13)),
-              ],
-            ),
-          ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            const Text("Ko'rinish:",
+                style: TextStyle(color: Colors.grey, fontSize: 13)),
+            const SizedBox(width: 8),
+            _buildModeButton('min', 'Kichik'),
+            const SizedBox(width: 4),
+            _buildModeButton('max', 'To\'liq'),
+            const SizedBox(width: 4),
+            _buildModeButton('form', 'Forma'),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _buildModeButton(String mode, String label) {
+    bool isSelected = _tableMode == mode;
+    return GestureDetector(
+      onTap: () => setState(() => _tableMode = mode),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blue[800] : Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: isSelected ? Colors.blue : Colors.white.withOpacity(0.1)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey,
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
     );
   }
 
@@ -136,173 +179,263 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
   }
 
   Widget _buildStandingsTable(List<LeagueStats> standings) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text("Jadval",
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold)),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: const [
-                SizedBox(
-                    width: 30,
-                    child: Text("#",
-                        style: TextStyle(color: Colors.grey, fontSize: 13))),
-                Expanded(
-                    child: Text("Team",
-                        style: TextStyle(color: Colors.grey, fontSize: 13))),
-                SizedBox(
-                    width: 30,
-                    child: Text("P",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey, fontSize: 13))),
-                SizedBox(
-                    width: 30,
-                    child: Text("W",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey, fontSize: 13))),
-                SizedBox(
-                    width: 30,
-                    child: Text("D",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey, fontSize: 13))),
-                SizedBox(
-                    width: 30,
-                    child: Text("L",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey, fontSize: 13))),
-                SizedBox(
-                    width: 50,
-                    child: Text("Goals",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey, fontSize: 13))),
-                SizedBox(
-                    width: 35,
-                    child: Text("PTS",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey, fontSize: 13))),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          // Rows
-          ...standings.asMap().entries.map((entry) {
-            int index = entry.key;
-            LeagueStats stats = entry.value;
-            bool isFirst = index == 0;
-            bool isTop4 = index < 4;
-            bool is5th = index == 4;
-
-            return GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => LeagueTeamStatsPage(
-                      tournament: widget.tournament,
-                      teamId: stats.team.id,
-                    ),
-                  ),
-                );
-              },
-              child: Container(
-                color: isFirst
-                    ? Colors.green.withOpacity(0.15)
-                    : Colors.transparent,
+          child: Column(
+            children: [
+              // Header
+              Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
-                    SizedBox(
-                      width: 30,
-                      child: isTop4 || is5th
-                          ? CircleAvatar(
-                              radius: 11,
-                              backgroundColor:
-                                  isTop4 ? Colors.green[700] : Colors.blue[800],
-                              child: Text("${index + 1}",
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold)),
-                            )
-                          : Padding(
-                              padding: const EdgeInsets.only(left: 6),
-                              child: Text("${index + 1}",
-                                  style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold)),
-                            ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        stats.team.name,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black,
-                            fontSize: 15),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    SizedBox(
-                        width: 30,
-                        child: Text("${stats.played}",
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                                color: Colors.black, fontSize: 14))),
-                    SizedBox(
-                        width: 30,
-                        child: Text("${stats.won}",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                color: stats.won > 0
-                                    ? Colors.red[700]
-                                    : Colors.black,
-                                fontSize: 14))),
-                    SizedBox(
-                        width: 30,
-                        child: Text("${stats.drawn}",
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                                color: Colors.black, fontSize: 14))),
-                    SizedBox(
-                        width: 30,
-                        child: Text("${stats.lost}",
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                                color: Colors.black, fontSize: 14))),
-                    SizedBox(
-                        width: 50,
-                        child: Text("${stats.goalsFor}:${stats.goalsAgainst}",
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                                color: Colors.black, fontSize: 13))),
-                    SizedBox(
-                        width: 35,
-                        child: Text("${stats.points}",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                color: Colors.red[700],
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14))),
+                    const SizedBox(
+                        width: 25,
+                        child: Text("#",
+                            style:
+                                TextStyle(color: Colors.grey, fontSize: 13))),
+                    const Expanded(
+                        child: Text("Jamoa",
+                            style:
+                                TextStyle(color: Colors.grey, fontSize: 13))),
+                    if (_tableMode == 'max') ...[
+                      _buildHeaderCell("O'", 30),
+                      _buildHeaderCell("G'", 30),
+                      _buildHeaderCell("D", 30),
+                      _buildHeaderCell("M", 30),
+                      _buildHeaderCell("Gollar", 50),
+                    ] else if (_tableMode == 'min') ...[
+                      _buildHeaderCell("O'", 30),
+                      _buildHeaderCell("+/-", 40),
+                    ] else if (_tableMode == 'form') ...[
+                      _buildHeaderCell("Oxirgi 6 o'yin", 120),
+                    ],
+                    _buildHeaderCell("OCH", 35),
                   ],
                 ),
               ),
-            );
-          }).toList(),
+              const Divider(height: 1),
+              // Rows
+              ...standings.asMap().entries.map((entry) {
+                int index = entry.key;
+                LeagueStats stats = entry.value;
+                bool isFirst = index == 0;
+                bool isTop4 = index < 4;
+                bool is5th = index == 4;
+
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => LeagueTeamStatsPage(
+                          tournament: widget.tournament,
+                          teamId: stats.team.id,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    color: isFirst
+                        ? Colors.green.withOpacity(0.15)
+                        : Colors.transparent,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 25,
+                          child: (isTop4 || is5th) && _tableMode != 'form'
+                              ? CircleAvatar(
+                                  radius: 10,
+                                  backgroundColor: isTop4
+                                      ? Colors.green[700]
+                                      : Colors.blue[800],
+                                  child: Text("${index + 1}",
+                                      style: const TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold)),
+                                )
+                              : Text("${index + 1}",
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            stats.team.name,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                                fontSize: 14),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (_tableMode == 'max') ...[
+                          _buildDataCell("${stats.played}", 30),
+                          _buildDataCell("${stats.won}", 30,
+                              color: Colors.green[800]),
+                          _buildDataCell("${stats.drawn}", 30),
+                          _buildDataCell("${stats.lost}", 30,
+                              color: Colors.red[800]),
+                          _buildDataCell(
+                              "${stats.goalsFor}:${stats.goalsAgainst}", 50,
+                              fontSize: 12),
+                        ] else if (_tableMode == 'min') ...[
+                          _buildDataCell("${stats.played}", 30),
+                          _buildDataCell(
+                              "${stats.goalDifference > 0 ? '+' : ''}${stats.goalDifference}",
+                              40,
+                              color: stats.goalDifference >= 0
+                                  ? Colors.blue[800]
+                                  : Colors.red[800]),
+                        ] else if (_tableMode == 'form') ...[
+                          _buildFormCell(stats.team.id, 120),
+                        ],
+                        _buildDataCell("${stats.points}", 35,
+                            isBold: true, color: Colors.black),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        _buildInfoSection(),
+      ],
+    );
+  }
+
+  Widget _buildHeaderCell(String label, double width) {
+    return SizedBox(
+      width: width,
+      child: Text(label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.grey, fontSize: 11)),
+    );
+  }
+
+  Widget _buildDataCell(String value, double width,
+      {Color? color, bool isBold = false, double fontSize = 13}) {
+    return SizedBox(
+      width: width,
+      child: Text(
+        value,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: color ?? Colors.black,
+          fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+          fontSize: fontSize,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormCell(String teamId, double width) {
+    final teamStats =
+        _leagueService.getTeamDetailedStats(widget.tournament, teamId);
+    final form = teamStats.form.reversed.take(6).toList().reversed.toList();
+
+    return SizedBox(
+      width: width,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: form.map((res) {
+          Color color = Colors.grey;
+          if (res == 'W') color = Colors.green;
+          if (res == 'D') color = Colors.orange;
+          if (res == 'L') color = Colors.red;
+
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 1.5),
+            width: 16,
+            height: 16,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                res,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildInfoSection() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildInfoRow("O'", "O'ynalgan o'yinlar soni"),
+          _buildInfoRow("G'", "G'alabalar soni"),
+          _buildInfoRow("D", "Duranglar soni"),
+          _buildInfoRow("M", "Mag'lubiyatlar soni"),
+          _buildInfoRow("+/-", "To'plar farqi (Urilgan - O'tkazib yuborilgan)"),
+          _buildInfoRow(
+              "OCH", "To'plangan umumiy ochkolar (3 g'alaba, 1 durang)"),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String symbol, String desc) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 35,
+            child: Text(symbol,
+                style: const TextStyle(
+                    color: Colors.blueAccent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12)),
+          ),
+          const Text("- ", style: TextStyle(color: Colors.grey)),
+          Expanded(
+            child: Text(desc,
+                style: const TextStyle(color: Colors.grey, fontSize: 12)),
+          ),
         ],
       ),
     );
@@ -329,7 +462,7 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
                   : null,
             ),
             Text(
-              "$_currentRound-Round",
+              "$_currentRound-Tur",
               style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,

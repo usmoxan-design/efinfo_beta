@@ -111,9 +111,9 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
   Widget _buildInternalTabs() {
     return Row(
       children: [
-        _buildTab(0, "Details"),
-        _buildTab(1, "Matches"),
-        _buildTab(2, "Standings"),
+        _buildTab(0, "Tafsilotlar"),
+        _buildTab(1, "O'yinlar"),
+        _buildTab(2, "Jadval"),
       ],
     );
   }
@@ -160,20 +160,20 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
       children: [
         // Next Match Card (if exists)
         if (stats.nextMatch != null) ...[
-          _buildSectionTitle("Upcoming Match"),
+          _buildSectionTitle("Kelgusi o'yin"),
           const SizedBox(height: 12),
           _buildMatchTile(stats.nextMatch!),
           const SizedBox(height: 24),
         ],
 
         // Recent Form (Bars)
-        _buildSectionTitle("Recent form"),
+        _buildSectionTitle("Oxirgi natijalar formasi"),
         const SizedBox(height: 12),
         _buildRecentForm(stats.form),
         const SizedBox(height: 24),
 
         // Stats Grid
-        _buildSectionTitle("Season Stats"),
+        _buildSectionTitle("Mavsum statistikasi"),
         const SizedBox(height: 12),
         _buildStatsGrid(stats),
         const SizedBox(height: 40),
@@ -198,16 +198,16 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (upcoming.isNotEmpty) ...[
-          _buildSectionTitle("Upcoming"),
-          const SizedBox(height: 12),
-          ...upcoming.map((m) => _buildMatchTile(m)),
-          const SizedBox(height: 24),
-        ],
         if (played.isNotEmpty) ...[
-          _buildSectionTitle("Results"),
+          _buildSectionTitle("Natijalar"),
           const SizedBox(height: 12),
           ...played.map((m) => _buildMatchTile(m)),
+          const SizedBox(height: 24),
+        ],
+        if (upcoming.isNotEmpty) ...[
+          _buildSectionTitle("Kelgusi o'yinlar"),
+          const SizedBox(height: 12),
+          ...upcoming.map((m) => _buildMatchTile(m)),
           const SizedBox(height: 40),
         ],
       ],
@@ -277,14 +277,14 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
               child: Text("#",
                   style: TextStyle(color: Colors.grey, fontSize: 11))),
           const Expanded(
-              child: Text("Team",
+              child: Text("Jamoa",
                   style: TextStyle(color: Colors.grey, fontSize: 11))),
-          _buildStatCell("P", isHeader: true),
-          _buildStatCell("W", isHeader: true),
+          _buildStatCell("O'", isHeader: true),
+          _buildStatCell("G'", isHeader: true),
           _buildStatCell("D", isHeader: true),
-          _buildStatCell("L", isHeader: true),
-          _buildStatCell("Goals", isHeader: true, width: 45),
-          _buildStatCell("PTS", isHeader: true),
+          _buildStatCell("M", isHeader: true),
+          _buildStatCell("Gollar", isHeader: true, width: 45),
+          _buildStatCell("OCH", isHeader: true),
         ],
       ),
     );
@@ -510,15 +510,15 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
       children: [
-        _buildStatCard("Wins", stats.totalWins.toString(), Colors.green),
-        _buildStatCard("Draws", stats.totalDraws.toString(), Colors.blue),
-        _buildStatCard("Losses", stats.totalLosses.toString(), Colors.red),
+        _buildStatCard("G'alaba", stats.totalWins.toString(), Colors.green),
+        _buildStatCard("Durang", stats.totalDraws.toString(), Colors.blue),
+        _buildStatCard("Mag'lubiyat", stats.totalLosses.toString(), Colors.red),
         _buildStatCard(
-            "Goals", stats.totalGoalsScored.toString(), Colors.orange),
+            "Gollar", stats.totalGoalsScored.toString(), Colors.orange),
         _buildStatCard(
-            "Clean Sheets", stats.cleanSheets.toString(), Colors.purple),
-        _buildStatCard(
-            "Avg Goals", stats.avgGoalsScored.toStringAsFixed(1), Colors.teal),
+            "Quruq o'yin", stats.cleanSheets.toString(), Colors.purple),
+        _buildStatCard("O'rtacha gol", stats.avgGoalsScored.toStringAsFixed(1),
+            Colors.teal),
       ],
     );
   }

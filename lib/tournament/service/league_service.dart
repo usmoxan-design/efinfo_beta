@@ -53,9 +53,13 @@ class TournamentStats {
   final List<LeagueStats> mostWins;
   final List<LeagueStats> mostLosses;
   final int totalGoals;
+  final int homeGoals;
+  final int awayGoals;
   final double avgGoalsPerMatch;
   final int matchesPlayed;
   final int totalMatches;
+  final int totalWins;
+  final int totalDraws;
 
   TournamentStats({
     required this.topScoringTeams,
@@ -63,9 +67,13 @@ class TournamentStats {
     required this.mostWins,
     required this.mostLosses,
     required this.totalGoals,
+    required this.homeGoals,
+    required this.awayGoals,
     required this.avgGoalsPerMatch,
     required this.matchesPlayed,
     required this.totalMatches,
+    required this.totalWins,
+    required this.totalDraws,
   });
 }
 
@@ -332,11 +340,23 @@ class LeagueService {
     mostLosses.sort((a, b) => b.lost.compareTo(a.lost));
 
     int totalGoals = 0;
+    int homeGoals = 0;
+    int awayGoals = 0;
     int playedMatches = 0;
+    int totalWins = 0;
+    int totalDraws = 0;
+
     for (var m in tournament.matches) {
       if (m.isPlayed) {
         totalGoals += (m.scoreA + m.scoreB);
+        homeGoals += m.scoreA;
+        awayGoals += m.scoreB;
         playedMatches++;
+        if (m.scoreA == m.scoreB) {
+          totalDraws++;
+        } else {
+          totalWins++;
+        }
       }
     }
 
@@ -346,9 +366,13 @@ class LeagueService {
       mostWins: mostWins.take(5).toList(),
       mostLosses: mostLosses.take(5).toList(),
       totalGoals: totalGoals,
+      homeGoals: homeGoals,
+      awayGoals: awayGoals,
       avgGoalsPerMatch: playedMatches > 0 ? totalGoals / playedMatches : 0,
       matchesPlayed: playedMatches,
       totalMatches: tournament.matches.length,
+      totalWins: totalWins,
+      totalDraws: totalDraws,
     );
   }
 }

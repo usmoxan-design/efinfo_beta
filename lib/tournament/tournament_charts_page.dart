@@ -23,7 +23,7 @@ class LeagueTournamentChartsPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text("Tournament Statistics"),
+        title: const Text("Turnir Statistikasi"),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -34,19 +34,77 @@ class LeagueTournamentChartsPage extends StatelessWidget {
             _buildGlobalSummary(stats),
             const SizedBox(height: 24),
 
+            // Pie Charts Row
+            Row(
+              children: [
+                Expanded(
+                  child: _buildPieChartCard(
+                    "O'yinlar natijasi",
+                    [
+                      PieChartSectionData(
+                          value: stats.totalWins.toDouble(),
+                          title: "G'alaba",
+                          color: Colors.green,
+                          radius: 50,
+                          titleStyle: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                      PieChartSectionData(
+                          value: stats.totalDraws.toDouble(),
+                          title: "Durang",
+                          color: Colors.orange,
+                          radius: 50,
+                          titleStyle: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildPieChartCard(
+                    "Gollar taqsimoti",
+                    [
+                      PieChartSectionData(
+                          value: stats.homeGoals.toDouble(),
+                          title: "Uy",
+                          color: Colors.blue,
+                          radius: 50,
+                          titleStyle: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                      PieChartSectionData(
+                          value: stats.awayGoals.toDouble(),
+                          title: "Mehmon",
+                          color: Colors.purple,
+                          radius: 50,
+                          titleStyle: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
             // Top Scoring Teams Chart
-            _buildSectionTitle("Top Scoring Teams"),
+            _buildSectionTitle("Eng ko'p gol urgan jamoalar"),
             const SizedBox(height: 12),
             _buildGoalsChart(stats.topScoringTeams),
             const SizedBox(height: 32),
 
             // Wins/Losses Distribution (Optional: Pie Chart)
-            _buildSectionTitle("Best Defenses (Goals Conceded)"),
+            _buildSectionTitle("Eng yaxshi himoyalar (O'tkazilgan gollar)"),
             const SizedBox(height: 12),
             _buildDefenseChart(stats.bestDefenses),
 
             const SizedBox(height: 32),
-            _buildSectionTitle("Top Wins"),
+            _buildSectionTitle("G'alabalar"),
             const SizedBox(height: 12),
             _buildWinsList(stats.mostWins),
 
@@ -77,10 +135,10 @@ class LeagueTournamentChartsPage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildSummaryItem(
-              "Matches", "${stats.matchesPlayed}/${stats.totalMatches}"),
-          _buildSummaryItem("Total Goals", stats.totalGoals.toString()),
+              "O'yinlar", "${stats.matchesPlayed}/${stats.totalMatches}"),
+          _buildSummaryItem("Gollar", stats.totalGoals.toString()),
           _buildSummaryItem(
-              "Avg Goals", stats.avgGoalsPerMatch.toStringAsFixed(2)),
+              "O'rtacha", stats.avgGoalsPerMatch.toStringAsFixed(2)),
         ],
       ),
     );
@@ -246,13 +304,42 @@ class LeagueTournamentChartsPage extends StatelessWidget {
               Expanded(
                   child: Text(stats.team.name,
                       style: const TextStyle(color: Colors.white))),
-              Text("${stats.won} Wins",
+              Text("${stats.won} G'alaba",
                   style: const TextStyle(
                       color: Colors.green, fontWeight: FontWeight.bold)),
             ],
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildPieChartCard(String title, List<PieChartSectionData> sections) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        children: [
+          Text(title,
+              style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 120,
+            child: PieChart(
+              PieChartData(
+                sections: sections,
+                centerSpaceRadius: 20,
+                sectionsSpace: 2,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
