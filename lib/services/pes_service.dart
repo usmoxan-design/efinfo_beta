@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as parser;
@@ -6,12 +7,17 @@ import 'package:html/dom.dart';
 import '../models/pes_models.dart';
 
 class _CachedResponse {
-  final http.Response response;
+  final dynamic data; // Can be http.Response or Map/List
   final DateTime timestamp;
-  _CachedResponse(this.response, this.timestamp);
+  _CachedResponse(this.data, this.timestamp);
 }
 
 class PesService {
+  // SETTINGS
+  // 1. If you have a backend proxy, put it here (e.g., 'https://your-api.vercel.app/api')
+  // 2. If null, it will use the default Scraper mode.
+  static const String? _apiBaseUrl = null;
+
   final String listingUrl = 'https://pesdb.net/efootball/';
   final String detailBaseUrl = 'https://pesdb.net/efootball/';
 
@@ -71,8 +77,10 @@ class PesService {
     final String cacheKey = uri.toString();
     if (!forceRefresh && _cache.containsKey(cacheKey)) {
       final cached = _cache[cacheKey]!;
-      if (DateTime.now().difference(cached.timestamp) < _cacheTTL)
-        return cached.response;
+      if (DateTime.now().difference(cached.timestamp) < _cacheTTL &&
+          cached.data is http.Response) {
+        return cached.data as http.Response;
+      }
     }
 
     while (_isRequesting)
@@ -112,10 +120,16 @@ class PesService {
             retryCount: retryCount + 1, forceRefresh: true);
       }
 
-      if (_cache.containsKey(cacheKey)) return _cache[cacheKey]!.response;
+      if (_cache.containsKey(cacheKey) &&
+          _cache[cacheKey]!.data is http.Response) {
+        return _cache[cacheKey]!.data as http.Response;
+      }
       return response;
     } catch (e) {
-      if (_cache.containsKey(cacheKey)) return _cache[cacheKey]!.response;
+      if (_cache.containsKey(cacheKey) &&
+          _cache[cacheKey]!.data is http.Response) {
+        return _cache[cacheKey]!.data as http.Response;
+      }
       if (retryCount < 2) {
         await Future.delayed(Duration(seconds: 2 + retryCount));
         _isRequesting = false;
@@ -149,40 +163,58 @@ class PesService {
     }
   }
 
+  // =================== PUBLIC METHODS ===================
+
   Future<List<PesCategory>> fetchCategories() async {
-    final uri = _buildUri(detailBaseUrl);
-    final response = await _safeRequest(uri);
-    final document = parser.parse(response.body);
-    final List<PesCategory> list = [];
-    final shortcuts = document.querySelector('div.shortcuts');
+    if (_apiBaseUrl != null) {
+      final resp = await http.get(Uri.parse('$_apiBaseUrl/categories'));
+      if (resp.statusCode == 200) {
+        List data = jsonDecode(resp.body);
+        return data.map((e) => PesCategory.fromJson(e)).toList();
+      }
+    }
+
+    // Scraper Fallback
+    final response = await _safeRequest(_buildUri(detailBaseUrl));
+    var document = parser.parse(response.body);
+    List<PesCategory> categories = [];
+    var shortcuts = document.querySelector('div.shortcuts');
     if (shortcuts != null) {
-      for (var a in shortcuts.querySelectorAll('a')) {
-        final name = a.text.trim();
-        final href = a.attributes['href'];
-        if (name.isNotEmpty && href != null) {
-          list.add(PesCategory(
+      for (var link in shortcuts.querySelectorAll('a')) {
+        String name = link.text.trim();
+        String href = link.attributes['href'] ?? '';
+        if (name.isNotEmpty && href.isNotEmpty) {
+          categories.add(PesCategory(
               name: name,
               url: href.startsWith('http') ? href : '$detailBaseUrl$href'));
         }
       }
     }
-    return list;
+    return categories;
   }
 
   Future<List<PesFeaturedOption>> fetchFeaturedOptions() async {
-    final uri = _buildUri(listingUrl);
-    final response = await _safeRequest(uri);
-    final List<PesFeaturedOption> options = [];
+    if (_apiBaseUrl != null) {
+      final resp = await http.get(Uri.parse('$_apiBaseUrl/featured-options'));
+      if (resp.statusCode == 200) {
+        List data = jsonDecode(resp.body);
+        return data.map((e) => PesFeaturedOption.fromJson(e)).toList();
+      }
+    }
+
+    final response = await _safeRequest(_buildUri(listingUrl));
+    List<PesFeaturedOption> options = [];
     if (response.statusCode == 200) {
-      final document = parser.parse(response.body);
-      final select = document.getElementById('featured') ??
+      var document = parser.parse(response.body);
+      var select = document.getElementById('featured') ??
           document.querySelector('select[name="featured"]');
       if (select != null) {
-        for (var opt in select.querySelectorAll('option')) {
-          final name = opt.text.trim();
-          final val = opt.attributes['value'] ?? '';
-          if (name.isNotEmpty && val != "0")
-            options.add(PesFeaturedOption(name: name, id: val));
+        for (var option in select.querySelectorAll('option')) {
+          String name = option.text.trim();
+          String value = option.attributes['value'] ?? '';
+          if (name.isNotEmpty && value.isNotEmpty && value != "0") {
+            options.add(PesFeaturedOption(name: name, id: value));
+          }
         }
       }
     }
@@ -191,37 +223,46 @@ class PesService {
 
   Future<List<PesPlayer>> fetchPlayers(
       {String? customUrl, int page = 1, Map<String, String>? filters}) async {
+    if (_apiBaseUrl != null) {
+      String url = '$_apiBaseUrl/players?page=$page';
+      if (customUrl != null) url += '&url=${Uri.encodeComponent(customUrl)}';
+      filters?.forEach((k, v) => url += '&$k=$v');
+      final resp = await http.get(Uri.parse(url));
+      if (resp.statusCode == 200) {
+        List data = jsonDecode(resp.body);
+        return data.map((e) => PesPlayer.fromJson(e)).toList();
+      }
+    }
+
+    // Scraper Fallback
     String base = customUrl ?? listingUrl;
-    final uriBase = Uri.parse(base);
-    final query = Map<String, String>.from(uriBase.queryParameters);
+    Uri uriBase = Uri.parse(base);
+    Map<String, String> query = Map.from(uriBase.queryParameters);
     if (filters != null) query.addAll(filters);
-    if (page > 1) query['page'] = '$page';
-    final finalUrl = uriBase.replace(queryParameters: query).toString();
+    if (page > 1) query['page'] = page.toString();
 
+    String finalUrl = uriBase.replace(queryParameters: query).toString();
     final response = await _safeRequest(_buildUri(finalUrl));
-    final document = parser.parse(response.body);
-    final List<PesPlayer> players = [];
-
+    var document = parser.parse(response.body);
+    List<PesPlayer> players = [];
     for (var row in document.querySelectorAll('tr')) {
-      String? id, name, club, nation;
-      for (var a in row.querySelectorAll('a')) {
-        final href = a.attributes['href'] ?? '';
-        final text = a.text.trim();
+      String? name, id, club, nationality;
+      for (var link in row.querySelectorAll('a')) {
+        String href = link.attributes['href'] ?? '';
+        String text = link.text.trim();
         if (href.contains('id=') && text.isNotEmpty) {
-          id = Uri.tryParse('https://fake.com/$href')?.queryParameters['id'];
           name = text;
-        } else if (href.contains('club_team=')) {
+          id = Uri.tryParse('https://fake.com/$href')?.queryParameters['id'];
+        } else if (href.contains('club_team='))
           club = text;
-        } else if (href.contains('nationality=')) {
-          nation = text;
-        }
+        else if (href.contains('nationality=')) nationality = text;
       }
       if (id != null && name != null) {
         players.add(PesPlayer(
             id: id,
             name: name,
             club: club ?? 'Free Agent',
-            nationality: nation ?? 'Unknown'));
+            nationality: nationality ?? 'Unknown'));
       }
     }
     return players;
@@ -229,51 +270,62 @@ class PesService {
 
   Future<PesPlayerDetail> fetchPlayerDetail(PesPlayer player,
       {String mode = 'level1', bool forceRefresh = false}) async {
+    if (_apiBaseUrl != null) {
+      final resp = await http
+          .get(Uri.parse('$_apiBaseUrl/player/${player.id}?mode=$mode'));
+      if (resp.statusCode == 200) {
+        return PesPlayerDetail.fromJson(jsonDecode(resp.body), player);
+      }
+    }
+
+    // Scraper Fallback
     String url = '$detailBaseUrl?id=${player.id}';
     if (mode == 'max_level') url += '&mode=max_level';
 
     final response =
         await _safeRequest(_buildUri(url), forceRefresh: forceRefresh);
-    final document = parser.parse(response.body);
+    var document = parser.parse(response.body);
 
-    final Map<String, String> stats = {};
-    final Map<String, String> info = {};
-    final List<String> skills = [];
-    Map<String, int> suggestedPoints = {};
     String position = 'Unknown',
         height = 'Unknown',
         age = 'Unknown',
         foot = 'Unknown',
         playingStyle = 'Unknown',
         description = '';
+    List<String> skills = [];
+    Map<String, String> stats = {}, info = {};
+    Map<String, int> suggestedPoints = {};
 
     for (var row in document.querySelectorAll('tr')) {
-      final th = row.querySelector('th'), td = row.querySelector('td');
+      var th = row.querySelector('th'), td = row.querySelector('td');
       if (th == null || td == null) continue;
 
-      final originalKey = th.text.replaceAll(':', '').trim();
-      final lowKey = originalKey.toLowerCase();
-      final value = td.text.trim();
-      final formattedKey = formatStatName(originalKey);
+      String originalHeader = th.text.trim().replaceAll(':', '').trim();
+      String header = originalHeader.toLowerCase();
+      String value = td.text.trim();
+      String formattedKey = formatStatName(originalHeader);
 
-      if (lowKey == 'position')
+      if (header == 'position')
         position = value;
-      else if (lowKey == 'height')
+      else if (header == 'height')
         height = value;
-      else if (lowKey == 'age')
+      else if (header == 'age')
         age = value;
-      else if (lowKey == 'foot')
+      else if (header == 'foot')
         foot = value;
-      else if (lowKey == 'playing styles')
+      else if (header == 'playing styles')
         playingStyle = value;
-      else if (lowKey == 'player skills') {
-        skills.addAll(
-            value.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty));
-      } else if (lowKey == 'ai playing styles') {
-        info[originalKey] = value
+      else if (header == 'player skills') {
+        skills = value
             .split('\n')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
+            .map((s) => s.trim())
+            .where((s) => s.isNotEmpty)
+            .toList();
+      } else if (header == 'ai playing styles') {
+        info[originalHeader] = value
+            .split('\n')
+            .map((s) => s.trim())
+            .where((s) => s.isNotEmpty)
             .join('\n');
       } else {
         if (RegExp(r'\d').hasMatch(value))
@@ -284,20 +336,20 @@ class PesService {
     }
 
     try {
-      final allDivs = document.querySelectorAll('div');
-      final head = allDivs.firstWhere(
+      var allDivs = document.querySelectorAll('div');
+      var head = allDivs.firstWhere(
           (d) => d.text.trim().contains('Suggested points for Level'),
           orElse: () => Element.tag('div'));
       if (head.text.isNotEmpty && head.parent != null) {
         for (var child in head.parent!.children) {
           if (child.localName == 'div' && child.text.contains(':')) {
-            final span = child.querySelector('span');
+            var span = child.querySelector('span');
             if (span != null) {
-              final key = child.text
+              String key = child.text
                   .split(':')[0]
                   .replaceAll(RegExp(r'[•\u2022]'), '')
                   .trim();
-              final val = int.tryParse(span.text.trim());
+              int? val = int.tryParse(span.text.trim());
               if (val != null) suggestedPoints[key] = val;
             }
           }
@@ -305,7 +357,7 @@ class PesService {
       }
     } catch (_) {}
 
-    final bottom = document.querySelector('.bottom-description h2');
+    var bottom = document.querySelector('.bottom-description h2');
     if (bottom != null) description = bottom.text.trim();
 
     return PesPlayerDetail(

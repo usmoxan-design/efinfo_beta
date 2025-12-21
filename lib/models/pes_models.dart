@@ -3,6 +3,13 @@ class PesCategory {
   final String url;
 
   PesCategory({required this.name, required this.url});
+
+  factory PesCategory.fromJson(Map<String, dynamic> json) {
+    return PesCategory(
+      name: json['name'] ?? '',
+      url: json['url'] ?? '',
+    );
+  }
 }
 
 class PesPlayer {
@@ -17,6 +24,15 @@ class PesPlayer {
     required this.club,
     required this.nationality,
   });
+
+  factory PesPlayer.fromJson(Map<String, dynamic> json) {
+    return PesPlayer(
+      id: json['id']?.toString() ?? '',
+      name: json['name'] ?? '',
+      club: json['club'] ?? 'Free Agent',
+      nationality: json['nationality'] ?? 'Unknown',
+    );
+  }
 
   String get imageUrl => 'https://pesdb.net/assets/img/card/f$id.png';
   String get imageFlipUrl => 'https://pesdb.net/assets/img/card/b$id.png';
@@ -51,6 +67,25 @@ class PesPlayerDetail {
     this.suggestedPoints = const {},
     this.description = '',
   });
+
+  factory PesPlayerDetail.fromJson(
+      Map<String, dynamic> json, PesPlayer originalPlayer) {
+    return PesPlayerDetail(
+      player: json['player'] != null
+          ? PesPlayer.fromJson(json['player'])
+          : originalPlayer,
+      position: json['position'] ?? 'Unknown',
+      height: json['height'] ?? 'Unknown',
+      age: json['age'] ?? 'Unknown',
+      foot: json['foot'] ?? 'Unknown',
+      stats: Map<String, String>.from(json['stats'] ?? {}),
+      info: Map<String, String>.from(json['info'] ?? {}),
+      playingStyle: json['playingStyle'] ?? 'Unknown',
+      skills: List<String>.from(json['skills'] ?? []),
+      suggestedPoints: Map<String, int>.from(json['suggestedPoints'] ?? {}),
+      description: json['description'] ?? '',
+    );
+  }
 }
 
 class PesPlayerListResult {
@@ -65,4 +100,11 @@ class PesFeaturedOption {
   final String id;
 
   PesFeaturedOption({required this.name, required this.id});
+
+  factory PesFeaturedOption.fromJson(Map<String, dynamic> json) {
+    return PesFeaturedOption(
+      name: json['name'] ?? '',
+      id: json['id']?.toString() ?? '',
+    );
+  }
 }
