@@ -19,19 +19,25 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
       TextEditingController();
   late List<TeamModel> _teams;
   late bool _isDrawLocked; // Qura tashlangan bo'lsa, tahrirlash cheklanadi
+  late TournamentType _selectedType;
+  late bool _isDoubleRound;
 
   @override
   void initState() {
     super.initState();
     if (widget.tournament != null) {
       _tournamentNameController.text = widget.tournament!.name;
-      // Listni nusxalash (widgetni emas)
       _teams = List.from(widget.tournament!.teams
           .map((t) => TeamModel(name: t.name, color: t.color, id: t.id)));
       _isDrawLocked = widget.tournament!.isDrawDone;
+      _selectedType = widget.tournament!.type;
+      _isDoubleRound =
+          widget.tournament!.leagueSettings?.isDoubleRound ?? false;
     } else {
       _teams = [];
       _isDrawLocked = false;
+      _selectedType = TournamentType.knockout;
+      _isDoubleRound = false;
     }
   }
 
@@ -43,8 +49,7 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
         return;
       }
       setState(() {
-        _teams
-            .add(TeamModel(name: name)); // TeamModel endi avtomatik rang oladi
+        _teams.add(TeamModel(name: name));
         _teamController.clear();
       });
     }
@@ -71,16 +76,17 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
       return;
     }
 
-    // 2, 4, 8, 12, 16, 20, ... tekshiruvi
-    if (teamCount % 2 != 0 || (teamCount & (teamCount - 1)) != 0) {
-      _showSnackbar(
-        "Jamoalar soni juft va uning 4 ga bo‘linadigan bo‘lishi shart. Masalan: 2, 4, 8, 12, 16.",
-        Colors.orange,
-      );
-      return;
+    if (_selectedType == TournamentType.knockout) {
+      // 2, 4, 8, 16, 32... tekshiruvi
+      if (teamCount % 2 != 0 || (teamCount & (teamCount - 1)) != 0) {
+        _showSnackbar(
+          "Knockout turniri uchun jamoalar soni 2 ning darajasi bo'lishi shart (2, 4, 8, 16, 32).",
+          Colors.orange,
+        );
+        return;
+      }
     }
 
-    // Saqlashdan oldin yangilangan modelni qaytarish
     TournamentModel result;
     if (widget.tournament != null) {
       result = TournamentModel(
@@ -90,11 +96,19 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
         isDrawDone: widget.tournament!.isDrawDone,
         matches: widget.tournament!.matches,
         championId: widget.tournament!.championId,
+        type: _selectedType,
+        leagueSettings: _selectedType == TournamentType.league
+            ? LeagueSettings(isDoubleRound: _isDoubleRound)
+            : null,
       );
     } else {
       result = TournamentModel(
         name: name,
         teams: _teams,
+        type: _selectedType,
+        leagueSettings: _selectedType == TournamentType.league
+            ? LeagueSettings(isDoubleRound: _isDoubleRound)
+            : null,
       );
     }
 
@@ -114,6 +128,7 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF101010),
       appBar: AppBar(
         title: Text(widget.tournament == null
             ? "Yangi Turnir Tuzish"
@@ -130,11 +145,66 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
               controller: _tournamentNameController,
               decoration: const InputDecoration(
                 labelText: 'Turnir Nomi',
-                border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: Colors.grey),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue),
+                ),
               ),
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, color: Colors.white),
             ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 20),
+
+            // Turnir Turi
+            if (!_isDrawLocked) ...[
+              const Text(
+                "Turnir Formatini Tanlang:",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTypeCard(
+                      TournamentType.knockout,
+                      "Knockout",
+                      BoxIcons.bx_bracket,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildTypeCard(
+                      TournamentType.league,
+                      "League (LaLiga)",
+                      BoxIcons.bx_table,
+                    ),
+                  ),
+                ],
+              ),
+              if (_selectedType == TournamentType.league) ...[
+                const SizedBox(height: 10),
+                CheckboxListTile(
+                  title: const Text("Uy-Mehmon o'yinlari (2 davra)",
+                      style: TextStyle(color: Colors.white)),
+                  value: _isDoubleRound,
+                  onChanged: (val) {
+                    setState(() {
+                      _isDoubleRound = val ?? false;
+                    });
+                  },
+                  activeColor: Colors.blue,
+                  checkColor: Colors.white,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ],
+              const SizedBox(height: 20),
+            ],
 
             // Jamoa Qo'shish
             if (!_isDrawLocked)
@@ -145,10 +215,16 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
                       controller: _teamController,
                       decoration: const InputDecoration(
                         labelText: 'Qatnashchi nomini kiriting',
-                        border: OutlineInputBorder(),
+                        labelStyle: TextStyle(color: Colors.grey),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.green),
+                        ),
                       ),
-                      onSubmitted: (_) =>
-                          _addTeam(), // Enter bosilganda qo'shish
+                      style: const TextStyle(color: Colors.white),
+                      onSubmitted: (_) => _addTeam(),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -164,13 +240,13 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.red[50],
+                  color: Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: Colors.redAccent),
                 ),
                 child: const Text(
-                  "Qura tashlangan. Jamoalar ro'yxatini o'zgartirish mumkin emas.",
-                  style: TextStyle(color: Colors.red),
+                  "Qura tashlangan. Jamoalar ro'yxatini va turini o'zgartirish mumkin emas.",
+                  style: TextStyle(color: Colors.redAccent),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -179,9 +255,12 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
 
             Text(
               'Qatnashchilar: ${_teams.length} ta jamoa',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white),
             ),
-            const Divider(),
+            const Divider(color: Colors.grey),
 
             // Jamoalar Ro'yxati
             Expanded(
@@ -198,16 +277,56 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: _saveTournament,
-                icon: const Icon(BoxIcons.bx_save, color: Colors.black),
+                icon: const Icon(BoxIcons.bx_save, color: Colors.white),
                 label: const Text(
                   "Saqlash",
-                  style: TextStyle(color: Colors.black),
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: mainColor,
+                  backgroundColor: Colors.blueAccent,
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   textStyle: const TextStyle(fontSize: 18),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypeCard(TournamentType type, String title, IconData icon) {
+    bool isSelected = _selectedType == type;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedType = type;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Colors.blue.withOpacity(0.2)
+              : Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? Colors.blue : Colors.grey.withOpacity(0.3),
+            width: 2,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: isSelected ? Colors.blue : Colors.grey, size: 30),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                color: isSelected ? Colors.blue : Colors.grey,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ],
@@ -218,8 +337,13 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
 
   Widget _buildTeamListItem(TeamModel team) {
     return Card(
+      color: Colors.white.withOpacity(0.05),
       margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 2,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(color: Colors.white.withOpacity(0.1)),
+      ),
       child: ListTile(
         leading: Container(
           width: 5,
@@ -229,7 +353,7 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
             borderRadius: BorderRadius.circular(3),
           ),
         ),
-        title: Text(team.name),
+        title: Text(team.name, style: const TextStyle(color: Colors.white)),
         trailing: !_isDrawLocked
             ? IconButton(
                 icon: const Icon(Icons.close, color: Colors.redAccent),

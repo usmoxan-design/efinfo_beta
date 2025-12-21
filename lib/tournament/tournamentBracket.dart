@@ -1,4 +1,3 @@
-// ... (Importlar TeamModel, MatchModel, TournamentModel va BracketService)
 import 'package:confetti/confetti.dart';
 import 'dart:typed_data';
 import 'dart:ui';
@@ -7,19 +6,15 @@ import 'package:efinfo_beta/Others/imageSaver.dart';
 import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:efinfo_beta/tournament/match_model.dart';
 import 'package:efinfo_beta/tournament/service/bracket_service.dart';
+import 'package:efinfo_beta/tournament/service/league_service.dart';
 import 'package:efinfo_beta/tournament/team_model.dart';
 import 'package:efinfo_beta/tournament/tournament_model.dart';
+import 'package:efinfo_beta/tournament/league_table.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:icons_plus/icons_plus.dart';
-// Yordamchi fayl
-// Yordamchi fayl
-// Model fayli
 import 'package:flutter/foundation.dart';
 import 'dart:ui' as ui;
-
-// JSON dan ma'lumotlarni yuklash uchun
-
 import 'dart:math';
 
 class TournamentBracketPage extends StatefulWidget {
@@ -33,6 +28,7 @@ class TournamentBracketPage extends StatefulWidget {
 class _TournamentBracketPageState extends State<TournamentBracketPage> {
   late TournamentModel _currentTournament;
   final BracketService _bracketService = BracketService();
+  final LeagueService _leagueService = LeagueService();
   late ConfettiController _confettiController;
 
   @override
@@ -41,11 +37,9 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 5));
     _currentTournament = widget.tournament;
-    // Turnir boshlanishida 3-o'rin matchini tekshirish
-    if (_currentTournament.isDrawDone) {
-      // Bu yerda createThirdPlaceMatch faqat yarim finalchilar aniqlangandan keyin
-      // ishlashi kerak, shuning uchun uni faqat natija kiritilganda chaqirish yaxshiroq.
-      // Lekin agar initState da bo'lishi shart bo'lsa, qoldiramiz.
+
+    if (_currentTournament.isDrawDone &&
+        _currentTournament.type == TournamentType.knockout) {
       _currentTournament =
           _bracketService.createThirdPlaceMatch(_currentTournament);
     }
@@ -59,12 +53,17 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
 
   int _calculateTotalRounds() {
     if (_currentTournament.teams.isEmpty) return 0;
+    if (_currentTournament.type == TournamentType.league) {
+      if (_currentTournament.matches.isEmpty) return 0;
+      return _currentTournament.matches
+          .map((m) => m.round)
+          .reduce((a, b) => a > b ? a : b);
+    }
     return log(BracketService.getNextPowerOfTwo(
             _currentTournament.teams.length)) ~/
         log(2);
   }
 
-  // --- Natijani Tahrirlash (UI'dan servisga chaqirish) ---
   void _editScore(MatchModel match) {
     if (match.teamA == null || match.teamB == null) {
       _showSnackbar(
@@ -75,8 +74,6 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
     showDialog(
       context: context,
       builder: (context) {
-        // TextEditingController dialog yopilgandan keyin xotiradan o'chirilishi kerak
-        // Bu joyda lokal o'zgaruvchilarni dialog ichida yaratish yaxshiroq
         int scoreA = match.scoreA;
         int scoreB = match.scoreB;
         final TextEditingController scoreAController =
@@ -84,23 +81,36 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
         final TextEditingController scoreBController =
             TextEditingController(text: scoreB.toString());
 
-        // Bu obyektlar dialog yopilgandan so'ng avtomatik o'chiriladi.
-
         return AlertDialog(
-          title: Text("${match.teamA!.name} vs ${match.teamB!.name}"),
+          backgroundColor: const Color(0xFF1E1E1E),
+          title: Text(
+            "${match.teamA!.name} vs ${match.teamB!.name}",
+            style: const TextStyle(color: Colors.white),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                decoration:
-                    InputDecoration(labelText: "${match.teamA!.name} Hisobi"),
+                decoration: InputDecoration(
+                  labelText: "${match.teamA!.name} Hisobi",
+                  labelStyle: const TextStyle(color: Colors.grey),
+                  enabledBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey)),
+                ),
+                style: const TextStyle(color: Colors.white),
                 keyboardType: TextInputType.number,
                 controller: scoreAController,
                 onChanged: (value) => scoreA = int.tryParse(value) ?? 0,
               ),
+              const SizedBox(height: 10),
               TextField(
-                decoration:
-                    InputDecoration(labelText: "${match.teamB!.name} Hisobi"),
+                decoration: InputDecoration(
+                  labelText: "${match.teamB!.name} Hisobi",
+                  labelStyle: const TextStyle(color: Colors.grey),
+                  enabledBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey)),
+                ),
+                style: const TextStyle(color: Colors.white),
                 keyboardType: TextInputType.number,
                 controller: scoreBController,
                 onChanged: (value) => scoreB = int.tryParse(value) ?? 0,
@@ -110,40 +120,57 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text("Bekor qilish")),
+                child: const Text("Bekor qilish",
+                    style: TextStyle(color: Colors.grey))),
             ElevatedButton(
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: AppColors.accent),
               onPressed: () {
                 try {
-                  // reportMatchResult orqali natjani kiritish va updateBracket ni chaqirish
-                  final updatedTournament = _bracketService.reportMatchResult(
-                    _currentTournament,
-                    match.id,
-                    scoreA,
-                    scoreB,
-                  );
-                  // 3-o'rin matchini yaratishni tekshirish (faqat Yarim Finaldan keyin)
-                  final finalTournament =
-                      _bracketService.createThirdPlaceMatch(updatedTournament);
+                  TournamentModel updatedTournament;
+                  if (_currentTournament.type == TournamentType.knockout) {
+                    updatedTournament = _bracketService.reportMatchResult(
+                      _currentTournament,
+                      match.id,
+                      scoreA,
+                      scoreB,
+                    );
+                    updatedTournament = _bracketService
+                        .createThirdPlaceMatch(updatedTournament);
+                  } else {
+                    updatedTournament = _leagueService.reportMatchResult(
+                      _currentTournament,
+                      match.id,
+                      scoreA,
+                      scoreB,
+                    );
+                  }
 
-                  // setState chaqiriladi
                   setState(() {
-                    _currentTournament = finalTournament;
-                    // Birinchi dialog yopiladi
+                    _currentTournament = updatedTournament;
                     Navigator.pop(context);
                   });
 
-                  // Agar bu final matchi bo'lsa va g'olib aniqlansa, konfeti otish
-                  int totalRounds = _calculateTotalRounds();
-                  if (match.round == totalRounds &&
-                      updatedTournament.matches
-                              .firstWhere((m) => m.id == match.id)
-                              .winnerId !=
-                          null) {
+                  bool isFinished = false;
+                  if (_currentTournament.type == TournamentType.knockout) {
+                    int totalRounds = _calculateTotalRounds();
+                    if (match.round == totalRounds &&
+                        updatedTournament.matches
+                                .firstWhere((m) => m.id == match.id)
+                                .winnerId !=
+                            null) {
+                      isFinished = true;
+                    }
+                  } else {
+                    isFinished =
+                        _currentTournament.matches.every((m) => m.isPlayed);
+                  }
+
+                  if (isFinished) {
                     _confettiController.play();
                     _showSnackbar("Turnir g'olibi aniqlandi! 🏆", Colors.amber);
                   } else {
-                    _showSnackbar(
-                        "Natija saqlandi. Bracket yangilandi.", Colors.green);
+                    _showSnackbar("Natija saqlandi.", Colors.green);
                   }
                 } catch (e) {
                   _showSnackbar(
@@ -151,7 +178,8 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                   Navigator.pop(context);
                 }
               },
-              child: const Text("Saqlash"),
+              child:
+                  const Text("Saqlash", style: TextStyle(color: Colors.black)),
             ),
           ],
         );
@@ -160,7 +188,6 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
   }
 
   void _performDraw() {
-    // Jamoalar sonini tekshirish
     final int teamCount = _currentTournament.teams.length;
 
     if (teamCount < 2) {
@@ -168,32 +195,32 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
       return;
     }
 
-    // if (teamCount > 16) {
-    //   _showSnackbar("Jamoalar soni 16 tadan oshmasligi kerak!", Colors.red);
-    //   return;
-    // }
-
-    // Turnir strukturasi uchun ideal sonlar tekshiruvi (2 yoki 4 ga bo'linadi)
-    if (teamCount % 4 != 0 && teamCount != 2) {
-      _showSnackbar(
-        "Jamoalar soni 4 ga bo‘linadigan bo‘lishi bo‘lishi shart. Masalan: 2, 4, 8, 12, 16, 20.",
-        Colors.red,
-      );
-      return;
+    if (_currentTournament.type == TournamentType.knockout) {
+      if (teamCount % 4 != 0 && teamCount != 2) {
+        _showSnackbar(
+          "Knockout uchun jamoalar soni 4 ga bo‘linadigan bo‘lishi shart. Masalan: 2, 4, 8, 12, 16.",
+          Colors.red,
+        );
+        return;
+      }
     }
 
     try {
-      final updatedTournament =
-          _bracketService.createBracket(_currentTournament);
+      TournamentModel updatedTournament;
+      if (_currentTournament.type == TournamentType.knockout) {
+        updatedTournament = _bracketService.createBracket(_currentTournament);
+      } else {
+        updatedTournament = _leagueService.createLeague(_currentTournament);
+      }
+
       setState(() {
         _currentTournament = updatedTournament;
         // Bosh sahifaga o'zgarishlarni qaytarish
-        Navigator.pop(context, _currentTournament);
+        // Note: Navigator.pop(context, _currentTournament) replaces the whole state in TournamentListPage
       });
       _showSnackbar("Qura muvaffaqiyatli tashlandi.", Colors.green);
     } catch (e) {
       String errorMsg = e.toString().replaceAll("Exception: ", "");
-      print("Bracket error: $errorMsg");
       _showSnackbar("Xato: $errorMsg", Colors.red);
     }
   }
@@ -206,10 +233,8 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
     ));
   }
 
-  // --- UI Bosqichlari ---
-  List<Widget> _buildBracket(BuildContext context) {
+  List<Widget> _buildContent() {
     if (!_currentTournament.isDrawDone) {
-      // Qura tashlash tugmasi UI
       return [
         Center(
           child: Padding(
@@ -240,17 +265,22 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
       ];
     }
 
-    // Total rounds sonini BracketService dan olish
-    // Math.log funksiyasini to'g'ri hisoblash uchun
+    if (_currentTournament.type == TournamentType.league) {
+      return [
+        LeagueTableWidget(
+          tournament: _currentTournament,
+          onMatchTap: (match) => _editScore(match),
+        )
+      ];
+    }
+
     final totalRounds = log(BracketService.getNextPowerOfTwo(
             _currentTournament.teams.length)) ~/
         log(2);
 
     List<Widget> roundWidgets = [];
 
-    // Asosiy Raundlar (1 dan Finalgacha)
     for (int r = 1; r <= totalRounds; r++) {
-      // Raund bo'yicha Matchlarni ajratib olish
       List<MatchModel> currentRoundMatches =
           _currentTournament.matches.where((m) => m.round == r).toList();
 
@@ -265,8 +295,7 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10.0),
                 child: Text(
-                  _bracketService.getRoundTitle(
-                      r, totalRounds), // Dinamik raund nomi
+                  _bracketService.getRoundTitle(r, totalRounds),
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -274,7 +303,6 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                   ),
                 ),
               ),
-              // Matchlarni chizish
               ...currentRoundMatches
                   .toList()
                   .map((match) => _buildMatchCard(match, totalRounds)),
@@ -284,15 +312,11 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
       );
     }
 
-    // 3-O'rin Uchrashuvi
     MatchModel? thirdPlaceMatch;
-    // Round 99 - 3-o'rin uchun standart
     try {
       thirdPlaceMatch =
           _currentTournament.matches.firstWhere((m) => m.round == 99);
-    } catch (_) {
-      // Agar topilmasa, shunchaki o'tkazib yuboramiz.
-    }
+    } catch (_) {}
 
     if (thirdPlaceMatch != null) {
       roundWidgets.add(
@@ -322,14 +346,12 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
     return roundWidgets;
   }
 
-  // --- O'yin Natijasi Kartasi (UI) ---
   Widget _buildMatchCard(MatchModel match, int totalRounds) {
     bool hasWinner = match.winnerId != null;
     Color cardColor = match.round == 99
         ? Colors.orange[50]!
         : (hasWinner ? Colors.green[50]! : Colors.white);
 
-    // Karta o'lchamini dinamik sozlash
     double width = 200;
 
     return InkWell(
@@ -374,7 +396,6 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
     );
   }
 
-  // --- Jamoa Natijasi UI ---
   Widget _buildTeamScore(
       TeamModel? team, int score, bool hasWinner, String? winnerId) {
     if (team == null) {
@@ -412,45 +433,26 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
     );
   }
 
-  // --- Main Build ---
   @override
   Widget build(BuildContext context) {
-    final totalRounds = _currentTournament.teams.isNotEmpty
-        ? log(BracketService.getNextPowerOfTwo(
-                _currentTournament.teams.length)) ~/
-            log(2)
-        : 0;
-
     String? championName;
-    if (totalRounds > 0) {
-      MatchModel? finalMatch = _currentTournament.matches.firstWhere(
-        (m) => m.round == totalRounds,
-        orElse: () => MatchModel(id: '', round: 0),
-      );
-
-      if (finalMatch.winnerId != null && finalMatch.round != 0) {
-        // Final g'olibini ID orqali topish
-        try {
-          championName = _currentTournament.teams
-              .firstWhere((p) => p.id == finalMatch.winnerId)
-              .name;
-        } catch (_) {
-          // G'olib topilmasa (kamdan-kam holat)
-        }
-      }
+    if (_currentTournament.championId != null) {
+      try {
+        championName = _currentTournament.teams
+            .firstWhere((p) => p.id == _currentTournament.championId)
+            .name;
+      } catch (_) {}
     }
+
     final GlobalKey pitchBoundaryKey = GlobalKey();
 
     Future<void> captureAndSave() async {
       final RenderRepaintBoundary boundary = pitchBoundaryKey.currentContext!
           .findRenderObject()! as RenderRepaintBoundary;
-
       final double pixelRatio = MediaQuery.of(context).devicePixelRatio;
       final ui.Image image = await boundary.toImage(pixelRatio: pixelRatio);
-
       final ByteData? byteData =
           await image.toByteData(format: ui.ImageByteFormat.png);
-
       final Uint8List? bytes = byteData?.buffer.asUint8List();
 
       if (bytes != null) {
@@ -472,83 +474,97 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
       }
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text("Turnir To'ri: ${_currentTournament.name}"),
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pop(context, _currentTournament);
+        return false;
+      },
+      child: Scaffold(
         backgroundColor: AppColors.background,
-        elevation: 0,
-        actions: [
-          if (championName != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 15.0),
-              child: Center(
-                child: Text("🏆 G'olib: $championName",
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.amberAccent)),
-              ),
-            ),
-          if (!_currentTournament.isDrawDone)
-            IconButton(
-              icon: const Icon(BoxIcons.bx_dice_5),
-              onPressed: _performDraw,
-              tooltip: "Qura tashlash",
-            ),
-          const SizedBox(width: 10),
-          if (_currentTournament.isDrawDone)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: ElevatedButton(
-                onPressed: captureAndSave,
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: Colors.black),
-                child: const Text("Saqlash"),
-              ),
-            )
-        ],
-      ),
-
-      // >>>>>>>>>>> IKKI YO'NALISHLI SCROLL TUZATILGAN QISM <<<<<<<<<<<
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
-                // Ichki gorizontal skroll
-                scrollDirection: Axis.horizontal,
-                child: RepaintBoundary(
-                  key: pitchBoundaryKey,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: _buildBracket(context),
-                  ),
+        appBar: AppBar(
+          title: Text(_currentTournament.name),
+          backgroundColor: AppColors.background,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context, _currentTournament),
+          ),
+          actions: [
+            if (championName != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 15.0),
+                child: Center(
+                  child: Text("🏆 G'olib: $championName",
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amberAccent)),
                 ),
               ),
+            if (!_currentTournament.isDrawDone)
+              IconButton(
+                icon: const Icon(BoxIcons.bx_dice_5),
+                onPressed: _performDraw,
+                tooltip: "Qura tashlash",
+              ),
+            const SizedBox(width: 10),
+            if (_currentTournament.isDrawDone)
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: ElevatedButton(
+                  onPressed: captureAndSave,
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: Colors.black),
+                  child: const Text("Saqlash"),
+                ),
+              )
+          ],
+        ),
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: _currentTournament.type == TournamentType.league &&
+                        _currentTournament.isDrawDone
+                    ? RepaintBoundary(
+                        key: pitchBoundaryKey,
+                        child: LeagueTableWidget(
+                          tournament: _currentTournament,
+                          onMatchTap: (match) => _editScore(match),
+                        ),
+                      )
+                    : SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: RepaintBoundary(
+                          key: pitchBoundaryKey,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: _buildContent(),
+                          ),
+                        ),
+                      ),
+              ),
             ),
-          ),
-          // Confetti Widget
-          Align(
-            alignment: Alignment.topCenter,
-            child: ConfettiWidget(
-              confettiController: _confettiController,
-              blastDirectionality: BlastDirectionality.explosive,
-              shouldLoop: false,
-              colors: const [
-                Colors.green,
-                Colors.blue,
-                Colors.pink,
-                Colors.orange,
-                Colors.purple
-              ],
+            Align(
+              alignment: Alignment.topCenter,
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirectionality: BlastDirectionality.explosive,
+                shouldLoop: false,
+                colors: const [
+                  Colors.green,
+                  Colors.blue,
+                  Colors.pink,
+                  Colors.orange,
+                  Colors.purple
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-      // >>>>>>>>>>> TUZATISH TUGADI <<<<<<<<<<<
     );
   }
 }

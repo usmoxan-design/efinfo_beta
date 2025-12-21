@@ -263,6 +263,14 @@ void _deleteTournament(TournamentModel tournament) {
               ),
               const SizedBox(height: 5),
               Text(
+                "Format: ${tournament.type == TournamentType.knockout ? 'Knockout' : 'League (LaLiga)'}",
+                style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic),
+              ),
+              const SizedBox(height: 5),
+              Text(
                 championName != null
                     ? "CHEMPION: $championName 👑"
                     : tournament.isDrawDone

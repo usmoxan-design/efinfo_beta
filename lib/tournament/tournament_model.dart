@@ -141,6 +141,24 @@ import 'package:uuid/uuid.dart';
 
 const uuid = Uuid();
 
+enum TournamentType { knockout, league }
+
+class LeagueSettings {
+  final bool isDoubleRound; // Uy-mehmon o'yinlari bormi?
+
+  LeagueSettings({this.isDoubleRound = false});
+
+  Map<String, dynamic> toJson() => {
+        'isDoubleRound': isDoubleRound,
+      };
+
+  factory LeagueSettings.fromJson(Map<String, dynamic> json) {
+    return LeagueSettings(
+      isDoubleRound: json['isDoubleRound'] as bool? ?? false,
+    );
+  }
+}
+
 class TournamentModel {
   final String id;
   String name;
@@ -148,6 +166,8 @@ class TournamentModel {
   bool isDrawDone;
   List<MatchModel> matches;
   String? championId;
+  TournamentType type;
+  LeagueSettings? leagueSettings;
 
   TournamentModel({
     String? id,
@@ -156,11 +176,11 @@ class TournamentModel {
     this.isDrawDone = false,
     List<MatchModel>? matches,
     this.championId,
+    this.type = TournamentType.knockout,
+    this.leagueSettings,
   })  : id = id ?? uuid.v4(),
         matches = matches ?? [];
 
-  // Serializatsiya/Deserializatsiya funksiyalari (qisqartirildi)
-  // ...
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
@@ -168,22 +188,29 @@ class TournamentModel {
         'isDrawDone': isDrawDone,
         'matches': matches.map((m) => m.toJson()).toList(),
         'championId': championId,
+        'type': type.index,
+        'leagueSettings': leagueSettings?.toJson(),
       };
 
   factory TournamentModel.fromJson(Map<String, dynamic> json) {
-    // ... deserializatsiya mantig'i (oldingi kabi)
-      var teamsList = json['teams'] as List;
-      List<TeamModel> teams = teamsList.map((i) => TeamModel.fromJson(i)).toList();
-      var matchesList = json['matches'] as List;
-      List<MatchModel> matches = matchesList.map((i) => MatchModel.fromJson(i)).toList();
+    var teamsList = json['teams'] as List;
+    List<TeamModel> teams =
+        teamsList.map((i) => TeamModel.fromJson(i)).toList();
+    var matchesList = json['matches'] as List;
+    List<MatchModel> matches =
+        matchesList.map((i) => MatchModel.fromJson(i)).toList();
 
-      return TournamentModel(
-          id: json['id'] as String,
-          name: json['name'] as String,
-          teams: teams,
-          isDrawDone: json['isDrawDone'] as bool,
-          matches: matches,
-          championId: json['championId'] as String?,
-      );
+    return TournamentModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      teams: teams,
+      isDrawDone: json['isDrawDone'] as bool? ?? false,
+      matches: matches,
+      championId: json['championId'] as String?,
+      type: TournamentType.values[json['type'] as int? ?? 0],
+      leagueSettings: json['leagueSettings'] != null
+          ? LeagueSettings.fromJson(json['leagueSettings'])
+          : null,
+    );
   }
 }
