@@ -4,11 +4,13 @@ import 'package:efinfo_beta/Player/player_skillspage.dart';
 import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:efinfo_beta/Player/playingstylespage.dart';
 import 'package:efinfo_beta/Player/positions.dart';
+import 'package:efinfo_beta/Player/formations.dart';
+import 'package:efinfo_beta/Player/individual.dart';
+import 'package:efinfo_beta/manager/plstyles.dart';
+import 'package:efinfo_beta/components/newBadge.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import '../Player/playerStat.dart';
-import '../components/newBadge.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,9 +19,62 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TabBar(
+                controller: _tabController,
+                indicatorColor: AppColors.accentPink,
+                indicatorWeight: 3,
+                labelColor: AppColors.textWhite,
+                unselectedLabelColor: AppColors.textDim,
+                labelStyle: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold, fontSize: 16),
+                tabs: const [
+                  Tab(text: "Futbolchilar"),
+                  Tab(text: "Menejer"),
+                ],
+              ),
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildPlayerHub(),
+                  _buildManagerHub(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlayerHub() {
     final List<Map<String, dynamic>> gridData = [
       {
         'title': 'Playing Styles',
@@ -85,63 +140,97 @@ class _HomePageState extends State<HomePage> {
       },
     ];
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 32),
-            GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 0.9,
-              ),
-              itemCount: gridData.length,
-              itemBuilder: (context, index) {
-                final item = gridData[index];
-                return _GridItem(
-                  title: item['title'],
-                  subtitle: item['subtitle'],
-                  icon: item['icon'],
-                  accent: item['accent'],
-                  badge: item['badge'],
-                  isColoredIcon: item['isColoredIcon'] ?? false,
-                  onTap: item['onTap'],
-                );
-              },
-            ),
-          ],
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+            childAspectRatio: 0.9,
+          ),
+          itemCount: gridData.length,
+          itemBuilder: (context, index) {
+            final item = gridData[index];
+            return _GridItem(
+              title: item['title'],
+              subtitle: item['subtitle'],
+              icon: item['icon'],
+              accent: item['accent'],
+              badge: item['badge'],
+              isColoredIcon: item['isColoredIcon'] ?? false,
+              onTap: item['onTap'],
+            );
+          },
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildManagerHub() {
+    final List<Map<String, dynamic>> managerData = [
+      {
+        'title': 'Team Playstyle',
+        'subtitle': "Jamoa o'yin stili",
+        'icon': "assets/images/team_playstyle.png",
+        'accent': AppColors.accentGreen,
+        'badge': false,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const ManagerStylesPage())),
+      },
+      {
+        'title': 'Formations',
+        'subtitle': 'Taktik sxemalar',
+        'icon': "assets/images/formation_change.png",
+        'accent': AppColors.accentBlue,
+        'badge': false,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const FormationsListScreen())),
+      },
+      {
+        'title': 'Individual Instructions',
+        'subtitle': "Shaxsiy ko'rsatmalar",
+        'icon': "assets/images/individual_instruction.png",
+        'accent': AppColors.accentPink,
+        'badge': false,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => const ModernInstructionsListPage())),
+      },
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
       children: [
-        Text(
-          "Hush kelibsiz,",
-          style: GoogleFonts.outfit(
-            fontSize: 16,
-            color: AppColors.textDim,
-            fontWeight: FontWeight.w500,
+        GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+            childAspectRatio: 0.9,
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          "EFINFO HUB",
-          style: GoogleFonts.outfit(
-            fontSize: 28,
-            color: AppColors.textWhite,
-            fontWeight: FontWeight.bold,
-          ),
+          itemCount: managerData.length,
+          itemBuilder: (context, index) {
+            final item = managerData[index];
+            return _GridItem(
+              title: item['title'],
+              subtitle: item['subtitle'],
+              icon: item['icon'],
+              accent: item['accent'],
+              badge: item['badge'],
+              isColoredIcon: item['isColoredIcon'] ?? false,
+              onTap: item['onTap'],
+            );
+          },
         ),
       ],
     );

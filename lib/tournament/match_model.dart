@@ -14,6 +14,7 @@ class MatchModel {
   int? nextMatchId; // Keyingi raunddagi qaysi matchga o'tishini bildiradi
   int? nextTeamSlot; // Keyingi matchda A yoki B (0 = A, 1 = B)
   bool isPlayed;
+  DateTime? date;
 
   MatchModel({
     String? id,
@@ -26,6 +27,7 @@ class MatchModel {
     this.nextMatchId,
     this.nextTeamSlot,
     this.isPlayed = false,
+    this.date,
   }) : id = id ?? uuid.v4();
 
   // G'olibni aniqlash
@@ -43,8 +45,6 @@ class MatchModel {
     }
   }
 
-  // Serializatsiya/Deserializatsiya funksiyalari (qisqartirildi)
-  // ...
   Map<String, dynamic> toJson() => {
         'id': id,
         'teamA': teamA?.toJson(),
@@ -56,6 +56,7 @@ class MatchModel {
         'nextMatchId': nextMatchId,
         'nextTeamSlot': nextTeamSlot,
         'isPlayed': isPlayed,
+        'date': date?.toIso8601String(),
       };
 
   factory MatchModel.fromJson(Map<String, dynamic> json) {
@@ -70,6 +71,8 @@ class MatchModel {
       nextMatchId: json['nextMatchId'] as int?,
       nextTeamSlot: json['nextTeamSlot'] as int?,
       isPlayed: json['isPlayed'] as bool? ?? false,
+      date:
+          json['date'] != null ? DateTime.parse(json['date'] as String) : null,
     );
   }
 }

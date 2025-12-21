@@ -21,6 +21,10 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
   late bool _isDrawLocked; // Qura tashlangan bo'lsa, tahrirlash cheklanadi
   late TournamentType _selectedType;
   late bool _isDoubleRound;
+  late bool _isAutoSchedule;
+  late int _daysInterval;
+  late int _startHour;
+  late int _endHour;
 
   @override
   void initState() {
@@ -33,11 +37,20 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
       _selectedType = widget.tournament!.type;
       _isDoubleRound =
           widget.tournament!.leagueSettings?.isDoubleRound ?? false;
+      _isAutoSchedule =
+          widget.tournament!.leagueSettings?.isAutoSchedule ?? false;
+      _daysInterval = widget.tournament!.leagueSettings?.daysInterval ?? 1;
+      _startHour = widget.tournament!.leagueSettings?.startHour ?? 18;
+      _endHour = widget.tournament!.leagueSettings?.endHour ?? 22;
     } else {
       _teams = [];
       _isDrawLocked = false;
       _selectedType = TournamentType.knockout;
       _isDoubleRound = false;
+      _isAutoSchedule = false;
+      _daysInterval = 1;
+      _startHour = 18;
+      _endHour = 22;
     }
   }
 
@@ -98,7 +111,13 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
         championId: widget.tournament!.championId,
         type: _selectedType,
         leagueSettings: _selectedType == TournamentType.league
-            ? LeagueSettings(isDoubleRound: _isDoubleRound)
+            ? LeagueSettings(
+                isDoubleRound: _isDoubleRound,
+                isAutoSchedule: _isAutoSchedule,
+                daysInterval: _daysInterval,
+                startHour: _startHour,
+                endHour: _endHour,
+              )
             : null,
       );
     } else {
@@ -107,7 +126,13 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
         teams: _teams,
         type: _selectedType,
         leagueSettings: _selectedType == TournamentType.league
-            ? LeagueSettings(isDoubleRound: _isDoubleRound)
+            ? LeagueSettings(
+                isDoubleRound: _isDoubleRound,
+                isAutoSchedule: _isAutoSchedule,
+                daysInterval: _daysInterval,
+                startHour: _startHour,
+                endHour: _endHour,
+              )
             : null,
       );
     }
@@ -202,6 +227,54 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
                   checkColor: Colors.white,
                   contentPadding: EdgeInsets.zero,
                 ),
+                CheckboxListTile(
+                  title: const Text("O'yin vaqtini avtomatik belgilash",
+                      style: TextStyle(color: Colors.white)),
+                  value: _isAutoSchedule,
+                  onChanged: (val) {
+                    setState(() {
+                      _isAutoSchedule = val ?? false;
+                    });
+                  },
+                  activeColor: Colors.blue,
+                  checkColor: Colors.white,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                if (_isAutoSchedule) ...[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    child: Text("Sozlamalar:",
+                        style: TextStyle(
+                            color: Colors.blue, fontWeight: FontWeight.bold)),
+                  ),
+                  _buildSliderSetting(
+                    "Kunlar oralig'i (interval)",
+                    _daysInterval.toDouble(),
+                    1,
+                    7,
+                    (val) => setState(() => _daysInterval = val.toInt()),
+                    "${_daysInterval} kun",
+                  ),
+                  _buildSliderSetting(
+                    "O'yinlar boshlanish soati",
+                    _startHour.toDouble(),
+                    0,
+                    23,
+                    (val) => setState(() => _startHour = val.toInt()),
+                    "${_startHour}:00 dan",
+                  ),
+                  _buildSliderSetting(
+                    "O'yinlar tugash soati",
+                    _endHour.toDouble(),
+                    0,
+                    23,
+                    (val) => setState(() {
+                      _endHour = val.toInt();
+                      if (_endHour < _startHour) _startHour = _endHour;
+                    }),
+                    "${_endHour}:00 gacha",
+                  ),
+                ],
               ],
               const SizedBox(height: 20),
             ],
@@ -295,6 +368,34 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSliderSetting(String label, double value, double min, double max,
+      Function(double) onChanged, String valueLabel) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label,
+                style: const TextStyle(color: Colors.grey, fontSize: 13)),
+            Text(valueLabel,
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        Slider(
+          value: value,
+          min: min,
+          max: max,
+          divisions: (max - min).toInt(),
+          onChanged: onChanged,
+          activeColor: Colors.blue,
+          inactiveColor: Colors.white.withOpacity(0.1),
+        ),
+      ],
     );
   }
 

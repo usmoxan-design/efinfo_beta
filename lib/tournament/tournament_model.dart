@@ -145,16 +145,34 @@ enum TournamentType { knockout, league }
 
 class LeagueSettings {
   final bool isDoubleRound; // Uy-mehmon o'yinlari bormi?
+  final bool isAutoSchedule; // Avtomatik sana tanlash
+  final int daysInterval; // Kunlar oralig'i
+  final int startHour; // O'yin boshlanish vaqti
+  final int endHour; // O'yin tugash vaqti
 
-  LeagueSettings({this.isDoubleRound = false});
+  LeagueSettings({
+    this.isDoubleRound = false,
+    this.isAutoSchedule = false,
+    this.daysInterval = 1,
+    this.startHour = 18,
+    this.endHour = 22,
+  });
 
   Map<String, dynamic> toJson() => {
         'isDoubleRound': isDoubleRound,
+        'isAutoSchedule': isAutoSchedule,
+        'daysInterval': daysInterval,
+        'startHour': startHour,
+        'endHour': endHour,
       };
 
   factory LeagueSettings.fromJson(Map<String, dynamic> json) {
     return LeagueSettings(
       isDoubleRound: json['isDoubleRound'] as bool? ?? false,
+      isAutoSchedule: json['isAutoSchedule'] as bool? ?? false,
+      daysInterval: json['daysInterval'] as int? ?? 1,
+      startHour: json['startHour'] as int? ?? 18,
+      endHour: json['endHour'] as int? ?? 22,
     );
   }
 }

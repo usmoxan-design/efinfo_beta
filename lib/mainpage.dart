@@ -1,5 +1,4 @@
 import 'package:efinfo_beta/Pages/HomePage.dart';
-import 'package:efinfo_beta/Pages/ManagerPage.dart';
 import 'package:efinfo_beta/Pages/MorePage.dart';
 import 'package:efinfo_beta/tournament/TournamentMaker.dart';
 import 'package:efinfo_beta/theme/app_colors.dart';
@@ -20,7 +19,6 @@ class _MainPageState extends State<MainPage> {
 
   final List<Widget> _pages = const [
     HomePage(),
-    ManagerPage(),
     TournamentListPage(),
     MorePage(),
   ];
@@ -45,7 +43,7 @@ class _MainPageState extends State<MainPage> {
               'assets/images/mainLogo.png',
               height: 32,
             ),
-            SizedBox(width: 15),
+            const SizedBox(width: 15),
             Text(
               "Version 1.0.7",
               textAlign: TextAlign.center,
@@ -155,10 +153,9 @@ class _MainPageState extends State<MainPage> {
         },
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         destinations: [
-          _buildNavDestination(IonIcons.football, "O'yinchi", 0),
-          _buildNavDestination(IonIcons.school, 'Menejer', 1),
-          _buildNavDestination(IonIcons.trophy, 'Turnirchi', 2),
-          _buildNavDestination(EvaIcons.grid, "Ko'proq", 3),
+          _buildNavDestination(IonIcons.apps, "Hub", 0),
+          _buildNavDestination(IonIcons.trophy, 'Turnirchi', 1),
+          _buildNavDestination(EvaIcons.grid, "Ko'proq", 2),
         ],
       ),
     );

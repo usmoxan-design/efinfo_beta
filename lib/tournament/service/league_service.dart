@@ -17,6 +17,58 @@ class LeagueStats {
   LeagueStats(this.team);
 }
 
+class TeamDetailedStats {
+  final TeamModel team;
+  final List<String> form; // ['W', 'L', 'D', ...]
+  final List<MatchModel> recentMatches;
+  final MatchModel? nextMatch;
+  final int cleanSheets;
+  final double avgGoalsScored;
+  final double avgGoalsConceded;
+  final int totalWins;
+  final int totalDraws;
+  final int totalLosses;
+  final int totalGoalsScored;
+  final int totalGoalsConceded;
+
+  TeamDetailedStats({
+    required this.team,
+    required this.form,
+    required this.recentMatches,
+    this.nextMatch,
+    required this.cleanSheets,
+    required this.avgGoalsScored,
+    required this.avgGoalsConceded,
+    required this.totalWins,
+    required this.totalDraws,
+    required this.totalLosses,
+    required this.totalGoalsScored,
+    required this.totalGoalsConceded,
+  });
+}
+
+class TournamentStats {
+  final List<LeagueStats> topScoringTeams;
+  final List<LeagueStats> bestDefenses;
+  final List<LeagueStats> mostWins;
+  final List<LeagueStats> mostLosses;
+  final int totalGoals;
+  final double avgGoalsPerMatch;
+  final int matchesPlayed;
+  final int totalMatches;
+
+  TournamentStats({
+    required this.topScoringTeams,
+    required this.bestDefenses,
+    required this.mostWins,
+    required this.mostLosses,
+    required this.totalGoals,
+    required this.avgGoalsPerMatch,
+    required this.matchesPlayed,
+    required this.totalMatches,
+  });
+}
+
 class LeagueService {
   // --- 1. createLeague(): Round-robin scheduling ---
   TournamentModel createLeague(TournamentModel tournament) {
@@ -40,18 +92,38 @@ class LeagueService {
     List<TeamModel?> rotation = List.from(teams);
     if (hasBye) rotation.add(null);
 
+    final settings = tournament.leagueSettings;
+    final bool autoSchedule = settings?.isAutoSchedule ?? false;
+    final int interval = settings?.daysInterval ?? 1;
+    final int startH = settings?.startHour ?? 18;
+    final int endH = settings?.endHour ?? 22;
+
+    final DateTime now = DateTime.now();
+    final DateTime baseDate = DateTime(now.year, now.month, now.day)
+        .add(const Duration(days: 1)); // Ertadan boshlanadi
+
     for (int round = 1; round <= numRounds; round++) {
+      DateTime roundDate = baseDate.add(Duration(days: (round - 1) * interval));
       for (int i = 0; i < matchesPerRound; i++) {
         TeamModel? teamA = rotation[i];
         TeamModel? teamB = rotation[rotation.length - 1 - i];
 
         if (teamA != null && teamB != null) {
           matchIdCounter++;
+          DateTime? matchDate;
+          if (autoSchedule) {
+            int h = startH + (endH > startH ? (i % (endH - startH)) : 0);
+            int m = (i * 15) % 60;
+            matchDate =
+                DateTime(roundDate.year, roundDate.month, roundDate.day, h, m);
+          }
+
           allMatches.add(MatchModel(
             id: matchIdCounter.toString(),
             teamA: teamA,
             teamB: teamB,
             round: round,
+            date: matchDate,
           ));
         }
       }
@@ -61,16 +133,23 @@ class LeagueService {
     }
 
     // Double round-robin (Home/Away)
-    if (tournament.leagueSettings?.isDoubleRound ?? false) {
+    if (settings?.isDoubleRound ?? false) {
       int firstHalfCount = allMatches.length;
       for (int i = 0; i < firstHalfCount; i++) {
         MatchModel m = allMatches[i];
         matchIdCounter++;
+
+        DateTime? matchDate;
+        if (autoSchedule && m.date != null) {
+          matchDate = m.date!.add(Duration(days: numRounds * interval));
+        }
+
         allMatches.add(MatchModel(
           id: matchIdCounter.toString(),
           teamA: m.teamB,
           teamB: m.teamA,
           round: m.round + numRounds,
+          date: matchDate,
         ));
       }
     }
@@ -166,5 +245,110 @@ class LeagueService {
       }
     }
     return tournament;
+  }
+
+  // --- 4. getTeamDetailedStats(): Get details for a specific team ---
+  TeamDetailedStats getTeamDetailedStats(
+      TournamentModel tournament, String teamId) {
+    TeamModel team = tournament.teams.firstWhere((t) => t.id == teamId);
+
+    List<MatchModel> teamMatches = tournament.matches
+        .where((m) => m.teamA?.id == teamId || m.teamB?.id == teamId)
+        .toList();
+
+    List<MatchModel> playedMatches =
+        teamMatches.where((m) => m.isPlayed).toList();
+    playedMatches.sort((a, b) => b.round.compareTo(a.round)); // Recent first
+
+    List<String> form = [];
+    int cleanSheets = 0;
+    int totalWins = 0;
+    int totalDraws = 0;
+    int totalLosses = 0;
+    int totalGoalsScored = 0;
+    int totalGoalsConceded = 0;
+
+    for (var match in playedMatches) {
+      bool isHome = match.teamA?.id == teamId;
+      int myScore = isHome ? match.scoreA : match.scoreB;
+      int opScore = isHome ? match.scoreB : match.scoreA;
+
+      totalGoalsScored += myScore;
+      totalGoalsConceded += opScore;
+
+      if (opScore == 0) cleanSheets++;
+
+      if (myScore > opScore) {
+        form.add('W');
+        totalWins++;
+      } else if (myScore == opScore) {
+        form.add('D');
+        totalDraws++;
+      } else {
+        form.add('L');
+        totalLosses++;
+      }
+    }
+
+    MatchModel? nextMatch;
+    try {
+      List<MatchModel> upcoming =
+          teamMatches.where((m) => !m.isPlayed).toList();
+      upcoming.sort((a, b) => a.round.compareTo(b.round));
+      if (upcoming.isNotEmpty) nextMatch = upcoming.first;
+    } catch (_) {}
+
+    int playedCount = playedMatches.length;
+    return TeamDetailedStats(
+      team: team,
+      form: form.reversed.toList(), // Chronological
+      recentMatches: playedMatches.take(5).toList(),
+      nextMatch: nextMatch,
+      cleanSheets: cleanSheets,
+      avgGoalsScored: playedCount > 0 ? totalGoalsScored / playedCount : 0,
+      avgGoalsConceded: playedCount > 0 ? totalGoalsConceded / playedCount : 0,
+      totalWins: totalWins,
+      totalDraws: totalDraws,
+      totalLosses: totalLosses,
+      totalGoalsScored: totalGoalsScored,
+      totalGoalsConceded: totalGoalsConceded,
+    );
+  }
+
+  // --- 5. getTournamentStats(): Global statistics ---
+  TournamentStats getTournamentStats(TournamentModel tournament) {
+    List<LeagueStats> standings = calculateStandings(tournament);
+
+    List<LeagueStats> topScoring = List.from(standings);
+    topScoring.sort((a, b) => b.goalsFor.compareTo(a.goalsFor));
+
+    List<LeagueStats> bestDefenses = List.from(standings);
+    bestDefenses.sort((a, b) => a.goalsAgainst.compareTo(b.goalsAgainst));
+
+    List<LeagueStats> mostWins = List.from(standings);
+    mostWins.sort((a, b) => b.won.compareTo(a.won));
+
+    List<LeagueStats> mostLosses = List.from(standings);
+    mostLosses.sort((a, b) => b.lost.compareTo(a.lost));
+
+    int totalGoals = 0;
+    int playedMatches = 0;
+    for (var m in tournament.matches) {
+      if (m.isPlayed) {
+        totalGoals += (m.scoreA + m.scoreB);
+        playedMatches++;
+      }
+    }
+
+    return TournamentStats(
+      topScoringTeams: topScoring.take(5).toList(),
+      bestDefenses: bestDefenses.take(5).toList(),
+      mostWins: mostWins.take(5).toList(),
+      mostLosses: mostLosses.take(5).toList(),
+      totalGoals: totalGoals,
+      avgGoalsPerMatch: playedMatches > 0 ? totalGoals / playedMatches : 0,
+      matchesPlayed: playedMatches,
+      totalMatches: tournament.matches.length,
+    );
   }
 }
