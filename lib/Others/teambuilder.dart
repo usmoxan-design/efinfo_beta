@@ -490,213 +490,242 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
   }
 
   Widget _buildPitch(double height) {
-    return WidgetsToImage(
-      controller: _screenshotController,
+    return Center(
       child: Container(
-        height: height,
-        margin: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          // borderRadius: BorderRadius.circular(32),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF1B5E20)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 20)
-          ],
-        ),
-        child: ClipRRect(
-          // borderRadius: BorderRadius.circular(32),
-          child: Stack(
-            children: [
-              CustomPaint(size: Size.infinite, painter: PitchPainter()),
-              // Formation Stamp / Watermark
-              Positioned(
-                bottom: 20,
-                left: 20,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.15),
-                      width: 1.5,
+        padding: const EdgeInsets.all(12),
+        child: AspectRatio(
+          aspectRatio: 0.75, // Standard football pitch proportion
+          child: WidgetsToImage(
+            controller: _screenshotController,
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF1B5E20),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.5),
+                    blurRadius: 30,
+                    spreadRadius: -5,
+                  )
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Stack(
+                  children: [
+                    CustomPaint(size: Size.infinite, painter: PitchPainter()),
+                    // Formation Stamp / Watermark
+                    Positioned(
+                      bottom: 24,
+                      right: 24,
+                      child: Opacity(
+                        opacity: 0.3,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              'FORMATION',
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            Text(
+                              _currentFormation.name,
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        spreadRadius: 1,
-                      )
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'FORMATION',
-                        style: GoogleFonts.outfit(
-                          color: Colors.white.withOpacity(0.2),
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                      Text(
-                        _currentFormation.name,
-                        style: GoogleFonts.outfit(
-                          color: Colors.white.withOpacity(0.35),
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                    ],
-                  ),
+
+                    // THE GRID-BASED LAYOUT
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: _getFormationRows().map((rowSpots) {
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: rowSpots
+                              .map((spot) => _buildPlayerCardSpot(spot))
+                              .toList(),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ),
               ),
-              ..._currentFormation.positions.entries.map(
-                  (entry) => _buildPlayerSpot(entry.key, entry.value, height)),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildPlayerSpot(
-      String spotName, Offset position, double pitchHeight) {
-    final player = _squad[spotName];
-    final screenWidth = MediaQuery.of(context).size.width - 24;
+  List<List<String>> _getFormationRows() {
+    Map<double, List<String>> rowsMap = {};
+    for (var entry in _currentFormation.positions.entries) {
+      double dy = (entry.value.dy * 10).round() / 10;
+      rowsMap.putIfAbsent(dy, () => []).add(entry.key);
+    }
+    // dy 0.1 (FWD) -> dy 0.9 (GK)
+    var sortedYs = rowsMap.keys.toList()..sort();
+    List<List<String>> rows = [];
+    for (var y in sortedYs) {
+      rows.add(rowsMap[y]!);
+    }
+    return rows;
+  }
 
-    return AnimatedPositioned(
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.elasticOut,
-      left: position.dx * screenWidth - 36,
-      top: position.dy * pitchHeight - 50,
-      child: DragTarget<PesPlayer>(
-        onAcceptWithDetails: (details) =>
-            _addPlayerToSpot(spotName, details.data),
-        builder: (context, candidateData, rejectedData) {
-          return GestureDetector(
-            onLongPress: () {
-              if (player != null) {
-                setState(() => _squad[spotName] = null);
-              }
-            },
-            onTap: () => setState(() => _selectedSpot = spotName),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 68,
-                  height: 94,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: candidateData.isNotEmpty
-                        ? Colors.white24
-                        : Colors.black38,
-                    border: Border.all(
-                      color: player != null ? AppColors.accent : Colors.white24,
-                      width: player != null ? 1.5 : 1,
-                    ),
-                    gradient: player != null
-                        ? LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Colors.white12,
-                              Colors.black.withOpacity(0.5),
-                            ],
-                          )
-                        : null,
-                    boxShadow: [
-                      if (player != null)
-                        BoxShadow(
-                            color: AppColors.accent.withOpacity(0.2),
-                            blurRadius: 8,
-                            spreadRadius: 1)
-                    ],
+  Widget _buildPlayerCardSpot(String spotName) {
+    final player = _squad[spotName];
+    final ovrValue = player != null ? (int.tryParse(player.ovr) ?? 0) : 0;
+    final posLabel = spotName.replaceAll(RegExp(r'\d'), '');
+
+    Color badgeColor = Colors.grey;
+    if (ovrValue >= 95)
+      badgeColor = const Color(0xFFFFD700);
+    else if (ovrValue >= 90)
+      badgeColor = const Color(0xFFC084FC);
+    else if (ovrValue >= 85)
+      badgeColor = const Color(0xFF4ADE80);
+    else if (ovrValue >= 80)
+      badgeColor = const Color(0xFF38BDF8);
+    else if (ovrValue > 0) badgeColor = Colors.white70;
+
+    return DragTarget<PesPlayer>(
+      onAcceptWithDetails: (details) =>
+          _addPlayerToSpot(spotName, details.data),
+      builder: (context, candidateData, rejectedData) {
+        return GestureDetector(
+          onLongPress: () {
+            if (player != null) setState(() => _squad[spotName] = null);
+          },
+          onTap: () => setState(() => _selectedSpot = spotName),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 54,
+                height: 74,
+                decoration: BoxDecoration(
+                  color: candidateData.isNotEmpty
+                      ? Colors.white.withOpacity(0.3)
+                      : Colors.black.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: player != null
+                        ? Colors.white.withOpacity(0.9)
+                        : Colors.white.withOpacity(0.1),
+                    width: player != null ? 2 : 1.5,
                   ),
-                  child: player != null
-                      ? Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: CachedNetworkImage(
-                                imageUrl: kIsWeb
-                                    ? 'https://corsproxy.io/?${Uri.encodeComponent(player.imageUrl)}'
-                                    : player.imageUrl,
-                                httpHeaders: PesService.headers,
-                                fit: BoxFit.cover,
-                                width: 68,
-                                height: 94,
-                                placeholder: (context, url) => const Center(
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2)),
-                                errorWidget: (context, url, error) =>
-                                    const Icon(Icons.person,
-                                        color: Colors.white24, size: 30),
-                              ),
+                  boxShadow: [
+                    if (player != null)
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      )
+                  ],
+                ),
+                child: player != null
+                    ? Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: CachedNetworkImage(
+                              imageUrl: kIsWeb
+                                  ? 'https://corsproxy.io/?${Uri.encodeComponent(player.imageUrl)}'
+                                  : player.imageUrl,
+                              httpHeaders: PesService.headers,
+                              fit: BoxFit.cover,
+                              width: 54,
+                              height: 74,
                             ),
-                            // Gradient over image for better text readability
-                            Container(
+                          ),
+                          Positioned(
+                            top: 2,
+                            right: 2,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 0.5),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.transparent,
-                                    Colors.black.withOpacity(0.7),
-                                  ],
-                                  stops: const [0.6, 1.0],
+                                color: badgeColor,
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                              child: Text(
+                                player.ovr,
+                                style: GoogleFonts.outfit(
+                                  color: Colors.black,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
                                 ),
                               ),
                             ),
-
-                            Positioned(
-                              bottom: 4,
-                              left: 4,
-                              right: 4,
-                              child: Text(
-                                player.name,
-                                style: GoogleFonts.outfit(
-                                    color: Colors.white,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w600),
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            )
-                          ],
-                        )
-                      : Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.add_circle_outline,
-                                  color: Colors.white24, size: 24),
-                              const SizedBox(height: 4),
-                              Text(spotName.replaceAll(RegExp(r'\d'), ''),
-                                  style: const TextStyle(
-                                      color: Colors.white24,
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold)),
-                            ],
                           ),
+                          Positioned(
+                            bottom: 2,
+                            left: 2,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.6),
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                              child: Text(
+                                posLabel,
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 7,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_rounded,
+                                color: Colors.white.withOpacity(0.2), size: 24),
+                            Text(
+                              posLabel,
+                              style: TextStyle(
+                                  color: Colors.white.withOpacity(0.15),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900),
+                            ),
+                          ],
                         ),
+                      ),
+              ),
+              const SizedBox(height: 6),
+              SizedBox(
+                width: 60,
+                child: Text(
+                  player?.name.split(' ').last ?? '',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white.withOpacity(player != null ? 0.9 : 0.0),
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
-          );
-        },
-      ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

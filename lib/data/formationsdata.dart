@@ -33,16 +33,16 @@ final List<Formation> allFormations = [
         "• CF (ikkala): Goal Poacher + Deep Lying Forward (Haaland + Kane, Mbappé + Lewandowski) — bitta target, bitta tez",
     positions: [
       [0.5, 0.94], // GK
-      [0.12, 0.80], // LB
-      [0.35, 0.80], // LCB
-      [0.65, 0.80], // RCB
-      [0.88, 0.80], // RB
-      [0.15, 0.55], // LMF
-      [0.38, 0.55], // LCM
-      [0.62, 0.55], // RCM
-      [0.85, 0.55], // RMF
-      [0.35, 0.22], // LCF
-      [0.65, 0.22], // RCF
+      [0.12, 0.82], // LB
+      [0.35, 0.82], // LCB
+      [0.65, 0.82], // RCB
+      [0.88, 0.82], // RB
+      [0.12, 0.50], // LMF
+      [0.38, 0.50], // LCM
+      [0.62, 0.50], // RCM
+      [0.88, 0.50], // RMF
+      [0.38, 0.18], // LCF
+      [0.62, 0.18], // RCF
     ],
     labels: [
       'GK',
@@ -86,16 +86,16 @@ final List<Formation> allFormations = [
         "• CF: Goal Poacher yoki Deep Lying Forward (Mbappé, Haaland, Lewandowski, Kane) — tez va kuchli",
     positions: [
       [0.5, 0.94], // GK
-      [0.12, 0.80], // LB
-      [0.35, 0.80], // LCB
-      [0.65, 0.80], // RCB
-      [0.88, 0.80], // RB
-      [0.32, 0.58], // LCM
-      [0.5, 0.65], // CDM
-      [0.68, 0.58], // RCM
-      [0.15, 0.28], // LWF
-      [0.5, 0.15], // CF
-      [0.85, 0.28], // RWF
+      [0.12, 0.82], // LB
+      [0.35, 0.82], // LCB
+      [0.65, 0.82], // RCB
+      [0.88, 0.82], // RB
+      [0.32, 0.50], // LCM
+      [0.5, 0.68], // CDM (DMF level)
+      [0.68, 0.50], // RCM
+      [0.15, 0.18], // LWF
+      [0.51, 0.18], // CF
+      [0.85, 0.18], // RWF
     ],
     labels: [
       'GK',
@@ -140,13 +140,13 @@ final List<Formation> allFormations = [
         "• CF: Goal Poacher (Haaland, Mbappé, Kane, Lewandowski) — box ichida tugatuvchi",
     positions: [
       [0.5, 0.94], // GK
-      [0.12, 0.80], // LB
-      [0.35, 0.80], // LCB
-      [0.65, 0.80], // RCB
-      [0.88, 0.80], // RB
-      [0.32, 0.62], // LCM
-      [0.5, 0.62], // CCM
-      [0.68, 0.62], // RCM
+      [0.12, 0.82], // LB
+      [0.35, 0.82], // LCB
+      [0.65, 0.82], // RCB
+      [0.88, 0.82], // RB
+      [0.32, 0.50], // LCM
+      [0.5, 0.50], // CCM
+      [0.68, 0.50], // RCM
       [0.35, 0.35], // LAMF
       [0.65, 0.35], // RAMF
       [0.5, 0.15], // CF
@@ -194,16 +194,16 @@ final List<Formation> allFormations = [
         "• CF (ikkala): Goal Poacher + Deep Lying Forward (Haaland + Mbappé, Kane + Lewandowski) — bitta tez, bitta kuchli",
     positions: [
       [0.5, 0.94], // GK
-      [0.12, 0.80], // LB
-      [0.35, 0.80], // LCB
-      [0.65, 0.80], // RCB
-      [0.88, 0.80], // RB
-      [0.32, 0.58], // LCM
-      [0.5, 0.58], // CCM
-      [0.68, 0.58], // RCM
-      [0.5, 0.38], // AMF
-      [0.35, 0.18], // LCF
-      [0.65, 0.18], // RCF
+      [0.12, 0.82], // LB
+      [0.35, 0.82], // LCB
+      [0.65, 0.82], // RCB
+      [0.88, 0.82], // RB
+      [0.32, 0.50], // LCM
+      [0.5, 0.68], // CDM (DMF)
+      [0.68, 0.50], // RCM
+      [0.5, 0.35], // AMF
+      [0.35, 0.15], // LCF
+      [0.65, 0.15], // RCF
     ],
     labels: [
       'GK',
@@ -305,16 +305,16 @@ final List<Formation> allFormations = [
         "• CF: Goal Poacher (Haaland, Mbappé, Kane) — counter target",
     positions: [
       [0.5, 0.94], // GK
-      [0.12, 0.80], // LB
-      [0.35, 0.80], // LCB
-      [0.65, 0.80], // RCB
-      [0.88, 0.80], // RB
-      [0.35, 0.62], // LDMF
-      [0.65, 0.62], // RDMF
-      [0.5, 0.45], // AMF
-      [0.15, 0.25], // LWF
-      [0.5, 0.12], // CF
-      [0.85, 0.25], // RWF
+      [0.12, 0.82], // LB
+      [0.35, 0.82], // LCB
+      [0.65, 0.82], // RCB
+      [0.88, 0.82], // RB
+      [0.35, 0.68], // LDMF
+      [0.65, 0.68], // RDMF
+      [0.5, 0.35], // AMF
+      [0.15, 0.15], // LWF
+      [0.5, 0.15], // CF
+      [0.85, 0.15], // RWF
     ],
     labels: [
       'GK',
