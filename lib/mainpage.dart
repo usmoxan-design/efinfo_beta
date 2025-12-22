@@ -45,7 +45,7 @@ class _MainPageState extends State<MainPage> {
             ),
             const SizedBox(width: 15),
             Text(
-              "Version 1.0.7",
+              "Version 1.0.8",
               textAlign: TextAlign.center,
               style: GoogleFonts.outfit(
                 fontSize: 14,
@@ -106,7 +106,7 @@ class _MainPageState extends State<MainPage> {
                   ),
                 ),
                 Text(
-                  "Eng so\'nggi yangiliklarni o'tkazib yubormang",
+                  "Eng so'nggi yangiliklarni o'tkazib yubormang",
                   style: GoogleFonts.outfit(
                     color: Colors.white70,
                     fontSize: 11,
@@ -127,7 +127,7 @@ class _MainPageState extends State<MainPage> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
             child: Text(
-              "Qo\'shilish",
+              "Qo'shilish",
               style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
             ),
           )

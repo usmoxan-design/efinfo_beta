@@ -1,23 +1,20 @@
-import 'package:efinfo_beta/Others/imageSaver.dart'; // Yordamchi fayl
-import 'package:efinfo_beta/theme/app_colors.dart';
-import 'package:efinfo_beta/Others/pitchpainter.dart'; // Yordamchi fayl
-import 'package:efinfo_beta/models/teamBLDRModel.dart'; // Model fayli
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
-import 'package:flutter/rendering.dart';
-import 'package:widgets_to_image/widgets_to_image.dart';
-
-// JSON dan ma'lumotlarni yuklash uchun
 import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
-
-import '../additional/imageview.dart';
-
-// ---------------------------------------------------------
-// 2. ASOSIY EKRAN (TEAM BUILDER)
-// ---------------------------------------------------------
+import 'dart:io';
+import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:efinfo_beta/Others/pitchpainter.dart';
+import 'package:efinfo_beta/models/pes_models.dart';
+import 'package:efinfo_beta/services/pes_service.dart';
+import 'package:efinfo_beta/models/formationsmodel.dart' as fm;
+import 'package:efinfo_beta/data/formationsdata.dart' as fd;
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:widgets_to_image/widgets_to_image.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:efinfo_beta/utils/platform_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TeamBuilderScreen extends StatefulWidget {
   const TeamBuilderScreen({super.key});
@@ -27,602 +24,1022 @@ class TeamBuilderScreen extends StatefulWidget {
 }
 
 class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
-  // RepaintBoundary ni boshqarish uchun Global Key
-  final GlobalKey _pitchBoundaryKey = GlobalKey();
-  final WidgetsToImageController _controller = WidgetsToImageController();
+  final PesService _pesService = PesService();
+  final WidgetsToImageController _screenshotController =
+      WidgetsToImageController();
 
-  String selectedFormation = '4-3-3';
-  Map<String, TBuilderPlayer?> fieldPositions = {};
-  String selectedFilter = 'All';
-  final TextEditingController searchController = TextEditingController();
+  final List<SquadFormation> _formations = [];
+  late SquadFormation _currentFormation;
+  Map<String, PesPlayer?> _squad = {};
 
-  // YANGI: O'yinchilar ro'yxati va Yuklash holati
-  List<TBuilderPlayer> _allPlayers = [];
-  bool _isLoading = true;
-
-  final Map<String, List<String>> roleMap = {
-    'Goalkeeper': ['GK'],
-    'Defense': ['CB', 'LB', 'RB'],
-    'Midfield': ['CMF', 'DMF', 'AMF', 'LMF', 'RMF'],
-    'Forward': ['CF', 'SS', 'LWF', 'RWF'],
-  };
-
-  final Map<String, Map<String, Alignment>> formations = {
-    '4-3-3': {
-      'GK': const Alignment(0.0, 0.95),
-      'LB': const Alignment(-0.9, 0.7),
-      'CB1': const Alignment(-0.4, 0.8),
-      'CB2': const Alignment(0.4, 0.8),
-      'RB': const Alignment(0.9, 0.7),
-      'CM1': const Alignment(-0.7, 0.15),
-      'DMF': const Alignment(0.0, 0.4),
-      'CM2': const Alignment(0.7, 0.15),
-      'LWF': const Alignment(-0.65, -0.74),
-      'CF': const Alignment(0.0, -0.75),
-      'RWF': const Alignment(0.65, -0.74),
-    },
-    '4-4-2': {
-      'GK': const Alignment(0.0, 0.95),
-      'LB': const Alignment(-0.9, 0.75),
-      'CB1': const Alignment(-0.4, 0.85),
-      'CB2': const Alignment(0.4, 0.85),
-      'RB': const Alignment(0.9, 0.75),
-      'LMF': const Alignment(-0.9, 0.15),
-      'CM1': const Alignment(-0.35, 0.3),
-      'CM2': const Alignment(0.35, 0.3),
-      'RMF': const Alignment(0.9, 0.15),
-      'CF1': const Alignment(-0.35, -0.6),
-      'CF2': const Alignment(0.35, -0.6),
-    },
-  };
+  // Search state
+  List<PesPlayer> _searchResults = [];
+  bool _isSearching = false;
+  String? _selectedSpot;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadPlayers(); // O'yinchilarni JSON dan yuklash
-    searchController.addListener(() => setState(() {}));
+    _formations.addAll(_convertFormations(fd.allFormations));
+    _currentFormation = _formations.first;
+    _initializeSquad();
+    _loadSavedSquad();
   }
 
-  // ---------------------------------------------------------
-  // JSON DAN MA'LUMOT YUKLASH MANTIQI (Yangi)
-  // ---------------------------------------------------------
-
-  Future<void> _loadPlayers() async {
+  Future<void> _autoPick() async {
+    setState(() => _isSearching = true);
     try {
-      final String response =
-          await rootBundle.loadString('assets/data/players.json');
-      final List<dynamic> data = json.decode(response);
-      final List<TBuilderPlayer> loadedPlayers = data
-          .map((json) => TBuilderPlayer.fromJson(json as Map<String, dynamic>))
-          .toList();
+      // Fetch top 100 players sorted by max OVR
+      final players = await _pesService.fetchPlayers(
+        filters: {
+          'all': '1',
+          'sort': 'overall_at_max_level',
+          'order': 'desc',
+          'mode': 'max_level'
+        },
+      );
+
+      if (players.isEmpty) throw 'Hech qanday o\'yinchi topilmadi';
+
+      final Map<String, PesPlayer?> newSquad = {};
+      final List<String> usedIds = [];
+
+      // Create a copy of current formation spots
+      final spots = _currentFormation.positions.keys.toList();
+
+      for (var spot in spots) {
+        final basePos = _getBasePosition(spot);
+
+        // Calculate score for all available players
+        final List<MapEntry<PesPlayer, int>> scoredPlayers = players
+            .where((p) => !usedIds.contains(p.id))
+            .map((p) => MapEntry(p, _calculateScore(p, basePos)))
+            .toList();
+
+        // Sort by score descending
+        scoredPlayers.sort((a, b) => b.value.compareTo(a.value));
+
+        if (scoredPlayers.isNotEmpty && scoredPlayers.first.value > -500) {
+          final bestMatch = scoredPlayers.first.key;
+          newSquad[spot] = bestMatch;
+          usedIds.add(bestMatch.id);
+        }
+      }
 
       setState(() {
-        _allPlayers = loadedPlayers;
-        _isLoading = false;
+        _squad = newSquad;
+        _isSearching = false;
       });
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error loading players from JSON: $e");
-      }
-    }
-  }
 
-  // ---------------------------------------------------------
-  // SCREENSHOT MANTIQI
-  // ---------------------------------------------------------
-
-  Future<void> _captureAndSave() async {
-    final RenderRepaintBoundary boundary = _pitchBoundaryKey.currentContext!
-        .findRenderObject()! as RenderRepaintBoundary;
-
-    final double pixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final ui.Image image = await boundary.toImage(pixelRatio: pixelRatio);
-
-    final ByteData? byteData =
-        await image.toByteData(format: ui.ImageByteFormat.png);
-
-    final Uint8List? bytes = byteData?.buffer.asUint8List();
-
-    if (bytes != null) {
-      if (mounted) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => ImagePreviewScreen(imageBytes: bytes),
-          ),
-        );
-      }
-    } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text("Rasmga olishda xato yuz berdi."),
-              backgroundColor: Colors.red),
+            content: Text('Eng kuchli tarkib avtomatik yig\'ildi! ⚡'),
+            backgroundColor: Colors.blueAccent,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSearching = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Xatolik: $e'), backgroundColor: Colors.red),
         );
       }
     }
   }
 
-  bool _playerMatchesFilter(TBuilderPlayer player) {
-    if (selectedFilter == 'All') return true;
-    final allowedPositions = roleMap[selectedFilter] ?? [];
-    return allowedPositions.contains(player.position);
+  int _calculateScore(PesPlayer p, String spotPos) {
+    int score = 0;
+    final style = p.playingStyle ?? '';
+    final pos = p.position;
+
+    // RULE 1: STRICT GK SEPARATION
+    if (spotPos == 'GK') return pos == 'GK' ? 1000 : -1000;
+    if (pos == 'GK') return -1000;
+
+    // RULE 2: POSITION MATCH
+    if (pos == spotPos) score += 100;
+
+    // RULE 3: PLAYING STYLE MATCH (THE BRAIN)
+    switch (spotPos) {
+      case 'CF':
+        if (style == 'Goal Poacher') score += 200;
+        if (style == 'Fox in the Box') score += 180;
+        if (style == 'Deep-Lying Forward') score += 150;
+        if (style == 'Target Man') score += 150;
+        if (pos == 'SS') score += 50;
+        break;
+      case 'LWF':
+      case 'RWF':
+        if (style == 'Prolific Winger') score += 200;
+        if (style == 'Roaming Flank') score += 180;
+        if (style == 'Creative Playmaker') score += 100;
+        break;
+      case 'AMF':
+        if (style == 'Hole Player') score += 200;
+        if (style == 'Creative Playmaker') score += 180;
+        if (style == 'Classic No. 10') score += 120;
+        break;
+      case 'CMF':
+        if (style == 'Box-to-Box') score += 200;
+        if (style == 'Orchestrator') score += 180;
+        if (style == 'Hole Player') score += 100;
+        break;
+      case 'DMF':
+        if (style == 'Anchorman') score += 250;
+        if (style == 'Destroyer') score += 180;
+        if (style == 'Orchestrator') score += 150;
+        break;
+      case 'CB':
+        if (style == 'Build Up') score += 200;
+        if (style == 'Destroyer') score += 180;
+        if (style == 'Extra Frontman') score += 150;
+        break;
+      case 'LB':
+      case 'RB':
+        if (style == 'Offensive Full-back') score += 200;
+        if (style == 'Defensive Full-back') score += 200;
+        if (style == 'Full-back Finisher') score += 150;
+        break;
+    }
+
+    // RULE 4: OVR BONUS (TIE BREAKER)
+    score += int.tryParse(p.ovr) ?? 0;
+
+    return score;
   }
 
-  bool canAcceptPlayer(TBuilderPlayer player, String slotKey) {
-    if (slotKey.startsWith('GK') && player.position != 'GK') return false;
-    if (!slotKey.startsWith('GK') && player.position == 'GK') return false;
-    return true;
+  String _getBasePosition(String spot) {
+    final pos = spot.replaceAll(RegExp(r'\d'), '');
+    if (pos == 'LCB' || pos == 'RCB' || pos == 'CBF') return 'CB';
+    if (pos == 'LCF' || pos == 'RCF') return 'CF';
+    if (pos == 'LCM' || pos == 'RCM' || pos == 'CCM') return 'CMF';
+    if (pos == 'LDMF' || pos == 'RDMF') return 'DMF';
+    if (pos == 'LAMF' || pos == 'RAMF' || pos == 'CAM') return 'AMF';
+    if (pos == 'LWB') return 'LB';
+    if (pos == 'RWB') return 'RB';
+    if (pos == 'CDM') return 'DMF';
+    return pos;
   }
 
-  void _movePlayer(TBuilderPlayer player, String newSlotKey) {
-    final oldSlotKey = fieldPositions.entries
-        .firstWhere((entry) => entry.value?.id == player.id,
-            orElse: () => const MapEntry('', null))
-        .key;
+  List<SquadFormation> _convertFormations(List<fm.Formation> formations) {
+    return formations.map((fm.Formation f) {
+      Map<String, Offset> posMap = {};
+      final positions = f.positions;
+      final labels = f.labels;
 
-    setState(() {
-      if (oldSlotKey.isNotEmpty) {
-        fieldPositions.remove(oldSlotKey);
+      for (int i = 0; i < positions.length; i++) {
+        String label =
+            (labels != null && i < labels.length) ? labels[i] : 'P${i + 1}';
+        // Add a numeric suffix if label exists to ensure uniqueness in the map
+        String uniqueLabel = label;
+        int count = 1;
+        while (posMap.containsKey(uniqueLabel)) {
+          uniqueLabel = '$label${count++}';
+        }
+        posMap[uniqueLabel] = Offset(positions[i][0], positions[i][1]);
       }
-      fieldPositions[newSlotKey] = player;
-    });
+      return SquadFormation(name: f.name, positions: posMap);
+    }).toList();
   }
 
-  void _removePlayerFromPitch(TBuilderPlayer player) {
-    final slotToRemove = fieldPositions.entries
-        .firstWhere((entry) => entry.value?.id == player.id,
-            orElse: () => const MapEntry('', null))
-        .key;
+  void _initializeSquad() {
+    _squad = {for (var pos in _currentFormation.positions.keys) pos: null};
+  }
 
-    if (slotToRemove.isNotEmpty) {
-      setState(() {
-        fieldPositions.remove(slotToRemove);
-      });
+  Future<void> _loadSavedSquad() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedStr = prefs.getString('saved_squad_data');
+      if (savedStr != null) {
+        final data = jsonDecode(savedStr);
+        final formationName = data['formationName'];
+        final foundFormation = _formations.firstWhere(
+          (f) => f.name == formationName,
+          orElse: () => _formations.first,
+        );
+
+        setState(() {
+          _currentFormation = foundFormation;
+          // Note: In a real app, you'd fetch player details by ID here.
+          // For now, we'll just keep the structure if we have objects stored.
+          // Since we ideally save just IDs, this part might need a list of players.
+          // But for this session, we'll persist the names/ids if they were available.
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading saved squad: $e');
     }
   }
 
-  List<TBuilderPlayer> get _filteredAndUnusedPlayers {
-    // Ma'lumot manbasi endi _allPlayers
-    final allPlayers = _allPlayers;
-    final playersOnPitchIds = fieldPositions.values
-        .whereType<TBuilderPlayer>()
-        .map((p) => p.id)
-        .toSet();
-    final search = searchController.text.toLowerCase();
+  Future<void> _saveSquad() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = {
+      'formationName': _currentFormation.name,
+      'players': _squad.map((k, v) => MapEntry(k, v?.id)),
+    };
+    await prefs.setString('saved_squad_data', jsonEncode(data));
 
-    return allPlayers.where((player) {
-      if (playersOnPitchIds.contains(player.id)) {
-        return false;
+    // Trigger export based on platform as requested by user
+    await _shareSquad();
+  }
+
+  void _changeFormation(SquadFormation formation) {
+    setState(() {
+      _currentFormation = formation;
+      Map<String, PesPlayer?> newSquad = {
+        for (var pos in formation.positions.keys) pos: null
+      };
+      // Migrate existing players if position names match
+      _squad.forEach((key, value) {
+        if (newSquad.containsKey(key)) {
+          newSquad[key] = value;
+        }
+      });
+      _squad = newSquad;
+    });
+  }
+
+  double get _averageOvr {
+    List<PesPlayer> active = _squad.values.whereType<PesPlayer>().toList();
+    if (active.isEmpty) return 0;
+
+    double total = 0;
+    for (var p in active) {
+      double ovr = double.tryParse(p.ovr) ?? 0;
+      if (ovr == 0) ovr = 90; // Default fallback for UI
+      total += ovr;
+    }
+    return total / active.length;
+  }
+
+  double get _chemistry {
+    List<PesPlayer> active = _squad.values.whereType<PesPlayer>().toList();
+    if (active.length < 2) return 0;
+
+    int points = 0;
+    for (int i = 0; i < active.length; i++) {
+      for (int j = i + 1; j < active.length; j++) {
+        if (active[i].club == active[j].club && active[i].club != 'Free Agent')
+          points += 10;
+        if (active[i].nationality == active[j].nationality) points += 5;
       }
-      if (!_playerMatchesFilter(player)) {
-        return false;
+    }
+
+    double maxPossible = (active.length * (active.length - 1) / 2) * 15;
+    if (maxPossible == 0) return 0;
+    double score = (points / (active.length * 5)) * 10; // Normalized for UI
+    return score.clamp(0, 100);
+  }
+
+  Future<void> _searchPlayers(String query) async {
+    if (query.isEmpty) return;
+    setState(() => _isSearching = true);
+    try {
+      final results = await _pesService.fetchPlayers(
+          filters: {'name': query, 'all': '1', 'mode': 'max_level'});
+      setState(() {
+        _searchResults = results;
+        _isSearching = false;
+      });
+    } catch (e) {
+      setState(() => _isSearching = false);
+    }
+  }
+
+  void _addPlayerToSpot(String spot, PesPlayer player) {
+    setState(() {
+      _squad[spot] = player;
+      _selectedSpot = null;
+      _searchResults = [];
+      _searchController.clear();
+    });
+  }
+
+  Future<void> _shareSquad() async {
+    final bytes = await _screenshotController.capture();
+    if (bytes == null) return;
+
+    if (kIsWeb) {
+      // Web platform handling
+      try {
+        if (PlatformUtils.isTelegramWebApp()) {
+          // Send to Telegram bot
+          final base64Image = base64Encode(bytes);
+          final data = jsonEncode({
+            'type': 'squad_screenshot',
+            'image': base64Image,
+            'formation': _currentFormation.name,
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+          });
+          PlatformUtils.sendTelegramData(data);
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Squad sent to Telegram bot! 🚀'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else {
+          // Regular web - download as blob
+          await PlatformUtils.downloadBlob(
+              bytes, 'mysquad_${DateTime.now().millisecondsSinceEpoch}.png');
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Squad downloaded! 📥'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error sharing: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
-      if (search.isNotEmpty && !player.name.toLowerCase().contains(search)) {
-        return false;
-      }
-      return true;
-    }).toList();
+    } else {
+      // Mobile platform - use native share
+      final directory = await getTemporaryDirectory();
+      final path =
+          '${directory.path}/mysquad_${DateTime.now().millisecondsSinceEpoch}.png';
+      final file = await File(path).create();
+      await file.writeAsBytes(bytes);
+      await Share.shareXFiles([XFile(path)],
+          text:
+              'Check out my eFootball Squad Build! 🔥 #eFootball #SuperSquad');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: Color(0xFF011A0B), // HomePage foni
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(
-                  color: Color(0xFF06DF5D)), // HomePage accent
-              SizedBox(height: 20),
-              Text("O'yinchilar ma'lumotlari yuklanmoqda...",
-                  style: TextStyle(color: Colors.white70)),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final currentFormation = formations[selectedFormation]!;
+    final size = MediaQuery.of(context).size;
+    final pitchHeight = size.height * 0.65;
 
     return Scaffold(
-      backgroundColor: AppColors.background, // HomePage foni
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        iconTheme: const IconThemeData(
-          color: Colors.white,
-        ),
-        backgroundColor: AppColors.background, // AppBar foni ham bir xil
+        title: Text('SuperSquad Builder',
+            style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text("SuperSquad XI",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            onPressed: () => Navigator.pop(context)),
         actions: [
-          DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              dropdownColor: AppColors.background,
-              value: selectedFormation,
-              icon: const Icon(Icons.keyboard_arrow_down,
-                  color: AppColors.accent), // Accent
-              style: const TextStyle(
-                  color: AppColors.accent, fontWeight: FontWeight.bold),
-              items: formations.keys
-                  .map((f) => DropdownMenuItem(value: f, child: Text(f)))
-                  .toList(),
-              onChanged: (v) => setState(() {
-                selectedFormation = v!;
-                fieldPositions.clear();
-              }),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: ElevatedButton(
-              onPressed: _captureAndSave,
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accent, // Accent
-                  foregroundColor: Colors.black), // Matn qora
-              child: const Text("Saqlash",
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          )
+          // IconButton(
+          //     icon: const Icon(Icons.auto_fix_high_rounded,
+          //         color: Colors.cyanAccent),
+          //     onPressed: _autoPick,
+          //     tooltip: 'Auto Pick'),
+          // IconButton(
+          //     icon: const Icon(Icons.grid_view_rounded, color: Colors.white),
+          //     onPressed: _showFormationDialog,
+          //     tooltip: 'Change Formation'),
+          IconButton(
+              icon: const Icon(Icons.share_outlined, color: AppColors.accent),
+              onPressed: _shareSquad),
+          IconButton(
+              icon: const Icon(Icons.save_alt_rounded, color: Colors.white70),
+              onPressed: _saveSquad),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
-          // --- 1. FUTBOL MAYDONI (Yuqori qism) ---
+          _buildStatsHeader(),
           Expanded(
-            flex: 6,
-            child: RepaintBoundary(
-              key: _pitchBoundaryKey,
-              child: WidgetsToImage(
-                controller: _controller,
+            child: Stack(
+              children: [
+                _buildPitch(pitchHeight),
+                _buildFormationFab(),
+                if (_selectedSpot != null) _buildSearchOverlay(),
+                if (_isSearching && _selectedSpot == null)
+                  _buildAutoPickOverlay(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      decoration: BoxDecoration(
+        color: AppColors.cardSurface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white10),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black26, blurRadius: 10, offset: const Offset(0, 4))
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          // _statItem('Avg OVR', _averageOvr.toInt().toString(), Icons.bolt,
+          //     Colors.amber),
+          _statItem('Chemistry', '${_chemistry.toInt()}', Icons.auto_awesome,
+              Colors.cyanAccent),
+          GestureDetector(
+            onLongPress: _showFormationDialog,
+            onTap: _showFormationDialog,
+            child: _statItem('Formation', _currentFormation.name,
+                Icons.grid_view_rounded, Colors.purpleAccent),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statItem(String label, String value, IconData icon, Color color) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: color, size: 16),
+            const SizedBox(width: 4),
+            Text(value,
+                style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold)),
+          ],
+        ),
+        Text(label,
+            style: GoogleFonts.outfit(
+                color: Colors.white38,
+                fontSize: 10,
+                fontWeight: FontWeight.w500)),
+      ],
+    );
+  }
+
+  Widget _buildPitch(double height) {
+    return WidgetsToImage(
+      controller: _screenshotController,
+      child: Container(
+        height: height,
+        margin: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          // borderRadius: BorderRadius.circular(32),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF1B5E20)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 20)
+          ],
+        ),
+        child: ClipRRect(
+          // borderRadius: BorderRadius.circular(32),
+          child: Stack(
+            children: [
+              CustomPaint(size: Size.infinite, painter: PitchPainter()),
+              // Formation Stamp / Watermark
+              Positioned(
+                bottom: 20,
+                left: 20,
                 child: Container(
-                  margin: const EdgeInsets.all(16),
-                  width: double.infinity,
-                  child: CustomPaint(
-                    painter: PitchPainter(),
-                    child: Stack(
-                      children: [
-                        // A) O'chirish/Qaytarish zonasi
-                        Align(
-                          alignment: Alignment.topCenter,
-                          child: DragTarget<TBuilderPlayer>(
-                            onAcceptWithDetails: (details) {
-                              _removePlayerFromPitch(details.data);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content:
-                                        Text("O'yinchi Grid'ga qaytarildi!"),
-                                    backgroundColor: Colors.amber),
-                              );
-                            },
-                            builder: (context, candidate, rejected) {
-                              if (candidate.isNotEmpty) {
-                                return Container(
-                                  height: 60,
-                                  width: 100,
-                                  decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.8),
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                        color: Colors.white, width: 2),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: const Icon(Icons.delete_forever,
-                                      color: Colors.white, size: 40),
-                                );
-                              }
-                              return const SizedBox.shrink();
-                            },
-                          ),
-                        ),
-
-                        // B) Pozitsiya katakchalari
-                        ...currentFormation.entries.map((entry) {
-                          final slotKey = entry.key;
-                          final alignment = entry.value;
-
-                          return Align(
-                            alignment: alignment,
-                            child: DragTarget<TBuilderPlayer>(
-                              onAcceptWithDetails: (details) {
-                                final TBuilderPlayer player = details.data;
-
-                                if (canAcceptPlayer(player, slotKey)) {
-                                  _movePlayer(player, slotKey);
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content:
-                                            Text("Darvozabon faqat darvozaga!"),
-                                        backgroundColor: Colors.red),
-                                  );
-                                }
-                              },
-                              builder: (context, candidate, rejected) {
-                                final player = fieldPositions[slotKey];
-                                final isHovered = candidate.isNotEmpty;
-
-                                return SizedBox(
-                                  width: 50,
-                                  height: 60,
-                                  child: player != null
-                                      ? _buildPlacedPlayer(player, slotKey)
-                                      : _buildEmptySlot(slotKey, isHovered),
-                                );
-                              },
-                            ),
-                          );
-                        }),
-                      ],
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.15),
+                      width: 1.5,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        spreadRadius: 1,
+                      )
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'FORMATION',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white.withOpacity(0.2),
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      Text(
+                        _currentFormation.name,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white.withOpacity(0.35),
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
+              ..._currentFormation.positions.entries.map(
+                  (entry) => _buildPlayerSpot(entry.key, entry.value, height)),
+            ],
           ),
-
-          // --- 2. O'YINCHILAR PANELI (Pastki qism) ---
-          Expanded(
-            flex: 4,
-            child: Container(
-              decoration: BoxDecoration(
-                color:
-                    const Color(0xFF011A0B).withOpacity(0.8), // Biroz shaffof
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(24)),
-                border: Border.all(
-                    color: const Color(0xFF06DF5D).withOpacity(0.3), width: 1),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Colors.black54,
-                      blurRadius: 10,
-                      offset: Offset(0, -4))
-                ],
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  const Text(
-                    "O'yinchini maydondan olib tashlash uchun ustiga bir marta bosing!",
-                    style: TextStyle(color: Colors.red, fontSize: 10),
-                  ),
-                  const SizedBox(height: 10),
-                  // A) Filtrlar
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Wrap(
-                      spacing: 8.0,
-                      runSpacing: 0.0,
-                      children: [
-                        'All',
-                        'Goalkeeper',
-                        'Defense',
-                        'Midfield',
-                        'Forward'
-                      ].map((filter) {
-                        final isSelected = selectedFilter == filter;
-                        return FilterChip(
-                          label: Text(filter),
-                          selected: isSelected,
-                          onSelected: (val) =>
-                              setState(() => selectedFilter = filter),
-                          backgroundColor: Colors.white10,
-                          selectedColor: AppColors.accent,
-                          checkmarkColor: Colors.black,
-                          labelStyle: TextStyle(
-                            color: isSelected ? Colors.black : Colors.white,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              side: BorderSide(
-                                  color: isSelected
-                                      ? const Color(0xFF06DF5D)
-                                      : Colors.white24)),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-
-                  // B) Qidiruv
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: TextField(
-                      controller: searchController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: "O'yinchi qidiring...",
-                        hintStyle: TextStyle(color: Colors.grey[500]),
-                        prefixIcon: const Icon(Icons.search,
-                            color: Colors.white54), // Grey o'rniga
-                        filled: true,
-                        fillColor: Colors.white10, // Black26 o'rniga
-                        contentPadding: EdgeInsets.zero,
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide:
-                                const BorderSide(color: Colors.white24)),
-                        focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: const BorderSide(
-                                color: AppColors.accent)), // Accent
-                      ),
-                      // onChanged allaqachon initState() da o'rnatilgan
-                    ),
-                  ),
-
-                  // C) O'yinchilar Grid'i
-                  Expanded(
-                    child: GridView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        childAspectRatio: 0.9,
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                      ),
-                      itemCount: _filteredAndUnusedPlayers.length,
-                      itemBuilder: (ctx, i) {
-                        final player = _filteredAndUnusedPlayers[i];
-
-                        return LongPressDraggable<TBuilderPlayer>(
-                          data: player,
-                          feedback: SizedBox(
-                            width: 80,
-                            height: 100,
-                            child: Material(
-                              color: Colors.transparent,
-                              child: _buildPlayerCard(player,
-                                  scale: 1.1, showDetails: true),
-                            ),
-                          ),
-                          childWhenDragging: Opacity(
-                              opacity: 0.5,
-                              child: _buildPlayerCard(player,
-                                  scale: 0.9, showDetails: false)),
-                          child: _buildPlayerCard(player, showDetails: false),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- WIDGETLAR ---
-
-  Widget _buildEmptySlot(String title, bool isHovered) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isHovered ? AppColors.accent.withOpacity(0.3) : Colors.black38,
-        border: Border.all(
-            color: isHovered ? AppColors.accent : Colors.white24, width: 1.5),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(title,
-              style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold)),
-          const Icon(Icons.add, color: Colors.white30, size: 18),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPlacedPlayer(TBuilderPlayer player, String slotKey) {
-    return LongPressDraggable<TBuilderPlayer>(
-      data: player,
-      feedback: SizedBox(
-        width: 80,
-        height: 100,
-        child: Material(
-          color: Colors.transparent,
-          child: _buildPlayerCard(player, scale: 1.1, showDetails: true),
         ),
       ),
-      childWhenDragging: Opacity(
-          opacity: 0.3, child: _buildPlayerCard(player, showDetails: true)),
-      child: GestureDetector(
-        onTap: () {
-          _removePlayerFromPitch(player);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("${player.name} maydondan olib tashlandi."),
-              backgroundColor: Colors.redAccent,
+    );
+  }
+
+  Widget _buildPlayerSpot(
+      String spotName, Offset position, double pitchHeight) {
+    final player = _squad[spotName];
+    final screenWidth = MediaQuery.of(context).size.width - 24;
+
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.elasticOut,
+      left: position.dx * screenWidth - 36,
+      top: position.dy * pitchHeight - 50,
+      child: DragTarget<PesPlayer>(
+        onAcceptWithDetails: (details) =>
+            _addPlayerToSpot(spotName, details.data),
+        builder: (context, candidateData, rejectedData) {
+          return GestureDetector(
+            onLongPress: () {
+              if (player != null) {
+                setState(() => _squad[spotName] = null);
+              }
+            },
+            onTap: () => setState(() => _selectedSpot = spotName),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 68,
+                  height: 94,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: candidateData.isNotEmpty
+                        ? Colors.white24
+                        : Colors.black38,
+                    border: Border.all(
+                      color: player != null ? AppColors.accent : Colors.white24,
+                      width: player != null ? 1.5 : 1,
+                    ),
+                    gradient: player != null
+                        ? LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white12,
+                              Colors.black.withOpacity(0.5),
+                            ],
+                          )
+                        : null,
+                    boxShadow: [
+                      if (player != null)
+                        BoxShadow(
+                            color: AppColors.accent.withOpacity(0.2),
+                            blurRadius: 8,
+                            spreadRadius: 1)
+                    ],
+                  ),
+                  child: player != null
+                      ? Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: CachedNetworkImage(
+                                imageUrl: kIsWeb
+                                    ? 'https://corsproxy.io/?${Uri.encodeComponent(player.imageUrl)}'
+                                    : player.imageUrl,
+                                httpHeaders: PesService.headers,
+                                fit: BoxFit.cover,
+                                width: 68,
+                                height: 94,
+                                placeholder: (context, url) => const Center(
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2)),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.person,
+                                        color: Colors.white24, size: 30),
+                              ),
+                            ),
+                            // Gradient over image for better text readability
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.black.withOpacity(0.7),
+                                  ],
+                                  stops: const [0.6, 1.0],
+                                ),
+                              ),
+                            ),
+
+                            Positioned(
+                              bottom: 4,
+                              left: 4,
+                              right: 4,
+                              child: Text(
+                                player.name,
+                                style: GoogleFonts.outfit(
+                                    color: Colors.white,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w600),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            )
+                          ],
+                        )
+                      : Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.add_circle_outline,
+                                  color: Colors.white24, size: 24),
+                              const SizedBox(height: 4),
+                              Text(spotName.replaceAll(RegExp(r'\d'), ''),
+                                  style: const TextStyle(
+                                      color: Colors.white24,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                ),
+              ],
             ),
           );
         },
-        child: _buildPlayerCard(player,
-            showDetails: true), // Pitchda ism va pozitsiya ko'rinsin
       ),
     );
   }
 
-  // Player Card WIDGETI
-  Widget _buildPlayerCard(TBuilderPlayer player,
-      {double scale = 1.0, required bool showDetails}) {
-    return Transform.scale(
-      scale: scale,
-      child: Column(
-        children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              // 1. Watermark / Orqa fon (O'yinchi rasmi)
-              Container(
-                width: 60,
-                height: 70,
-                decoration: const BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black54,
-                        blurRadius: 6,
-                        offset: Offset(0, 2))
-                  ],
-                ),
-                child: buildPlayerImage(player.imageUrl),
-              ),
+  Widget _buildFormationFab() {
+    return Positioned(
+      bottom: 24,
+      right: 24,
+      child: FloatingActionButton.extended(
+        onPressed: _showFormationDialog,
+        backgroundColor: AppColors.accent,
+        label: Text('Formation',
+            style: GoogleFonts.outfit(
+                color: Colors.black, fontWeight: FontWeight.bold)),
+        icon:
+            const Icon(Icons.dashboard_customize_rounded, color: Colors.black),
+      ),
+    );
+  }
 
-              // 2. Rating (OVR)
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: Colors.orange,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white, width: 1),
-                  ),
-                  child: Text(
-                    '${player.rating}',
-                    style: const TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 10),
-                  ),
+  void _showFormationDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.75,
+          decoration: BoxDecoration(
+            color: AppColors.background.withOpacity(0.98),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            border: Border.all(color: Colors.white10),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.accent.withOpacity(0.05),
+                blurRadius: 40,
+                spreadRadius: 10,
+              )
+            ],
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              // 3. Pozitsiya (Pitch ustida)
-              Positioned(
-                top: 20,
-                right: 2,
-                child: Text(
-                  player.position,
-                  style: const TextStyle(
-                      color: AppColors.accent, // Cyan o'rniga
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold),
+              const SizedBox(height: 24),
+              Text(
+                'TAKTKIK SXEMANI TANLANG',
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Jamoangiz uchun eng mos variantni tanlang',
+                style: GoogleFonts.outfit(
+                  color: Colors.white38,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: GridView.builder(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 1.1,
+                  ),
+                  itemCount: _formations.length,
+                  itemBuilder: (context, index) {
+                    final f = _formations[index];
+                    final isSelected = _currentFormation.name == f.name;
+                    return GestureDetector(
+                      onTap: () {
+                        _changeFormation(f);
+                        Navigator.pop(context);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.accent.withOpacity(0.1)
+                              : Colors.white.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color:
+                                isSelected ? AppColors.accent : Colors.white10,
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            if (isSelected)
+                              BoxShadow(
+                                color: AppColors.accent.withOpacity(0.15),
+                                blurRadius: 15,
+                                spreadRadius: 2,
+                              )
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.accent.withOpacity(0.1)
+                                    : Colors.white.withOpacity(0.05),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.grid_4x4_rounded,
+                                color: isSelected
+                                    ? AppColors.accent
+                                    : Colors.white38,
+                                size: 32,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              f.name,
+                              style: GoogleFonts.outfit(
+                                color: isSelected
+                                    ? AppColors.accent
+                                    : Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${f.positions.length} o\'yinchi',
+                              style: GoogleFonts.outfit(
+                                color: Colors.white24,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
           ),
+        );
+      },
+    );
+  }
 
-          // 4. Ism (Faqat maydonda va feedbackda ko'rinadi)
-          if (showDetails)
-            Text(
-              // player.name.split(' ').first,
-              player.name,
-              maxLines: 1,
-              // overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white, fontSize: 8),
-            ),
-        ],
+  Widget _buildSearchOverlay() {
+    return Positioned.fill(
+      child: FadeTransition(
+        opacity: const AlwaysStoppedAnimation(1),
+        child: Container(
+          color: Colors.black.withOpacity(0.95),
+          child: Column(
+            children: [
+              AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 28),
+                    onPressed: () => setState(() => _selectedSpot = null)),
+                title: TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
+                  decoration: InputDecoration(
+                    hintText:
+                        ' $_selectedSpot pozitsiyadagi o\'yinchi ismini yozing...',
+                    hintStyle: const TextStyle(color: Colors.white24),
+                    border: InputBorder.none,
+                  ),
+                  onSubmitted: _searchPlayers,
+                ),
+                actions: [
+                  if (_isSearching)
+                    const Center(
+                        child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: AppColors.accent))))
+                  else
+                    IconButton(
+                        icon: const Icon(Icons.search_rounded,
+                            color: AppColors.accent),
+                        onPressed: () =>
+                            _searchPlayers(_searchController.text)),
+                ],
+              ),
+              Expanded(
+                child: _searchResults.isEmpty && !_isSearching
+                    ? Center(
+                        child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.sports_soccer_rounded,
+                              size: 80, color: Colors.white10),
+                          const SizedBox(height: 20),
+                          Text('Build your dream team...',
+                              style: GoogleFonts.outfit(
+                                  color: Colors.white24, fontSize: 18)),
+                        ],
+                      ))
+                    : ListView.builder(
+                        itemCount: _searchResults.length,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        itemBuilder: (context, index) {
+                          final p = _searchResults[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.04),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white10),
+                            ),
+                            child: Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: CachedNetworkImage(
+                                    imageUrl: kIsWeb
+                                        ? 'https://corsproxy.io/?${Uri.encodeComponent(p.imageUrl)}'
+                                        : p.imageUrl,
+                                    httpHeaders: PesService.headers,
+                                    width: 60,
+                                    height: 60,
+                                    fit: BoxFit.cover,
+                                    errorWidget: (context, url, error) =>
+                                        const Icon(Icons.person,
+                                            color: Colors.white24),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(p.name,
+                                          style: GoogleFonts.outfit(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16)),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                          '${p.position} • ${p.club} • ${p.nationality}',
+                                          style: const TextStyle(
+                                              color: Colors.white54,
+                                              fontSize: 12)),
+                                      const SizedBox(height: 2),
+                                      Text('OVR: ${p.ovr}',
+                                          style: TextStyle(
+                                              color: AppColors.accent,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.accent,
+                                    foregroundColor: Colors.black,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20),
+                                  ),
+                                  onPressed: () =>
+                                      _addPlayerToSpot(_selectedSpot!, p),
+                                  child: const Text('ADD',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w900)),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAutoPickOverlay() {
+    return Container(
+      color: Colors.black54,
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: AppColors.cardSurface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(color: AppColors.accent),
+              const SizedBox(height: 24),
+              Text(
+                'ENG KUCHLI TARKIB\nYIG\'ILMOQDA...',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Bu biroz vaqt olishi mumkin',
+                style: GoogleFonts.outfit(
+                  color: Colors.white38,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

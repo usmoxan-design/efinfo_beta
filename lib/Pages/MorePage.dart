@@ -1,8 +1,9 @@
 import 'package:efinfo_beta/Others/positionskillchecker.dart';
 import 'package:efinfo_beta/Others/teambuilder.dart';
-import 'package:efinfo_beta/Pages/CategoryPlayersPage.dart';
-import 'package:efinfo_beta/Pages/StandartPlayersPage.dart';
-import 'package:efinfo_beta/Player/ElementsPage.dart';
+import 'package:efinfo_beta/dataPlayers/CategoryPlayersPage.dart';
+import 'package:efinfo_beta/Others/PackTricksPage.dart';
+import 'package:efinfo_beta/dataPlayers/StandartPlayersPage.dart';
+import 'package:efinfo_beta/Others/ElementsPage.dart';
 import 'package:efinfo_beta/components/newBadge.dart';
 import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -72,6 +73,16 @@ class _MorePageState extends State<MorePage> {
         'onTap': () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const TeamBuilderScreen())),
       },
+      {
+        'title': 'Pack Tricks',
+        'subtitle': 'Epik tushurish sirlari',
+        'icon': "assets/images/elements.png",
+        'accent': Colors.purpleAccent,
+        'badge': true,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const PackTricksPage())),
+      },
     ];
 
     return Scaffold(
@@ -80,8 +91,6 @@ class _MorePageState extends State<MorePage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            _buildHeader(),
-            const SizedBox(height: 32),
             GridView.builder(
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
@@ -113,73 +122,48 @@ class _MorePageState extends State<MorePage> {
       ),
     );
   }
+}
 
-  Widget _buildHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+Widget _buildDisclaimer() {
+  return Container(
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      color: AppColors.cardSurface,
+      borderRadius: BorderRadius.circular(24),
+      border: Border.all(color: AppColors.border, width: 1),
+    ),
+    child: Column(
       children: [
-        Text(
-          "More Tools,",
-          style: GoogleFonts.outfit(
-            fontSize: 16,
-            color: AppColors.textDim,
-            fontWeight: FontWeight.w500,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.info_outline_rounded,
+                color: AppColors.accentOrange, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              "Disclaimer",
+              style: GoogleFonts.outfit(
+                fontSize: 18,
+                color: AppColors.accentOrange,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 12),
         Text(
-          "Explore Extra",
+          "Unofficial fan-made app. Data from public sources like pesdb.net. Not affiliated with Konami. Built for PES community with love.",
+          textAlign: TextAlign.center,
           style: GoogleFonts.outfit(
-            fontSize: 28,
-            color: AppColors.textWhite,
-            fontWeight: FontWeight.bold,
+            color: AppColors.textDim,
+            fontSize: 13,
+            height: 1.5,
+            fontWeight: FontWeight.w400,
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildDisclaimer() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.cardSurface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border, width: 1),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.info_outline_rounded,
-                  color: AppColors.accentOrange, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                "Disclaimer",
-                style: GoogleFonts.outfit(
-                  fontSize: 18,
-                  color: AppColors.accentOrange,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            "Unofficial fan-made app. Data from public sources like pesdb.net. Not affiliated with Konami. Built for PES community with love.",
-            textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(
-              color: AppColors.textDim,
-              fontSize: 13,
-              height: 1.5,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    ),
+  );
 }
 
 class _MoreItem extends StatelessWidget {

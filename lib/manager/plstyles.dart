@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:efinfo_beta/Player/markdown_page.dart';
+import 'package:efinfo_beta/Others/markdown_page.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

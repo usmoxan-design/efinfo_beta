@@ -8,6 +8,7 @@ class Formation {
   final String description;
   final String bestFor;
   final String playerRecommendations;
+  final List<String>? labels;
   final List<List<double>> positions; // [x, y]
   final Difficulty difficulty;
 
@@ -20,6 +21,7 @@ class Formation {
     required this.bestFor,
     required this.playerRecommendations,
     required this.positions,
+    this.labels,
     this.difficulty = Difficulty.medium,
   });
 }

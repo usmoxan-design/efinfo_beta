@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class PesCategory {
   final String name;
   final String url;
@@ -17,12 +19,20 @@ class PesPlayer {
   final String name;
   final String club;
   final String nationality;
+  final String ovr;
+  final String position;
+  final String? image;
+  final String? playingStyle;
 
   PesPlayer({
     required this.id,
     required this.name,
     required this.club,
     required this.nationality,
+    this.ovr = '0',
+    this.position = 'Unknown',
+    this.image,
+    this.playingStyle,
   });
 
   factory PesPlayer.fromJson(Map<String, dynamic> json) {
@@ -31,10 +41,14 @@ class PesPlayer {
       name: json['name'] ?? '',
       club: json['club'] ?? 'Free Agent',
       nationality: json['nationality'] ?? 'Unknown',
+      ovr: json['ovr']?.toString() ?? '0',
+      position: json['position']?.toString() ?? 'Unknown',
+      image: json['image'],
+      playingStyle: json['playing_style'] ?? json['playingStyle'],
     );
   }
 
-  String get imageUrl => 'https://pesdb.net/assets/img/card/f$id.png';
+  String get imageUrl => image ?? 'https://pesdb.net/assets/img/card/f$id.png';
   String get imageFlipUrl => 'https://pesdb.net/assets/img/card/b$id.png';
   String get imageMaxUrl => 'https://pesdb.net/assets/img/card/f${id}max.png';
   String get imageMaxFlipUrl =>
@@ -74,15 +88,16 @@ class PesPlayerDetail {
       player: json['player'] != null
           ? PesPlayer.fromJson(json['player'])
           : originalPlayer,
-      position: json['position'] ?? 'Unknown',
-      height: json['height'] ?? 'Unknown',
-      age: json['age'] ?? 'Unknown',
-      foot: json['foot'] ?? 'Unknown',
+      position: json['position']?.toString() ?? 'Unknown',
+      height: json['height']?.toString() ?? 'Unknown',
+      age: json['age']?.toString() ?? 'Unknown',
+      foot: json['foot']?.toString() ?? 'Unknown',
       stats: Map<String, String>.from(json['stats'] ?? {}),
       info: Map<String, String>.from(json['info'] ?? {}),
-      playingStyle: json['playingStyle'] ?? 'Unknown',
-      skills: List<String>.from(json['skills'] ?? []),
-      suggestedPoints: Map<String, int>.from(json['suggestedPoints'] ?? {}),
+      playingStyle: json['playing_style'] ?? json['playingStyle'] ?? 'Unknown',
+      skills: List<String>.from(json['skills'] ?? json['player_skills'] ?? []),
+      suggestedPoints: Map<String, int>.from(
+          json['suggested_points'] ?? json['suggestedPoints'] ?? {}),
       description: json['description'] ?? '',
     );
   }
@@ -106,5 +121,141 @@ class PesFeaturedOption {
       name: json['name'] ?? '',
       id: json['id']?.toString() ?? '',
     );
+  }
+}
+
+class SquadFormation {
+  final String name;
+  final Map<String, Offset>
+      positions; // Position name -> Normalized Offset (0.0 to 1.0)
+
+  SquadFormation({required this.name, required this.positions});
+
+  // Futbol formasi uchun professional joylashuvlar
+  static List<SquadFormation> get defaults => [
+        SquadFormation(name: '4-3-3', positions: {
+          'GK': const Offset(0.50, 0.94),
+          'LB': const Offset(0.12, 0.80),
+          'CB1': const Offset(0.35, 0.80),
+          'CB2': const Offset(0.65, 0.80),
+          'RB': const Offset(0.88, 0.80),
+          'DMF': const Offset(0.50, 0.65),
+          'CMF1': const Offset(0.32, 0.58),
+          'CMF2': const Offset(0.68, 0.58),
+          'LWF': const Offset(0.15, 0.28),
+          'RWF': const Offset(0.85, 0.28),
+          'CF': const Offset(0.50, 0.15),
+        }),
+        SquadFormation(name: '4-4-2', positions: {
+          'GK': const Offset(0.50, 0.94),
+          'LB': const Offset(0.12, 0.80),
+          'CB1': const Offset(0.35, 0.80),
+          'CB2': const Offset(0.65, 0.80),
+          'RB': const Offset(0.88, 0.80),
+          'LMF': const Offset(0.15, 0.55),
+          'LCM': const Offset(0.38, 0.55),
+          'RCM': const Offset(0.62, 0.55),
+          'RMF': const Offset(0.85, 0.55),
+          'CF1': const Offset(0.38, 0.22),
+          'CF2': const Offset(0.62, 0.22),
+        }),
+        SquadFormation(name: '4-2-1-3', positions: {
+          'GK': const Offset(0.50, 0.94),
+          'LB': const Offset(0.12, 0.80),
+          'CB1': const Offset(0.35, 0.80),
+          'CB2': const Offset(0.65, 0.80),
+          'RB': const Offset(0.88, 0.80),
+          'DMF1': const Offset(0.35, 0.62),
+          'DMF2': const Offset(0.65, 0.62),
+          'AMF': const Offset(0.50, 0.45),
+          'LWF': const Offset(0.15, 0.25),
+          'RWF': const Offset(0.85, 0.25),
+          'CF': const Offset(0.50, 0.12),
+        }),
+        SquadFormation(name: '4-3-1-2', positions: {
+          'GK': const Offset(0.50, 0.94),
+          'LB': const Offset(0.12, 0.80),
+          'CB1': const Offset(0.35, 0.80),
+          'CB2': const Offset(0.65, 0.80),
+          'RB': const Offset(0.88, 0.80),
+          'LCM': const Offset(0.32, 0.58),
+          'CDM': const Offset(0.50, 0.58),
+          'RCM': const Offset(0.68, 0.58),
+          'AMF': const Offset(0.50, 0.38),
+          'CF1': const Offset(0.38, 0.18),
+          'CF2': const Offset(0.62, 0.18),
+        }),
+        SquadFormation(name: '5-3-2', positions: {
+          'GK': const Offset(0.50, 0.94),
+          'LWB': const Offset(0.12, 0.78),
+          'CB1': const Offset(0.32, 0.85),
+          'CB2': const Offset(0.50, 0.82),
+          'CB3': const Offset(0.68, 0.85),
+          'RWB': const Offset(0.88, 0.78),
+          'CMF1': const Offset(0.30, 0.58),
+          'CMF2': const Offset(0.50, 0.65),
+          'CMF3': const Offset(0.70, 0.58),
+          'CF1': const Offset(0.38, 0.18),
+          'CF2': const Offset(0.62, 0.18),
+        }),
+        SquadFormation(name: '4-2-2-2', positions: {
+          'GK': const Offset(0.50, 0.94),
+          'LB': const Offset(0.12, 0.80),
+          'CB1': const Offset(0.35, 0.80),
+          'CB2': const Offset(0.65, 0.80),
+          'RB': const Offset(0.88, 0.80),
+          'DMF1': const Offset(0.35, 0.62),
+          'DMF2': const Offset(0.65, 0.62),
+          'AMF1': const Offset(0.35, 0.40),
+          'AMF2': const Offset(0.65, 0.40),
+          'CF1': const Offset(0.38, 0.18),
+          'CF2': const Offset(0.62, 0.18),
+        }),
+        SquadFormation(name: '5-2-1-2', positions: {
+          'GK': const Offset(0.50, 0.94),
+          'LWB': const Offset(0.12, 0.78),
+          'CB1': const Offset(0.32, 0.85),
+          'CB2': const Offset(0.50, 0.82),
+          'CB3': const Offset(0.68, 0.85),
+          'RWB': const Offset(0.88, 0.78),
+          'DMF1': const Offset(0.35, 0.62),
+          'DMF2': const Offset(0.65, 0.62),
+          'AMF': const Offset(0.50, 0.42),
+          'CF1': const Offset(0.38, 0.15),
+          'CF2': const Offset(0.62, 0.15),
+        }),
+        SquadFormation(name: '4-2-4', positions: {
+          'GK': const Offset(0.50, 0.94),
+          'LB': const Offset(0.12, 0.80),
+          'CB1': const Offset(0.35, 0.80),
+          'CB2': const Offset(0.65, 0.80),
+          'RB': const Offset(0.88, 0.80),
+          'CMF1': const Offset(0.38, 0.60),
+          'CMF2': const Offset(0.62, 0.60),
+          'LWF': const Offset(0.15, 0.25),
+          'LCF': const Offset(0.38, 0.15),
+          'RCF': const Offset(0.62, 0.15),
+          'RWF': const Offset(0.85, 0.25),
+        }),
+      ];
+}
+
+class SavedSquad {
+  final String name;
+  final String formationName;
+  final Map<String, PesPlayer?> players;
+
+  SavedSquad({
+    required this.name,
+    required this.formationName,
+    required this.players,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'formationName': formationName,
+      'players': players.map((k, v) => MapEntry(k, v?.id)),
+    };
   }
 }

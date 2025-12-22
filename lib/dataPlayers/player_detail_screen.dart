@@ -28,7 +28,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
   String? _errorMessage;
 
   // UI State
-  bool _isFlipped = false;
+  final bool _isFlipped = false;
   bool _isMaxLevel = false;
 
   // Training Simulation State
@@ -772,7 +772,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     return Column(
       children: [
         _buildStatCategory(
-          'Attacking',
+          'Hujumkorlik',
           [
             'Offensive Awareness',
             'Ball Control',
@@ -790,7 +790,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
         ),
         const SizedBox(height: 16),
         _buildStatCategory(
-          'Defending',
+          'Himoyaviylik',
           [
             'Defensive Awareness',
             'Tackling',
@@ -803,7 +803,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
         ),
         const SizedBox(height: 16),
         _buildStatCategory(
-          'Physical & Speed',
+          'Fizik holat & Tezlik',
           [
             'Speed',
             'Acceleration',
@@ -819,7 +819,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
         ),
         const SizedBox(height: 16),
         _buildStatCategory(
-          'Goalkeeping',
+          'Darvozabonlik',
           [
             'GK Awareness',
             'GK Catching',
@@ -833,7 +833,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
         ),
         const SizedBox(height: 16),
         _buildStatCategory(
-          'Other Stats',
+          'Boshqa statistika',
           [
             'Set Piece Taking',
             'Weak Foot Usage',
@@ -900,25 +900,17 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 2,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-              ),
-              itemCount: categoryData.length,
-              itemBuilder: (context, index) {
-                final key = categoryData.keys.elementAt(index);
-                final valueStr = categoryData[key]!;
+            child: Column(
+              children: categoryData.entries.map((entry) {
+                final key = entry.key;
+                final valueStr = entry.value;
                 final value = _parseStatValue(valueStr);
                 final color = _getStatColor(value);
 
                 return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(12),
@@ -928,6 +920,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                     children: [
                       Container(
                         width: 4,
+                        height: 20,
                         decoration: BoxDecoration(
                           color: value > 0
                               ? color
@@ -935,28 +928,62 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           PesService.formatStatName(key),
                           style: const TextStyle(
                               color: AppColors.textDim,
-                              fontSize: 11,
+                              fontSize: 14,
                               fontWeight: FontWeight.w500),
-                          maxLines: 2,
                         ),
                       ),
-                      Text(
-                        valueStr,
-                        style: TextStyle(
-                            color: value > 0 ? color : AppColors.textWhite,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold),
+                      Builder(
+                        builder: (context) {
+                          if (valueStr.contains('(') &&
+                              valueStr.contains(')')) {
+                            int closeIdx = valueStr.indexOf(')');
+                            String boost = valueStr.substring(0, closeIdx + 1);
+                            String val = valueStr.substring(closeIdx + 1);
+                            return RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: boost,
+                                    style: TextStyle(
+                                        color: value > 0
+                                            ? color
+                                            : AppColors.textWhite,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.normal),
+                                  ),
+                                  const WidgetSpan(child: SizedBox(width: 4)),
+                                  TextSpan(
+                                    text: val,
+                                    style: TextStyle(
+                                        color: value > 0
+                                            ? color
+                                            : AppColors.textWhite,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                          return Text(
+                            valueStr,
+                            style: TextStyle(
+                                color: value > 0 ? color : AppColors.textWhite,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold),
+                          );
+                        },
                       ),
                     ],
                   ),
                 );
-              },
+              }).toList(),
             ),
           ),
         ],
@@ -1040,9 +1067,9 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
               ),
               Row(
                 children: [
-                  _buildOvrBadge("Max", baseMaxOvr, isSmall: true),
-                  const SizedBox(width: 8),
-                  _buildOvrBadge("Sim", dynamicOvr),
+                  // _buildOvrBadge("Max", baseMaxOvr, isSmall: true),
+                  // const SizedBox(width: 8),
+                  _buildOvrBadge("Max", dynamicOvr),
                 ],
               ),
             ],

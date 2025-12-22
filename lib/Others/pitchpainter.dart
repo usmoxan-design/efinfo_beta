@@ -6,93 +6,129 @@ class PitchPainter extends CustomPainter {
     // --- 1. Field Background (Gradient) ---
     final fieldPaint = Paint()
       ..shader = const LinearGradient(
-        colors: [Color(0xFF2e7d32), Color(0xFF1b5e20)],
+        colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF1B5E20)],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
-    // --- 2. Field Shape (Perspective Trapezoid) ---
-    final path = Path();
-    // Top boundary (narrower)
-    path.moveTo(size.width * 0.1, 0);
-    path.lineTo(size.width * 0.9, 0);
-    // Right boundary
-    path.lineTo(size.width, size.height);
-    // Bottom boundary (wider)
-    path.lineTo(0, size.height);
-    path.close();
+    // Draw base green field
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), fieldPaint);
 
-    // Draw the green field
-    canvas.drawPath(path, fieldPaint);
+    // --- 2. Grass Stripes ---
+    final stripePaint = Paint()
+      ..color = Colors.black.withOpacity(0.08)
+      ..style = PaintingStyle.fill;
+
+    double stripeHeight = size.height / 10;
+    for (int i = 0; i < 10; i++) {
+      if (i % 2 == 0) {
+        canvas.drawRect(
+            Rect.fromLTWH(0, i * stripeHeight, size.width, stripeHeight),
+            stripePaint);
+      }
+    }
 
     // --- 3. Field Lines ---
     final linePaint = Paint()
-      ..color = Colors.white.withOpacity(0.6)
+      ..color = Colors.white.withOpacity(0.5)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+      ..strokeWidth = 1.5;
 
-    // Outer boundary line
-    canvas.drawPath(path, linePaint);
+    // Outer boundary line with padding
+    double padding = 8.0;
+    Rect fieldRect = Rect.fromLTWH(
+        padding, padding, size.width - 2 * padding, size.height - 2 * padding);
+    canvas.drawRect(fieldRect, linePaint);
 
     // Center line
     canvas.drawLine(
-      Offset(size.width * 0.05, size.height / 2),
-      Offset(size.width * 0.95, size.height / 2),
+      Offset(padding, size.height / 2),
+      Offset(size.width - padding, size.height / 2),
       linePaint,
     );
 
     // Center circle
     canvas.drawCircle(
-        Offset(size.width / 2, size.height / 2), size.width * 0.12, linePaint);
+        Offset(size.width / 2, size.height / 2), size.width * 0.15, linePaint);
 
-    // Top Goal Box (Narrower at the top)
-    final topBox = Path();
-    topBox.moveTo(size.width * 0.35, 0);
-    topBox.lineTo(size.width * 0.35, size.height * 0.15);
-    topBox.lineTo(size.width * 0.65, size.height * 0.15);
-    topBox.lineTo(size.width * 0.65, 0);
-    canvas.drawPath(topBox, linePaint);
+    // Center point
+    final pointPaint = Paint()
+      ..color = Colors.white.withOpacity(0.5)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(size.width / 2, size.height / 2), 2, pointPaint);
 
-    // Bottom Goal Box (Wider at the bottom)
-    final bottomBox = Path();
-    bottomBox.moveTo(size.width * 0.25, size.height);
-    bottomBox.lineTo(size.width * 0.25, size.height * 0.85);
-    bottomBox.lineTo(size.width * 0.75, size.height * 0.85);
-    bottomBox.lineTo(size.width * 0.75, size.height);
-    canvas.drawPath(bottomBox, linePaint);
+    // Top Penalty Box (Large)
+    canvas.drawRect(
+        Rect.fromLTWH(
+            size.width * 0.2, padding, size.width * 0.6, size.height * 0.18),
+        linePaint);
+    // Top Goal Box (Small)
+    canvas.drawRect(
+        Rect.fromLTWH(
+            size.width * 0.35, padding, size.width * 0.3, size.height * 0.06),
+        linePaint);
+    // Top Penalty Arc
+    canvas.drawArc(
+        Rect.fromLTWH(size.width * 0.4, size.height * 0.14, size.width * 0.2,
+            size.height * 0.08),
+        0.1,
+        3.0,
+        false,
+        linePaint);
 
-    // --- 4. Watermark Text (eFinfo App) ---
-    const watermarkText = 'eFinfo App';
+    // Bottom Penalty Box (Large)
+    canvas.drawRect(
+        Rect.fromLTWH(
+            size.width * 0.2,
+            size.height - size.height * 0.18 - padding,
+            size.width * 0.6,
+            size.height * 0.18),
+        linePaint);
+    // Bottom Goal Box (Small)
+    canvas.drawRect(
+        Rect.fromLTWH(
+            size.width * 0.35,
+            size.height - size.height * 0.06 - padding,
+            size.width * 0.3,
+            size.height * 0.06),
+        linePaint);
+    // Bottom Penalty Arc
+    canvas.drawArc(
+        Rect.fromLTWH(
+            size.width * 0.4,
+            size.height - size.height * 0.22 - padding,
+            size.width * 0.2,
+            size.height * 0.08),
+        3.2,
+        3.0,
+        false,
+        linePaint);
 
-    // Define the text style with 50% opacity and responsive font size
-    final textSpan = TextSpan(
-      text: watermarkText,
-      style: TextStyle(
-        color: Colors.white.withOpacity(0.5), // 50% opacity
-        fontSize: size.width * 0.04, // Responsive font size based on width
-        fontWeight: FontWeight.w900,
-        letterSpacing: 1.5,
-      ),
-    );
+    // --- 4. Watermark / Corner Decoration ---
+    _drawWatermark(canvas, size);
+  }
 
-    // Create a TextPainter
+  void _drawWatermark(Canvas canvas, Size size) {
+    const watermarkText = 'EFINFO';
     final textPainter = TextPainter(
-      text: textSpan,
+      text: TextSpan(
+        text: watermarkText,
+        style: TextStyle(
+          color: Colors.white.withOpacity(0.12),
+          fontSize: size.width * 0.1,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 10,
+        ),
+      ),
       textDirection: TextDirection.ltr,
-      textAlign: TextAlign.center,
-    );
+    )..layout();
 
-    // Layout the painter to calculate its size
-    textPainter.layout(minWidth: 0, maxWidth: size.width);
-
-    // Calculate position: Right side of the center (60% down, 70% across)
-    // Centered around the calculated X position
-    final x = size.width * 0.7 - textPainter.width / 2;
-    final y = size.height * 0.6;
-
-    // Draw the text on the canvas
-    final offset = Offset(x, y);
-    textPainter.paint(canvas, offset);
+    canvas.save();
+    canvas.translate(size.width / 2, size.height / 2);
+    canvas.rotate(-0.5);
+    textPainter.paint(
+        canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
+    canvas.restore();
   }
 
   @override
