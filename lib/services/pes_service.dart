@@ -709,29 +709,67 @@ class PesService {
         ? _apiBaseUrl.substring(0, _apiBaseUrl.length - 1)
         : _apiBaseUrl;
 
+    PesPlayerDetail? detailFromApi;
+
     // 1. Next.js API'dan foydalanish
     // /api/player/[id]?mode=level1
-    final resp =
-        await http.get(Uri.parse('$baseUrl/player/${player.id}?mode=$mode'));
-    if (resp.statusCode == 200) {
-      var data = jsonDecode(resp.body);
-      // Ensure the data has some meaningful content
-      if (data != null &&
-          (data['stats'] != null ||
-              data['playingStyle'] != null ||
-              data['playing_style'] != null)) {
-        return PesPlayerDetail.fromJson(data, player);
+    try {
+      final apiUrl = '$baseUrl/player/${player.id}?mode=$mode';
+      print('🔍 DEBUG: Fetching from API: $apiUrl');
+
+      final resp = await http.get(Uri.parse(apiUrl));
+      print('🔍 DEBUG: API Status Code: ${resp.statusCode}');
+
+      if (resp.statusCode == 200) {
+        var data = jsonDecode(resp.body);
+        print('🔍 DEBUG: API Response keys: ${data?.keys}');
+        print('🔍 DEBUG: Skills from API: ${data['skills']}');
+        print('🔍 DEBUG: Player_skills from API: ${data['player_skills']}');
+
+        // Ensure the data has some meaningful content
+        if (data != null &&
+            (data['stats'] != null ||
+                data['playingStyle'] != null ||
+                data['playing_style'] != null)) {
+          detailFromApi = PesPlayerDetail.fromJson(data, player);
+
+          print('🔍 DEBUG: Skills after parsing: ${detailFromApi.skills}');
+          print('🔍 DEBUG: Skills count: ${detailFromApi.skills.length}');
+
+          // Agar API javobida skills bo'sh bo'lsa, scraper bilan to'ldiramiz
+          if (detailFromApi.skills.isEmpty) {
+            print('⚠️ DEBUG: Skills empty from API, using scraper fallback');
+            // Skills uchun scraper ishlatish kerak
+          } else {
+            print(
+                '✅ DEBUG: Got ${detailFromApi.skills.length} skills from API');
+            // API'dan to'liq ma'lumot keldi, qaytaramiz
+            return detailFromApi;
+          }
+        }
       }
+    } catch (e) {
+      print('❌ DEBUG: API Error: $e');
+      // API xato berdi, scraper'ga o'tamiz
     }
-    // Agar API xato bersa, pastdagi Scraper Fallbackga o'tamiz
+    // Agar API xato bersa yoki skills bo'sh bo'lsa, pastdagi Scraper Fallbackga o'tamiz
 
     // 2. Scraper Fallback
     String url = '$detailBaseUrl?id=${player.id}';
     if (mode == 'max_level') url += '&mode=max_level';
 
+    print('🔍 DEBUG Scraper: Starting scraper for URL: $url');
+
     final response =
         await _safeRequest(_buildUri(url), forceRefresh: forceRefresh);
+
+    print('🔍 DEBUG Scraper: Response status: ${response.statusCode}');
+    print('🔍 DEBUG Scraper: Response body length: ${response.body.length}');
+
     var document = parser.parse(response.body);
+
+    final allTrs = document.querySelectorAll('tr');
+    print('🔍 DEBUG Scraper: Found ${allTrs.length} tr elements');
 
     String position = 'Unknown',
         height = 'Unknown',
@@ -752,6 +790,12 @@ class PesService {
       String value = td.text.trim();
       String formattedKey = formatStatName(originalHeader);
 
+      // Debug: barcha headerlarni ko'rsatish
+      if (header.contains('skill') || header.contains('style')) {
+        print(
+            '🔍 DEBUG Scraper: Found header: "$header" (original: "$originalHeader")');
+      }
+
       if (header == 'position')
         position = value;
       else if (header == 'height')
@@ -769,6 +813,11 @@ class PesService {
         // Now parse the text from this modified HTML
         String cleanText = parser.parse(htmlContent).body?.text ?? htmlContent;
 
+        print('🔍 DEBUG Scraper: Found player skills header');
+        print(
+            '🔍 DEBUG Scraper: HTML Content: ${htmlContent.substring(0, htmlContent.length > 100 ? 100 : htmlContent.length)}...');
+        print('🔍 DEBUG Scraper: Clean Text: $cleanText');
+
         skills = cleanText
             .split('\n')
             .map((s) => s.trim())
@@ -776,6 +825,8 @@ class PesService {
                 s.isNotEmpty &&
                 !s.contains('<')) // Filter out any remaining HTML tags
             .toList();
+
+        print('🔍 DEBUG Scraper: Parsed ${skills.length} skills: $skills');
       } else if (header == 'ai playing styles') {
         info[originalHeader] = value
             .split('\n')
@@ -821,6 +872,36 @@ class PesService {
     var bottom = document.querySelector('.bottom-description h2');
     if (bottom != null) description = bottom.text.trim();
 
+    print('🔍 DEBUG Scraper: Finished parsing');
+    print('🔍 DEBUG Scraper: Skills count from scraper: ${skills.length}');
+    print('🔍 DEBUG Scraper: Playing style: $playingStyle');
+
+    // Agar API'dan ma'lumot olgan bo'lsak va faqat skills kerak bo'lsa
+    if (detailFromApi != null &&
+        detailFromApi.skills.isEmpty &&
+        skills.isNotEmpty) {
+      print('✅ DEBUG: Merging API data with Scraper skills');
+      // API ma'lumotlarini ishlatib, faqat skillsni yangilaymiz
+      return PesPlayerDetail(
+        player: detailFromApi.player,
+        position: detailFromApi.position,
+        height: detailFromApi.height,
+        age: detailFromApi.age,
+        foot: detailFromApi.foot,
+        stats: detailFromApi.stats,
+        info: detailFromApi.info,
+        playingStyle:
+            playingStyle.isNotEmpty ? playingStyle : detailFromApi.playingStyle,
+        skills: skills, // Scraper'dan olingan skills
+        suggestedPoints: detailFromApi.suggestedPoints,
+        description: detailFromApi.description.isNotEmpty
+            ? detailFromApi.description
+            : description,
+      );
+    }
+
+    print('✅ DEBUG: Using full scraper result');
+    // Aks holda, to'liq scraper natijasini qaytaramiz
     return PesPlayerDetail(
       player: player,
       position: position,

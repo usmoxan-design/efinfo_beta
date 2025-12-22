@@ -782,7 +782,8 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
             'Lofted Pass',
             'Finishing',
             'Heading',
-            'Curl'
+            'Curl',
+            'Set Piece Taking',
           ],
           detail,
           AppColors.accentPink,
@@ -835,7 +836,6 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
         _buildStatCategory(
           'Boshqa statistika',
           [
-            'Set Piece Taking',
             'Weak Foot Usage',
             'Weak Foot Accuracy',
             'Form',

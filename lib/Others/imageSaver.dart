@@ -72,7 +72,7 @@ class ImagePreviewScreen extends StatelessWidget {
           imageBytes,
           fileName: fileName,
           androidRelativePath: "Pictures/SquadBuilder",
-          quality: 100,
+          quality: 300,
           skipIfExists: false,
         );
 

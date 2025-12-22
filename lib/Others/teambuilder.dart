@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:efinfo_beta/Others/imageSaver.dart';
 import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:efinfo_beta/Others/pitchpainter.dart';
 import 'package:efinfo_beta/models/pes_models.dart';
 import 'package:efinfo_beta/services/pes_service.dart';
-import 'package:efinfo_beta/models/formationsmodel.dart' as fm;
-import 'package:efinfo_beta/data/formationsdata.dart' as fd;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:widgets_to_image/widgets_to_image.dart';
@@ -28,6 +30,9 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
   final WidgetsToImageController _screenshotController =
       WidgetsToImageController();
 
+  // // Yangi: RepaintBoundary ni boshqarish uchun Global Key e'lon qiling
+  final GlobalKey _pitchBoundaryKey = GlobalKey();
+
   final List<SquadFormation> _formations = [];
   late SquadFormation _currentFormation;
   Map<String, PesPlayer?> _squad = {};
@@ -41,7 +46,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
   @override
   void initState() {
     super.initState();
-    _formations.addAll(_convertFormations(fd.allFormations));
+    _formations.addAll(_getBuiltInFormations());
     _currentFormation = _formations.first;
     _initializeSquad();
     _loadSavedSquad();
@@ -105,6 +110,56 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
         setState(() => _isSearching = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Xatolik: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _captureAndSave() async {
+    try {
+      final RenderRepaintBoundary boundary = _pitchBoundaryKey.currentContext!
+          .findRenderObject()! as RenderRepaintBoundary;
+
+      // Ultra-HD capture: Use 3x device pixel ratio for maximum sharpness
+      // This ensures crystal-clear screenshots even on high-DPI displays
+      final double devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+      final double capturePixelRatio =
+          devicePixelRatio * 3.0; // 3x multiplier for ultra-HD
+
+      // Capture image at ultra-high resolution
+      final ui.Image image =
+          await boundary.toImage(pixelRatio: capturePixelRatio);
+
+      // Convert to PNG with lossless compression (maximum quality)
+      final ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+
+      final Uint8List? bytes = byteData?.buffer.asUint8List();
+
+      if (bytes != null) {
+        // Navigate to preview screen
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => ImagePreviewScreen(imageBytes: bytes),
+            ),
+          );
+        }
+      } else {
+        // Error handling
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text("Rasmga olishda xato yuz berdi."),
+                backgroundColor: Colors.red),
+          );
+        }
+      }
+    } catch (e) {
+      // Catch any errors during capture
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Xatolik: $e"), backgroundColor: Colors.red),
         );
       }
     }
@@ -184,25 +239,174 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
     return pos;
   }
 
-  List<SquadFormation> _convertFormations(List<fm.Formation> formations) {
-    return formations.map((fm.Formation f) {
-      Map<String, Offset> posMap = {};
-      final positions = f.positions;
-      final labels = f.labels;
+  /// TeamBuilder uchun ichki formation ma'lumotlari
+  List<SquadFormation> _getBuiltInFormations() {
+    return [
+      // 4-3-3 - Classic Attacking
+      SquadFormation(name: '4-3-3', positions: {
+        'GK': const Offset(0.50, 0.94),
+        'LB': const Offset(0.12, 0.82),
+        'CB1': const Offset(0.35, 0.82),
+        'CB2': const Offset(0.65, 0.82),
+        'RB': const Offset(0.88, 0.82),
+        'DMF': const Offset(0.50, 0.68),
+        'CMF1': const Offset(0.32, 0.50),
+        'CMF2': const Offset(0.68, 0.50),
+        'LWF': const Offset(0.15, 0.18),
+        'RWF': const Offset(0.85, 0.18),
+        'CF': const Offset(0.50, 0.18),
+      }),
 
-      for (int i = 0; i < positions.length; i++) {
-        String label =
-            (labels != null && i < labels.length) ? labels[i] : 'P${i + 1}';
-        // Add a numeric suffix if label exists to ensure uniqueness in the map
-        String uniqueLabel = label;
-        int count = 1;
-        while (posMap.containsKey(uniqueLabel)) {
-          uniqueLabel = '$label${count++}';
-        }
-        posMap[uniqueLabel] = Offset(positions[i][0], positions[i][1]);
-      }
-      return SquadFormation(name: f.name, positions: posMap);
-    }).toList();
+      // 4-4-2 - Balanced
+      SquadFormation(name: '4-4-2', positions: {
+        'GK': const Offset(0.50, 0.94),
+        'LB': const Offset(0.12, 0.82),
+        'CB1': const Offset(0.35, 0.82),
+        'CB2': const Offset(0.65, 0.82),
+        'RB': const Offset(0.88, 0.82),
+        'LMF': const Offset(0.15, 0.50),
+        'LCM': const Offset(0.38, 0.50),
+        'RCM': const Offset(0.62, 0.50),
+        'RMF': const Offset(0.85, 0.50),
+        'CF1': const Offset(0.38, 0.18),
+        'CF2': const Offset(0.62, 0.18),
+      }),
+
+      // 4-2-1-3 - CAM Focus
+      SquadFormation(name: '4-2-1-3', positions: {
+        'GK': const Offset(0.50, 0.94),
+        'LB': const Offset(0.12, 0.82),
+        'CB1': const Offset(0.35, 0.82),
+        'CB2': const Offset(0.65, 0.82),
+        'RB': const Offset(0.88, 0.82),
+        'DMF1': const Offset(0.35, 0.68),
+        'DMF2': const Offset(0.65, 0.68),
+        'AMF': const Offset(0.50, 0.35),
+        'LWF': const Offset(0.15, 0.18),
+        'RWF': const Offset(0.85, 0.18),
+        'CF': const Offset(0.50, 0.18),
+      }),
+
+      // 4-3-1-2 - Diamond Midfield
+      SquadFormation(name: '4-3-1-2', positions: {
+        'GK': const Offset(0.50, 0.94),
+        'LB': const Offset(0.12, 0.82),
+        'CB1': const Offset(0.35, 0.82),
+        'CB2': const Offset(0.65, 0.82),
+        'RB': const Offset(0.88, 0.82),
+        'LCM': const Offset(0.32, 0.50),
+        'CDM': const Offset(0.50, 0.68),
+        'RCM': const Offset(0.68, 0.50),
+        'AMF': const Offset(0.50, 0.35),
+        'CF1': const Offset(0.38, 0.18),
+        'CF2': const Offset(0.62, 0.18),
+      }),
+
+      // 5-3-2 - Defensive Solid
+      SquadFormation(name: '5-3-2', positions: {
+        'GK': const Offset(0.50, 0.94),
+        'LWB': const Offset(0.12, 0.82),
+        'CB1': const Offset(0.32, 0.82),
+        'CB2': const Offset(0.50, 0.82),
+        'CB3': const Offset(0.68, 0.82),
+        'RWB': const Offset(0.88, 0.82),
+        'CMF1': const Offset(0.30, 0.50),
+        'CMF2': const Offset(0.50, 0.50),
+        'CMF3': const Offset(0.70, 0.50),
+        'CF1': const Offset(0.40, 0.18),
+        'CF2': const Offset(0.60, 0.18),
+      }),
+
+      // 4-2-2-2 - Box Midfield
+      SquadFormation(name: '4-2-2-2', positions: {
+        'GK': const Offset(0.50, 0.94),
+        'LB': const Offset(0.12, 0.82),
+        'CB1': const Offset(0.35, 0.82),
+        'CB2': const Offset(0.65, 0.82),
+        'RB': const Offset(0.88, 0.82),
+        'DMF1': const Offset(0.35, 0.68),
+        'DMF2': const Offset(0.65, 0.68),
+        'AMF1': const Offset(0.35, 0.35),
+        'AMF2': const Offset(0.65, 0.35),
+        'CF1': const Offset(0.40, 0.18),
+        'CF2': const Offset(0.60, 0.18),
+      }),
+
+      // 5-2-1-2 - Wing Back Attack
+      SquadFormation(name: '5-2-1-2', positions: {
+        'GK': const Offset(0.50, 0.94),
+        'LWB': const Offset(0.12, 0.82),
+        'CB1': const Offset(0.32, 0.82),
+        'CB2': const Offset(0.50, 0.82),
+        'CB3': const Offset(0.68, 0.82),
+        'RWB': const Offset(0.88, 0.82),
+        'DMF1': const Offset(0.35, 0.68),
+        'DMF2': const Offset(0.65, 0.68),
+        'AMF': const Offset(0.50, 0.35),
+        'CF1': const Offset(0.40, 0.18),
+        'CF2': const Offset(0.60, 0.18),
+      }),
+
+      // 4-2-4 - Ultra Attack
+      SquadFormation(name: '4-2-4', positions: {
+        'GK': const Offset(0.50, 0.94),
+        'LB': const Offset(0.12, 0.82),
+        'CB1': const Offset(0.35, 0.82),
+        'CB2': const Offset(0.65, 0.82),
+        'RB': const Offset(0.88, 0.82),
+        'CMF1': const Offset(0.38, 0.50),
+        'CMF2': const Offset(0.62, 0.50),
+        'LWF': const Offset(0.15, 0.18),
+        'LCF': const Offset(0.38, 0.18),
+        'RCF': const Offset(0.62, 0.18),
+        'RWF': const Offset(0.85, 0.18),
+      }),
+
+      // 3-5-2 - Wing Domination
+      SquadFormation(name: '3-5-2', positions: {
+        'GK': const Offset(0.50, 0.94),
+        'CB1': const Offset(0.28, 0.82),
+        'CB2': const Offset(0.50, 0.82),
+        'CB3': const Offset(0.72, 0.82),
+        'LMF': const Offset(0.12, 0.52),
+        'LCM': const Offset(0.38, 0.62),
+        'RCM': const Offset(0.62, 0.62),
+        'RMF': const Offset(0.88, 0.52),
+        'LWF': const Offset(0.18, 0.28),
+        'CF': const Offset(0.50, 0.18),
+        'RWF': const Offset(0.82, 0.28),
+      }),
+
+      // 3-2-4-1 - Midfield Dominant
+      SquadFormation(name: '3-2-4-1', positions: {
+        'GK': const Offset(0.50, 0.94),
+        'CB1': const Offset(0.28, 0.82),
+        'CB2': const Offset(0.50, 0.82),
+        'CB3': const Offset(0.72, 0.82),
+        'DMF1': const Offset(0.35, 0.65),
+        'DMF2': const Offset(0.65, 0.65),
+        'LMF': const Offset(0.12, 0.45),
+        'AMF1': const Offset(0.38, 0.45),
+        'AMF2': const Offset(0.62, 0.45),
+        'RMF': const Offset(0.88, 0.45),
+        'CF': const Offset(0.50, 0.18),
+      }),
+
+      // 3-2-3-2 - High Press
+      SquadFormation(name: '3-2-3-2', positions: {
+        'GK': const Offset(0.50, 0.94),
+        'CB1': const Offset(0.28, 0.82),
+        'CB2': const Offset(0.50, 0.82),
+        'CB3': const Offset(0.72, 0.82),
+        'DMF1': const Offset(0.35, 0.65),
+        'DMF2': const Offset(0.65, 0.65),
+        'LMF': const Offset(0.15, 0.42),
+        'AMF': const Offset(0.50, 0.38),
+        'RMF': const Offset(0.85, 0.42),
+        'CF1': const Offset(0.38, 0.18),
+        'CF2': const Offset(0.62, 0.18),
+      }),
+    ];
   }
 
   void _initializeSquad() {
@@ -407,12 +611,12 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
           //     icon: const Icon(Icons.grid_view_rounded, color: Colors.white),
           //     onPressed: _showFormationDialog,
           //     tooltip: 'Change Formation'),
-          IconButton(
-              icon: const Icon(Icons.share_outlined, color: AppColors.accent),
-              onPressed: _shareSquad),
+          // IconButton(
+          //     icon: const Icon(Icons.share_outlined, color: AppColors.accent),
+          //     onPressed: _shareSquad),
           IconButton(
               icon: const Icon(Icons.save_alt_rounded, color: Colors.white70),
-              onPressed: _saveSquad),
+              onPressed: _captureAndSave),
           const SizedBox(width: 8),
         ],
       ),
@@ -490,99 +694,149 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
   }
 
   Widget _buildPitch(double height) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.all(12),
+    return LayoutBuilder(builder: (context, constraints) {
+      // Get formation rows from bottom to top (GK first, attackers last)
+      final rows = _getFormationRowsSimple();
+      final totalRows = rows.length;
+
+      // Adaptive scaling based on number of rows
+      double scale = 1.0;
+      if (totalRows > 5)
+        scale = 0.82;
+      else if (totalRows > 4) scale = 0.9;
+
+      return Center(
         child: AspectRatio(
-          aspectRatio: 0.75, // Standard football pitch proportion
-          child: WidgetsToImage(
-            controller: _screenshotController,
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF1B5E20),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
-                    blurRadius: 30,
-                    spreadRadius: -5,
-                  )
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: Stack(
-                  children: [
-                    CustomPaint(size: Size.infinite, painter: PitchPainter()),
-                    // Formation Stamp / Watermark
-                    Positioned(
-                      bottom: 24,
-                      right: 24,
-                      child: Opacity(
-                        opacity: 0.3,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              'FORMATION',
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 2,
+          aspectRatio: 0.72, // Locked aspect ratio (width:height)
+          child: RepaintBoundary(
+            key: _pitchBoundaryKey,
+            child: WidgetsToImage(
+              controller: _screenshotController,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1B5E20),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.4),
+                      blurRadius: 25,
+                      spreadRadius: -5,
+                    )
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Stack(
+                    children: [
+                      CustomPaint(size: Size.infinite, painter: PitchPainter()),
+
+                      // Formation Info Stamp
+                      Positioned(
+                        top: 16,
+                        right: 16,
+                        child: Opacity(
+                          opacity: 0.2,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                'FORMATION',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            Text(
-                              _currentFormation.name,
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w900,
+                              Text(
+                                _currentFormation.name,
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
 
-                    // THE GRID-BASED LAYOUT
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: _getFormationRows().map((rowSpots) {
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: rowSpots
-                              .map((spot) => _buildPlayerCardSpot(spot))
-                              .toList(),
-                        );
-                      }).toList(),
-                    ),
-                  ],
+                      // Simple row-based layout: bottom (GK) to top (Attackers)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 30, horizontal: 16),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: rows.reversed.map((rowSpots) {
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: rowSpots
+                                  .map((spot) =>
+                                      _buildPlayerCardSpot(spot, scale))
+                                  .toList(),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 
-  List<List<String>> _getFormationRows() {
+  /// Smart formation row grouping based on Y-coordinate proximity
+  /// Players are grouped into rows and sorted left-to-right within each row
+  List<List<String>> _getFormationRowsSimple() {
+    final positions = _currentFormation.positions;
+
+    // Group players by Y-coordinate proximity (threshold 0.06 for same row)
     Map<double, List<String>> rowsMap = {};
-    for (var entry in _currentFormation.positions.entries) {
-      double dy = (entry.value.dy * 10).round() / 10;
-      rowsMap.putIfAbsent(dy, () => []).add(entry.key);
+
+    for (var entry in positions.entries) {
+      double dy = entry.value.dy;
+
+      // Find existing row within threshold
+      double? matchingRow;
+      for (var existingY in rowsMap.keys) {
+        if ((existingY - dy).abs() < 0.06) {
+          matchingRow = existingY;
+          break;
+        }
+      }
+
+      if (matchingRow != null) {
+        rowsMap[matchingRow]!.add(entry.key);
+      } else {
+        rowsMap[dy] = [entry.key];
+      }
     }
-    // dy 0.1 (FWD) -> dy 0.9 (GK)
-    var sortedYs = rowsMap.keys.toList()..sort();
+
+    // Sort rows from bottom to top (GK to attackers)
+    var sortedYs = rowsMap.keys.toList()..sort((a, b) => b.compareTo(a));
+
+    // Create final row list with players sorted left-to-right
     List<List<String>> rows = [];
     for (var y in sortedYs) {
-      rows.add(rowsMap[y]!);
+      var playersInRow = rowsMap[y]!;
+
+      // Sort players in this row by X-coordinate (left to right)
+      playersInRow.sort((a, b) {
+        double xA = positions[a]?.dx ?? 0;
+        double xB = positions[b]?.dx ?? 0;
+        return xA.compareTo(xB);
+      });
+
+      rows.add(playersInRow);
     }
+
     return rows;
   }
 
-  Widget _buildPlayerCardSpot(String spotName) {
+  Widget _buildPlayerCardSpot(String spotName, double scale) {
     final player = _squad[spotName];
     final ovrValue = player != null ? (int.tryParse(player.ovr) ?? 0) : 0;
     final posLabel = spotName.replaceAll(RegExp(r'\d'), '');
@@ -596,7 +850,10 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
       badgeColor = const Color(0xFF4ADE80);
     else if (ovrValue >= 80)
       badgeColor = const Color(0xFF38BDF8);
-    else if (ovrValue > 0) badgeColor = Colors.white70;
+    else if (ovrValue > 0) badgeColor = Colors.white;
+
+    final cardWidth = 60.0 * scale;
+    final cardHeight = 82.0 * scale;
 
     return DragTarget<PesPlayer>(
       onAcceptWithDetails: (details) =>
@@ -611,63 +868,85 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 54,
-                height: 74,
+                width: cardWidth,
+                height: cardHeight,
                 decoration: BoxDecoration(
                   color: candidateData.isNotEmpty
                       ? Colors.white.withOpacity(0.3)
                       : Colors.black.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                     color: player != null
-                        ? Colors.white.withOpacity(0.9)
-                        : Colors.white.withOpacity(0.1),
-                    width: player != null ? 2 : 1.5,
+                        ? Colors.white.withOpacity(0.8)
+                        : Colors.white.withOpacity(0.12),
+                    width: player != null ? 1.5 : 1,
                   ),
-                  boxShadow: [
-                    if (player != null)
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      )
-                  ],
                 ),
                 child: player != null
                     ? Stack(
                         children: [
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(5),
                             child: CachedNetworkImage(
                               imageUrl: kIsWeb
                                   ? 'https://corsproxy.io/?${Uri.encodeComponent(player.imageUrl)}'
                                   : player.imageUrl,
                               httpHeaders: PesService.headers,
-                              fit: BoxFit.cover,
-                              width: 54,
-                              height: 74,
-                            ),
-                          ),
-                          Positioned(
-                            top: 2,
-                            right: 2,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 4, vertical: 0.5),
-                              decoration: BoxDecoration(
-                                color: badgeColor,
-                                borderRadius: BorderRadius.circular(3),
+                              fit: BoxFit.cover, // Cover for better fill
+                              width: cardWidth,
+                              height: cardHeight,
+                              // High quality rendering
+                              filterQuality: FilterQuality.high,
+                              // High-res in-memory cache for crisp display
+                              memCacheWidth: (cardWidth * 3).toInt(),
+                              memCacheHeight: (cardHeight * 3).toInt(),
+                              // Smooth fade-in
+                              fadeInDuration: const Duration(milliseconds: 200),
+                              placeholder: (context, url) => Container(
+                                color: Colors.white10,
+                                child: const Center(
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white24,
+                                    ),
+                                  ),
+                                ),
                               ),
-                              child: Text(
-                                player.ovr,
-                                style: GoogleFonts.outfit(
-                                  color: Colors.black,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w900,
+                              errorWidget: (context, url, error) => Container(
+                                color: Colors.white10,
+                                child: const Icon(
+                                  Icons.person,
+                                  color: Colors.white24,
+                                  size: 30,
                                 ),
                               ),
                             ),
                           ),
+                          // Rating Badge
+                          // Positioned(
+                          //   top: 2,
+                          //   right: 2,
+                          //   child: Container(
+                          //     padding: const EdgeInsets.symmetric(
+                          //         horizontal: 4, vertical: 0.5),
+                          //     decoration: BoxDecoration(
+                          //       color: badgeColor,
+                          //       borderRadius: BorderRadius.circular(2),
+                          //     ),
+                          //     child: Text(
+                          //       player.ovr,
+                          //       style: GoogleFonts.outfit(
+                          //         color: Colors.black,
+                          //         fontSize: 8.5 * scale,
+                          //         fontWeight: FontWeight.w900,
+                          //       ),
+                          //     ),
+                          //   ),
+                          // ),
+                          // Position Overlay
                           Positioned(
                             bottom: 2,
                             left: 2,
@@ -675,14 +954,14 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 4, vertical: 1),
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.6),
-                                borderRadius: BorderRadius.circular(3),
+                                color: Colors.black.withOpacity(0.7),
+                                borderRadius: BorderRadius.circular(2),
                               ),
                               child: Text(
                                 posLabel,
                                 style: GoogleFonts.outfit(
                                   color: Colors.white,
-                                  fontSize: 7,
+                                  fontSize: 7 * scale,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -695,26 +974,27 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.add_rounded,
-                                color: Colors.white.withOpacity(0.2), size: 24),
+                                color: Colors.white.withOpacity(0.2),
+                                size: 20 * scale),
                             Text(
                               posLabel,
                               style: TextStyle(
                                   color: Colors.white.withOpacity(0.15),
-                                  fontSize: 10,
+                                  fontSize: 9 * scale,
                                   fontWeight: FontWeight.w900),
                             ),
                           ],
                         ),
                       ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               SizedBox(
-                width: 60,
+                width: cardWidth + 10,
                 child: Text(
                   player?.name.split(' ').last ?? '',
                   style: GoogleFonts.outfit(
                     color: Colors.white.withOpacity(player != null ? 0.9 : 0.0),
-                    fontSize: 9,
+                    fontSize: 8.5 * scale,
                     fontWeight: FontWeight.w600,
                   ),
                   textAlign: TextAlign.center,
