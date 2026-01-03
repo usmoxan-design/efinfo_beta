@@ -2,8 +2,12 @@ import 'dart:convert';
 
 import 'package:efinfo_beta/Others/markdown_page.dart';
 import 'package:efinfo_beta/models/playing_styles.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class PlayingStylePage extends StatefulWidget {
   const PlayingStylePage({super.key});
@@ -46,13 +50,22 @@ class _PlayingStylePageState extends State<PlayingStylePage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Playing Styles",
-          // style: TextStyle(color: Colors.white),
+          style: GoogleFonts.outfit(
+            color: isDark ? Colors.white : Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        // backgroundColor: const Color(0xFF2E7BFF),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
       ),
       body: playingStyles.isEmpty
           ? const Center(child: CircularProgressIndicator())
@@ -70,20 +83,27 @@ class _PlayingStylePageState extends State<PlayingStylePage> {
                   ),
                   // 🔹 Search bar
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                     child: TextField(
                       controller: searchController,
                       onChanged: filterSearch,
+                      style: GoogleFonts.outfit(
+                          color: isDark ? Colors.white : Colors.black),
                       decoration: InputDecoration(
                         hintText: 'Qidirish...',
-                        prefixIcon: const Icon(Icons.search),
+                        hintStyle: GoogleFonts.outfit(
+                            color: isDark ? Colors.white38 : Colors.black38),
+                        prefixIcon: Icon(Icons.search,
+                            color: isDark ? Colors.white54 : Colors.black54),
                         filled: true,
-                        // fillColor: Colors.grey.shade200,
+                        fillColor: isDark
+                            ? Colors.white.withOpacity(0.05)
+                            : Colors.black.withOpacity(0.05),
                         contentPadding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 16),
+                            vertical: 16, horizontal: 20),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
                         ),
                       ),
@@ -95,82 +115,87 @@ class _PlayingStylePageState extends State<PlayingStylePage> {
                     shrinkWrap: true,
                     itemBuilder: (context, index) {
                       final style = filteredStyles[index];
-
-                      return Card(
-                        // color: Colors.white,
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        elevation: 1,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          title: Text(
-                            style.title,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          subtitle: Column(
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: GlassContainer(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const SizedBox(height: 4),
+                              Text(
+                                style.title,
+                                style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color:
+                                        isDark ? Colors.white : Colors.black),
+                              ),
+                              const SizedBox(height: 8),
                               Text(
                                 style.description,
-                                style: const TextStyle(fontSize: 14),
+                                style: GoogleFonts.outfit(
+                                    fontSize: 14,
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black87),
                               ),
-                              const SizedBox(height: 6),
-                              const Text(
+                              const SizedBox(height: 12),
+                              Text(
                                 "Mos pozitsiyalar: ",
-                                style: TextStyle(
-                                    color: Color(0xFF117340),
-                                    fontWeight: FontWeight.w500),
+                                style: GoogleFonts.outfit(
+                                    color: const Color(0xFF06DF5D),
+                                    fontWeight: FontWeight.w600),
                               ),
+                              const SizedBox(height: 4),
                               Container(
-                                padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(5),
-                                  color: Colors.green,
+                                  borderRadius: BorderRadius.circular(8),
+                                  color:
+                                      const Color(0xFF06DF5D).withOpacity(0.1),
+                                  border: Border.all(
+                                      color: const Color(0xFF06DF5D)
+                                          .withOpacity(0.3)),
                                 ),
                                 child: Text(
                                   style.compatiblePositions,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(color: Colors.white),
+                                  style: GoogleFonts.outfit(
+                                    color: const Color(0xFF06DF5D),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                              // const Spacer(),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          const Color(0xFF117340), // fon rangi
-
-                                      foregroundColor:
-                                          Colors.white, // matn rangi
-
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 24, vertical: 12),
-
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF06DF5D),
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => MarkdownPage(
-                                            title: style.title,
-                                            markdownPath: style.data,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    child: const Text("Ko'proq o'qish"),
                                   ),
-                                ],
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => MarkdownPage(
+                                          title: style.title,
+                                          markdownPath: style.data,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Text("Ko'proq o'qish",
+                                      style: GoogleFonts.outfit(
+                                          fontWeight: FontWeight.bold)),
+                                ),
                               ),
                             ],
                           ),

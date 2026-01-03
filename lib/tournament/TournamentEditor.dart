@@ -1,8 +1,11 @@
-import 'package:efinfo_beta/additional/colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:efinfo_beta/tournament/team_model.dart';
 import 'package:efinfo_beta/tournament/tournament_model.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:provider/provider.dart';
 
 class TournamentEditorPage extends StatefulWidget {
   final TournamentModel? tournament;
@@ -152,14 +155,23 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF101010),
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(widget.tournament == null
-            ? "Yangi Turnir Tuzish"
-            : "Turnirni Tahrirlash"),
-        backgroundColor: const Color(0xFF1A1A1A),
+        title: Text(
+          widget.tournament == null
+              ? "Yangi Turnir Tuzish"
+              : "Turnirni Tahrirlash",
+          style: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black),
+        ),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -170,27 +182,38 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
               // Turnir Nomi
               TextField(
                 controller: _tournamentNameController,
-                decoration: const InputDecoration(
+                style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black),
+                decoration: InputDecoration(
                   labelText: 'Turnir Nomi',
-                  labelStyle: TextStyle(color: Colors.grey),
+                  labelStyle: GoogleFonts.outfit(
+                      color: isDark ? Colors.white54 : Colors.black54),
+                  hintText: "Turnir nomini kiriting...",
+                  hintStyle: GoogleFonts.outfit(
+                      color: isDark ? Colors.white24 : Colors.black26),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                        color: isDark ? Colors.white10 : Colors.black12),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.blue),
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: Color(0xFF06DF5D)),
                   ),
+                  filled: true,
+                  fillColor:
+                      (isDark ? Colors.white : Colors.black).withOpacity(0.05),
                 ),
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.white),
               ),
               const SizedBox(height: 20),
 
               // Turnir Turi
               if (!_isDrawLocked) ...[
-                const Text(
+                Text(
                   "Turnir Formatini Tanlang:",
-                  style: TextStyle(
-                      color: Colors.white,
+                  style: GoogleFonts.outfit(
+                      color: isDark ? Colors.white : Colors.black,
                       fontSize: 16,
                       fontWeight: FontWeight.bold),
                 ),
@@ -202,6 +225,7 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
                         TournamentType.knockout,
                         "Knockout",
                         BoxIcons.bx_bracket,
+                        isDark,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -210,6 +234,7 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
                         TournamentType.league,
                         "League (LaLiga)",
                         BoxIcons.bx_table,
+                        isDark,
                       ),
                     ),
                   ],
@@ -217,8 +242,9 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
                 if (_selectedType == TournamentType.league) ...[
                   const SizedBox(height: 10),
                   CheckboxListTile(
-                    title: const Text("Uy-Mehmon o'yinlari (2 davra)",
-                        style: TextStyle(color: Colors.white)),
+                    title: Text("Uy-Mehmon o'yinlari (2 davra)",
+                        style: GoogleFonts.outfit(
+                            color: isDark ? Colors.white70 : Colors.black87)),
                     value: _isDoubleRound,
                     onChanged: (val) {
                       setState(() {
@@ -230,8 +256,9 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
                     contentPadding: EdgeInsets.zero,
                   ),
                   CheckboxListTile(
-                    title: const Text("O'yin vaqtini avtomatik belgilash",
-                        style: TextStyle(color: Colors.white)),
+                    title: Text("O'yin vaqtini avtomatik belgilash",
+                        style: GoogleFonts.outfit(
+                            color: isDark ? Colors.white70 : Colors.black87)),
                     value: _isAutoSchedule,
                     onChanged: (val) {
                       setState(() {
@@ -243,11 +270,12 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
                     contentPadding: EdgeInsets.zero,
                   ),
                   if (_isAutoSchedule) ...[
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Text("Sozlamalar:",
-                          style: TextStyle(
-                              color: Colors.blue, fontWeight: FontWeight.bold)),
+                          style: GoogleFonts.outfit(
+                              color: const Color(0xFF06DF5D),
+                              fontWeight: FontWeight.bold)),
                     ),
                     _buildSliderSetting(
                       "Kunlar oralig'i (interval)",
@@ -255,7 +283,7 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
                       1,
                       7,
                       (val) => setState(() => _daysInterval = val.toInt()),
-                      "${_daysInterval} kun",
+                      "$_daysInterval kun",
                     ),
                     _buildSliderSetting(
                       "O'yinlar boshlanish soati",
@@ -263,7 +291,7 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
                       0,
                       23,
                       (val) => setState(() => _startHour = val.toInt()),
-                      "${_startHour}:00 dan",
+                      "$_startHour:00 dan",
                     ),
                     _buildSliderSetting(
                       "O'yinlar tugash soati",
@@ -274,7 +302,7 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
                         _endHour = val.toInt();
                         if (_endHour < _startHour) _startHour = _endHour;
                       }),
-                      "${_endHour}:00 gacha",
+                      "$_endHour:00 gacha",
                     ),
                   ],
                 ],
@@ -288,17 +316,27 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
                     Expanded(
                       child: TextField(
                         controller: _teamController,
-                        decoration: const InputDecoration(
+                        style: GoogleFonts.outfit(
+                            color: isDark ? Colors.white : Colors.black),
+                        decoration: InputDecoration(
                           labelText: 'Qatnashchi nomini kiriting',
-                          labelStyle: TextStyle(color: Colors.grey),
+                          labelStyle: GoogleFonts.outfit(
+                              color: isDark ? Colors.white54 : Colors.black54),
                           enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                                color:
+                                    isDark ? Colors.white10 : Colors.black12),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.green),
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide:
+                                const BorderSide(color: Color(0xFF06DF5D)),
                           ),
+                          filled: true,
+                          fillColor: (isDark ? Colors.white : Colors.black)
+                              .withOpacity(0.05),
                         ),
-                        style: const TextStyle(color: Colors.white),
                         onSubmitted: (_) => _addTeam(),
                       ),
                     ),
@@ -306,8 +344,9 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
                     FloatingActionButton(
                       onPressed: _addTeam,
                       mini: true,
-                      backgroundColor: Colors.green,
-                      child: const Icon(BoxIcons.bx_plus, color: Colors.white),
+                      backgroundColor: const Color(0xFF06DF5D),
+                      elevation: 0,
+                      child: const Icon(BoxIcons.bx_plus, color: Colors.black),
                     ),
                   ],
                 )
@@ -330,12 +369,12 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
 
               Text(
                 'Qatnashchilar: ${_teams.length} ta jamoa',
-                style: const TextStyle(
+                style: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
-                    color: Colors.white),
+                    color: isDark ? Colors.white : Colors.black),
               ),
-              const Divider(color: Colors.grey),
+              Divider(color: isDark ? Colors.white10 : Colors.black12),
 
               // Jamoalar Ro'yxati
               ListView.builder(
@@ -354,18 +393,18 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: _saveTournament,
-                  icon: const Icon(BoxIcons.bx_save, color: Colors.white),
-                  label: const Text(
+                  icon: const Icon(BoxIcons.bx_save, color: Colors.black),
+                  label: Text(
                     "Saqlash",
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.outfit(
+                        color: Colors.black, fontWeight: FontWeight.bold),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
+                    backgroundColor: const Color(0xFF06DF5D),
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     textStyle: const TextStyle(fontSize: 18),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(16)),
                   ),
                 ),
               ),
@@ -378,6 +417,8 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
 
   Widget _buildSliderSetting(String label, double value, double min, double max,
       Function(double) onChanged, String valueLabel) {
+    final isDark =
+        Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -385,10 +426,13 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label,
-                style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                style: GoogleFonts.outfit(
+                    color: isDark ? Colors.white54 : Colors.black54,
+                    fontSize: 13)),
             Text(valueLabel,
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
+                style: GoogleFonts.outfit(
+                    color: isDark ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.bold)),
           ],
         ),
         Slider(
@@ -397,14 +441,16 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
           max: max,
           divisions: (max - min).toInt(),
           onChanged: onChanged,
-          activeColor: Colors.blue,
-          inactiveColor: Colors.white.withOpacity(0.1),
+          activeColor: const Color(0xFF06DF5D),
+          inactiveColor:
+              (isDark ? Colors.white : Colors.black).withOpacity(0.1),
         ),
       ],
     );
   }
 
-  Widget _buildTypeCard(TournamentType type, String title, IconData icon) {
+  Widget _buildTypeCard(
+      TournamentType type, String title, IconData icon, bool isDark) {
     bool isSelected = _selectedType == type;
     return GestureDetector(
       onTap: () {
@@ -412,60 +458,77 @@ class _TournamentEditorPageState extends State<TournamentEditorPage> {
           _selectedType = type;
         });
       },
-      child: Container(
+      child: GlassContainer(
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Colors.blue.withOpacity(0.2)
-              : Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey.withOpacity(0.3),
-            width: 2,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: isSelected ? Colors.blue : Colors.grey, size: 30),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(
-                color: isSelected ? Colors.blue : Colors.grey,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
+        borderRadius: 12,
+        child: Container(
+          decoration: BoxDecoration(
+            color: isSelected
+                ? const Color(0xFF06DF5D).withOpacity(0.1)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? const Color(0xFF06DF5D)
+                  : (isDark ? Colors.white10 : Colors.black12),
+              width: 1.5,
             ),
-          ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon,
+                  color: isSelected
+                      ? const Color(0xFF06DF5D)
+                      : (isDark ? Colors.white38 : Colors.black38),
+                  size: 30),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  color: isSelected
+                      ? (isDark ? Colors.white : Colors.black)
+                      : (isDark ? Colors.white38 : Colors.black38),
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildTeamListItem(TeamModel team) {
-    return Card(
-      color: Colors.white.withOpacity(0.05),
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: Colors.white.withOpacity(0.1)),
-      ),
-      child: ListTile(
-        leading: Container(
-          width: 5,
-          height: 40,
-          decoration: BoxDecoration(
-            color: team.color,
-            borderRadius: BorderRadius.circular(3),
+    final isDark =
+        Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: GlassContainer(
+        borderRadius: 12,
+        padding: EdgeInsets.zero,
+        child: ListTile(
+          leading: Container(
+            width: 5,
+            height: 40,
+            decoration: BoxDecoration(
+              color: team.color,
+              borderRadius: BorderRadius.circular(3),
+            ),
           ),
+          title: Text(team.name,
+              style: GoogleFonts.outfit(
+                  color: isDark ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.w600)),
+          trailing: !_isDrawLocked
+              ? IconButton(
+                  icon: const Icon(Icons.close, color: Colors.redAccent),
+                  onPressed: () => _removeTeam(team),
+                )
+              : Icon(Icons.lock,
+                  color: isDark ? Colors.white24 : Colors.black26),
         ),
-        title: Text(team.name, style: const TextStyle(color: Colors.white)),
-        trailing: !_isDrawLocked
-            ? IconButton(
-                icon: const Icon(Icons.close, color: Colors.redAccent),
-                onPressed: () => _removeTeam(team),
-              )
-            : const Icon(Icons.lock, color: Colors.grey),
       ),
     );
   }

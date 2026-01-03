@@ -1,10 +1,13 @@
 import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:efinfo_beta/models/pes_models.dart';
 import 'package:efinfo_beta/services/pes_service.dart';
 import 'package:efinfo_beta/widgets/pes_player_card_widget.dart';
 import 'package:efinfo_beta/widgets/error_display_widget.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'level_toggle_header_delegate.dart';
 
@@ -515,21 +518,33 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
+    final bgColor = isDark ? AppColors.background : const Color(0xFFF8F9FA);
+    final cardColor = isDark ? AppColors.cardSurface : Colors.white;
+    final surfaceColor = isDark ? AppColors.surface : const Color(0xFFF1F3F5);
+    final textColor = isDark ? AppColors.textWhite : const Color(0xFF1A1A1A);
+    final secondaryTextColor =
+        isDark ? AppColors.textDim : const Color(0xFF707070);
+    final borderColor =
+        isDark ? AppColors.border : Colors.black.withOpacity(0.05);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: bgColor,
       appBar: AppBar(
         title: Text(
           widget.player.name,
           style: TextStyle(
-            color: AppColors.textWhite,
+            color: textColor,
             fontSize: 18,
             fontFamily: GoogleFonts.outfit().fontFamily,
           ),
         ),
-        backgroundColor: AppColors.background,
+        backgroundColor: bgColor,
         elevation: 0,
         centerTitle: false,
-        iconTheme: const IconThemeData(color: AppColors.textWhite),
+        iconTheme: IconThemeData(color: textColor),
       ),
       body: Builder(
         builder: (context) {
@@ -565,6 +580,11 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                 delegate: LevelToggleHeaderDelegate(
                   isMaxLevel: _isMaxLevel,
                   onToggle: _toggleLevel,
+                  backgroundColor: bgColor,
+                  surfaceColor: surfaceColor,
+                  borderColor: borderColor,
+                  textColor: textColor,
+                  secondaryTextColor: secondaryTextColor,
                 ),
               ),
               SliverToBoxAdapter(
@@ -572,18 +592,53 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     children: [
-                      _buildHeaderSection(detail),
+                      _buildHeaderSection(
+                          detail,
+                          isDark,
+                          cardColor,
+                          surfaceColor,
+                          textColor,
+                          secondaryTextColor,
+                          borderColor),
                       const SizedBox(height: 24),
-                      _buildProgressionBar(detail),
+                      _buildProgressionBar(
+                          detail,
+                          isDark,
+                          cardColor,
+                          surfaceColor,
+                          textColor,
+                          secondaryTextColor,
+                          borderColor),
                       const SizedBox(height: 24),
                       if (_isMaxLevel) ...[
                         if (detail.suggestedPoints.isNotEmpty)
-                          _buildSuggestedPoints(detail.suggestedPoints),
+                          _buildSuggestedPoints(
+                              detail.suggestedPoints,
+                              isDark,
+                              cardColor,
+                              surfaceColor,
+                              textColor,
+                              secondaryTextColor,
+                              borderColor),
                         const SizedBox(height: 24),
                       ],
-                      _buildStatsGridWithSim(detail),
+                      _buildStatsGridWithSim(
+                          detail,
+                          isDark,
+                          cardColor,
+                          surfaceColor,
+                          textColor,
+                          secondaryTextColor,
+                          borderColor),
                       const SizedBox(height: 24),
-                      _buildSkillsSection(detail),
+                      _buildSkillsSection(
+                          detail,
+                          isDark,
+                          cardColor,
+                          surfaceColor,
+                          textColor,
+                          secondaryTextColor,
+                          borderColor),
                       const SizedBox(height: 50),
                     ],
                   ),
@@ -596,13 +651,17 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     );
   }
 
-  Widget _buildHeaderSection(PesPlayerDetail detail) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardSurface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border, width: 1),
-      ),
+  Widget _buildHeaderSection(
+      PesPlayerDetail detail,
+      bool isDark,
+      Color cardColor,
+      Color surfaceColor,
+      Color textColor,
+      Color secondaryTextColor,
+      Color borderColor) {
+    return GlassContainer(
+      borderRadius: 24,
+      border: isDark ? null : Border.all(color: borderColor),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -640,19 +699,21 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildInfoTile(
-                        'Pozitsiyasi:', detail.position, AppColors.accentPink),
+                    _buildInfoTile('Pozitsiyasi:', detail.position,
+                        AppColors.accentPink, secondaryTextColor),
                     const SizedBox(height: 12),
-                    _buildInfoTile('Yoshi:', detail.age, AppColors.accentGreen),
+                    _buildInfoTile('Yoshi:', detail.age, AppColors.accentGreen,
+                        secondaryTextColor),
                     const SizedBox(height: 12),
                     _buildInfoTile(
                         'Bo\'yi',
                         detail.height.contains('sm')
                             ? detail.height
                             : '${detail.height} sm',
-                        AppColors.accentOrange),
+                        AppColors.accentOrange,
+                        secondaryTextColor),
                     const SizedBox(height: 12),
-                    _buildFootTile(detail.foot),
+                    _buildFootTile(detail.foot, secondaryTextColor),
                   ],
                 ),
               ],
@@ -662,25 +723,25 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-              decoration: const BoxDecoration(
-                color: AppColors.surface,
+              decoration: BoxDecoration(
+                color: surfaceColor.withOpacity(isDark ? 0.3 : 0.5),
                 borderRadius:
-                    BorderRadius.vertical(bottom: Radius.circular(24)),
+                    const BorderRadius.vertical(bottom: Radius.circular(24)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.style_rounded,
-                      color: AppColors.textDim, size: 16),
+                  Icon(Icons.style_rounded,
+                      color: secondaryTextColor, size: 16),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Playing Style: ',
-                    style: TextStyle(color: AppColors.textDim, fontSize: 13),
+                    style: TextStyle(color: secondaryTextColor, fontSize: 13),
                   ),
                   Expanded(
                     child: Text(
                       detail.playingStyle,
-                      style: const TextStyle(
-                          color: AppColors.textWhite,
+                      style: TextStyle(
+                          color: textColor,
                           fontSize: 13,
                           fontWeight: FontWeight.bold),
                       overflow: TextOverflow.ellipsis,
@@ -695,14 +756,15 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     );
   }
 
-  Widget _buildInfoTile(String label, String value, Color accent) {
+  Widget _buildInfoTile(
+      String label, String value, Color accent, Color secondaryTextColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-              color: AppColors.textDim,
+          style: TextStyle(
+              color: secondaryTextColor,
               fontSize: 11,
               fontWeight: FontWeight.w500),
         ),
@@ -724,7 +786,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     );
   }
 
-  Widget _buildFootTile(String foot) {
+  Widget _buildFootTile(String foot, Color secondaryTextColor) {
     final bool isRight = foot.toLowerCase().contains('right');
     final String asset = isRight
         ? 'assets/images/right_foot.png'
@@ -733,10 +795,10 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Oyoq:',
           style: TextStyle(
-              color: AppColors.textDim,
+              color: secondaryTextColor,
               fontSize: 11,
               fontWeight: FontWeight.w500),
         ),
@@ -768,9 +830,21 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     );
   }
 
-  Widget _buildStatsGridWithSim(PesPlayerDetail detail) {
+  Widget _buildStatsGridWithSim(
+      PesPlayerDetail detail,
+      bool isDark,
+      Color cardColor,
+      Color surfaceColor,
+      Color textColor,
+      Color secondaryTextColor,
+      Color borderColor) {
     return Column(
       children: [
+        if (_isMaxLevel) ...[
+          _buildTrainingControls(
+              isDark, surfaceColor, textColor, secondaryTextColor, borderColor),
+          const SizedBox(height: 24),
+        ],
         _buildStatCategory(
           'Hujumkorlik',
           [
@@ -788,6 +862,12 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
           detail,
           AppColors.accentPink,
           Icons.sports_soccer_rounded,
+          isDark,
+          cardColor,
+          surfaceColor,
+          textColor,
+          secondaryTextColor,
+          borderColor,
         ),
         const SizedBox(height: 16),
         _buildStatCategory(
@@ -801,6 +881,12 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
           detail,
           AppColors.accentBlue,
           Icons.shield_rounded,
+          isDark,
+          cardColor,
+          surfaceColor,
+          textColor,
+          secondaryTextColor,
+          borderColor,
         ),
         const SizedBox(height: 16),
         _buildStatCategory(
@@ -817,6 +903,12 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
           detail,
           AppColors.accentOrange,
           Icons.bolt_rounded,
+          isDark,
+          cardColor,
+          surfaceColor,
+          textColor,
+          secondaryTextColor,
+          borderColor,
         ),
         const SizedBox(height: 16),
         _buildStatCategory(
@@ -831,6 +923,12 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
           detail,
           AppColors.accentGreen,
           Icons.pan_tool_rounded,
+          isDark,
+          cardColor,
+          surfaceColor,
+          textColor,
+          secondaryTextColor,
+          borderColor,
         ),
         const SizedBox(height: 16),
         _buildStatCategory(
@@ -845,13 +943,29 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
           detail,
           AppColors.accentGreen,
           Icons.tune_rounded,
+          isDark,
+          cardColor,
+          surfaceColor,
+          textColor,
+          secondaryTextColor,
+          borderColor,
         ),
       ],
     );
   }
 
-  Widget _buildStatCategory(String title, List<String> groupKeys,
-      PesPlayerDetail detail, Color themeColor, IconData icon) {
+  Widget _buildStatCategory(
+      String title,
+      List<String> groupKeys,
+      PesPlayerDetail detail,
+      Color themeColor,
+      IconData icon,
+      bool isDark,
+      Color cardColor,
+      Color surfaceColor,
+      Color textColor,
+      Color secondaryTextColor,
+      Color borderColor) {
     // Collect stats from both stats and info maps with robust matching
     final Map<String, String> categoryData = {};
 
@@ -874,9 +988,9 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardSurface,
+        color: cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border, width: 1),
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -889,8 +1003,8 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                 const SizedBox(width: 8),
                 Text(
                   title,
-                  style: const TextStyle(
-                      color: AppColors.textWhite,
+                  style: TextStyle(
+                      color: textColor,
                       fontSize: 16,
                       fontWeight: FontWeight.bold),
                 ),
@@ -912,9 +1026,9 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: surfaceColor,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border, width: 1),
+                    border: Border.all(color: borderColor, width: 1),
                   ),
                   child: Row(
                     children: [
@@ -924,7 +1038,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                         decoration: BoxDecoration(
                           color: value > 0
                               ? color
-                              : AppColors.textDim.withOpacity(0.3),
+                              : secondaryTextColor.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -932,8 +1046,8 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                       Expanded(
                         child: Text(
                           PesService.formatStatName(key),
-                          style: const TextStyle(
-                              color: AppColors.textDim,
+                          style: TextStyle(
+                              color: secondaryTextColor,
                               fontSize: 14,
                               fontWeight: FontWeight.w500),
                         ),
@@ -951,9 +1065,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                                   TextSpan(
                                     text: boost,
                                     style: TextStyle(
-                                        color: value > 0
-                                            ? color
-                                            : AppColors.textWhite,
+                                        color: value > 0 ? color : textColor,
                                         fontSize: 12,
                                         fontWeight: FontWeight.normal),
                                   ),
@@ -961,9 +1073,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                                   TextSpan(
                                     text: val,
                                     style: TextStyle(
-                                        color: value > 0
-                                            ? color
-                                            : AppColors.textWhite,
+                                        color: value > 0 ? color : textColor,
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold),
                                   ),
@@ -974,7 +1084,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                           return Text(
                             valueStr,
                             style: TextStyle(
-                                color: value > 0 ? color : AppColors.textWhite,
+                                color: value > 0 ? color : textColor,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold),
                           );
@@ -991,16 +1101,23 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     );
   }
 
-  Widget _buildProgressionBar(PesPlayerDetail detail) {
+  Widget _buildProgressionBar(
+      PesPlayerDetail detail,
+      bool isDark,
+      Color cardColor,
+      Color surfaceColor,
+      Color textColor,
+      Color secondaryTextColor,
+      Color borderColor) {
     if (!_isMaxLevel) {
       int ovr = int.tryParse(detail.stats['Overall Rating'] ?? '0') ?? 0;
       Color bg = _getStatColor(ovr);
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: surfaceColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border, width: 1),
+          border: Border.all(color: borderColor, width: 1),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1008,12 +1125,12 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("Current Level",
-                    style: TextStyle(color: AppColors.textDim, fontSize: 11)),
+                Text("Current Level",
+                    style: TextStyle(color: secondaryTextColor, fontSize: 11)),
                 const SizedBox(height: 2),
-                const Text("Level 1",
+                Text("Level 1",
                     style: TextStyle(
-                        color: AppColors.textWhite,
+                        color: textColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 14)),
               ],
@@ -1037,15 +1154,14 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     }
 
     int dynamicOvr = _dynamicOvr;
-    int baseMaxOvr = _getOvrFromData(_maxLevelData);
     int remaining = _totalPoints - _usedPoints;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardSurface,
+        color: cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border, width: 1),
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: Column(
         children: [
@@ -1055,21 +1171,21 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Progression Points",
-                      style: TextStyle(color: AppColors.textDim, fontSize: 11)),
+                  Text("Progression Points",
+                      style:
+                          TextStyle(color: secondaryTextColor, fontSize: 11)),
                   const SizedBox(height: 4),
                   Text("$remaining / $_totalPoints",
-                      style: const TextStyle(
-                          color: AppColors.textWhite,
+                      style: TextStyle(
+                          color: textColor,
                           fontWeight: FontWeight.bold,
                           fontSize: 16)),
                 ],
               ),
               Row(
                 children: [
-                  // _buildOvrBadge("Max", baseMaxOvr, isSmall: true),
-                  // const SizedBox(width: 8),
-                  _buildOvrBadge("Max", dynamicOvr),
+                  _buildOvrBadge("Max", dynamicOvr, isDark, textColor,
+                      secondaryTextColor, borderColor),
                 ],
               ),
             ],
@@ -1079,7 +1195,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: _totalPoints > 0 ? _usedPoints / _totalPoints : 0,
-              backgroundColor: AppColors.background,
+              backgroundColor: isDark ? AppColors.background : surfaceColor,
               color: AppColors.accent,
               minHeight: 6,
             ),
@@ -1089,7 +1205,8 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     );
   }
 
-  Widget _buildTrainingControls() {
+  Widget _buildTrainingControls(bool isDark, Color surfaceColor,
+      Color textColor, Color secondaryTextColor, Color borderColor) {
     var keys = _allocatedPoints.keys.toList();
     // Custom sort to match game order roughly
     final sortOrder = [
@@ -1124,10 +1241,10 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 "Training Simulation",
                 style: TextStyle(
-                    color: Colors.white,
+                    color: textColor,
                     fontSize: 16,
                     fontWeight: FontWeight.bold),
               ),
@@ -1183,9 +1300,9 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                 margin: const EdgeInsets.only(right: 8),
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0D2418),
+                  color: isDark ? const Color(0xFF0D2418) : surfaceColor,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white12),
+                  border: Border.all(color: borderColor),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1194,8 +1311,8 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            color: Colors.white70,
+                        style: TextStyle(
+                            color: secondaryTextColor,
                             fontSize: 11,
                             fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
@@ -1203,15 +1320,14 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         InkWell(
-                          // Enable visual touch but logic handles constraints
                           onTap: () => _updateTrainingCategory(key, false),
                           child: const Icon(Icons.remove_circle,
                               color: Colors.orange, size: 22),
                         ),
                         const SizedBox(width: 4),
                         Text("$value",
-                            style: const TextStyle(
-                                color: Colors.white,
+                            style: TextStyle(
+                                color: textColor,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18)),
                         const SizedBox(width: 4),
@@ -1222,26 +1338,33 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    _buildStatSvgIcon(key, size: 16)
+                    const SizedBox(height: 8),
+                    _buildStatSvgIcon(key, size: 16, isDark: isDark),
                   ],
                 ),
               );
             },
           ),
-        )
+        ),
       ],
     );
   }
 
-  Widget _buildSkillsSection(PesPlayerDetail detail) {
+  Widget _buildSkillsSection(
+      PesPlayerDetail detail,
+      bool isDark,
+      Color cardColor,
+      Color surfaceColor,
+      Color textColor,
+      Color secondaryTextColor,
+      Color borderColor) {
     if (detail.skills.isEmpty) return const SizedBox.shrink();
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardSurface,
+        color: cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border, width: 1),
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1253,10 +1376,10 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                 const Icon(Icons.bolt_rounded,
                     color: AppColors.accentBlue, size: 20),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   "Player Skills",
                   style: TextStyle(
-                      color: AppColors.textWhite,
+                      color: textColor,
                       fontSize: 16,
                       fontWeight: FontWeight.bold),
                 ),
@@ -1274,14 +1397,14 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: surfaceColor,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.border, width: 1),
+                    border: Border.all(color: borderColor, width: 1),
                   ),
                   child: Text(
                     skill,
-                    style: const TextStyle(
-                        color: AppColors.textWhite,
+                    style: TextStyle(
+                        color: textColor,
                         fontSize: 12,
                         fontWeight: FontWeight.w500),
                   ),
@@ -1294,7 +1417,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     );
   }
 
-  Widget _buildStatSvgIcon(String key, {double size = 16}) {
+  Widget _buildStatSvgIcon(String key, {double size = 16, bool isDark = true}) {
     final k = key.toLowerCase();
     String assetPath = 'assets/images/shooting.svg';
 
@@ -1322,15 +1445,16 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
 
     return Container(
       padding: const EdgeInsets.all(4),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white : Colors.black.withOpacity(0.1),
         shape: BoxShape.circle,
       ),
       child: SvgPicture.asset(
         assetPath,
         width: size,
         height: size,
-        colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+        colorFilter: ColorFilter.mode(
+            isDark ? Colors.black : Colors.black, BlendMode.srcIn),
       ),
     );
   }
@@ -1368,28 +1492,32 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     return const Color(0xFFd74233);
   }
 
-  Widget _buildOvrBadge(String label, int ovr, {bool isSmall = false}) {
+  Widget _buildOvrBadge(String label, int ovr, bool isDark, Color textColor,
+      Color secondaryTextColor, Color borderColor,
+      {bool isSmall = false}) {
     Color bg = _getStatColor(ovr);
     return Container(
       padding: EdgeInsets.symmetric(
           horizontal: isSmall ? 10 : 14, vertical: isSmall ? 4 : 8),
       decoration: BoxDecoration(
-        color: isSmall ? AppColors.background : bg.withOpacity(0.1),
+        color: isSmall
+            ? (isDark ? AppColors.background : const Color(0xFFF1F3F5))
+            : bg.withOpacity(0.1),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-            color: isSmall ? AppColors.border : bg.withOpacity(0.3), width: 1),
+            color: isSmall ? borderColor : bg.withOpacity(0.3), width: 1),
       ),
       child: Column(
         children: [
           Text(label,
               style: TextStyle(
-                  color: isSmall ? AppColors.textDim : bg,
+                  color: isSmall ? secondaryTextColor : bg,
                   fontSize: 10,
                   fontWeight: FontWeight.w500)),
           Text(
             ovr.toString(),
             style: TextStyle(
-                color: isSmall ? AppColors.textWhite : bg,
+                color: isSmall ? textColor : bg,
                 fontWeight: FontWeight.bold,
                 fontSize: isSmall ? 14 : 18),
           ),
@@ -1398,7 +1526,14 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     );
   }
 
-  Widget _buildSuggestedPoints(Map<String, int> points) {
+  Widget _buildSuggestedPoints(
+      Map<String, int> points,
+      bool isDark,
+      Color cardColor,
+      Color surfaceColor,
+      Color textColor,
+      Color secondaryTextColor,
+      Color borderColor) {
     if (points.isEmpty) return const SizedBox.shrink();
 
     final List<String> standardCategories = [
@@ -1450,9 +1585,9 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.cardSurface,
+        color: cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border, width: 1),
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1464,9 +1599,9 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                 const Icon(Icons.auto_awesome_rounded,
                     color: AppColors.accentOrange, size: 20),
                 const SizedBox(width: 8),
-                const Text("To'g'ri kuchaytirish",
+                Text("To'g'ri kuchaytirish",
                     style: TextStyle(
-                        color: AppColors.textWhite,
+                        color: textColor,
                         fontSize: 16,
                         fontWeight: FontWeight.bold)),
               ],
@@ -1493,18 +1628,18 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                       decoration: BoxDecoration(
                         color: isTotal
                             ? AppColors.accentPink.withOpacity(0.1)
-                            : AppColors.surface,
+                            : surfaceColor,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                             color: isTotal
                                 ? AppColors.accentPink.withOpacity(0.3)
-                                : AppColors.border,
+                                : borderColor,
                             width: 1),
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _buildStatSvgIcon(e.key, size: 14),
+                          _buildStatSvgIcon(e.key, size: 14, isDark: isDark),
                           const SizedBox(height: 6),
                           Text(
                               displayKey
@@ -1514,7 +1649,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                               style: TextStyle(
                                   color: isTotal
                                       ? AppColors.accentPink
-                                      : AppColors.textDim,
+                                      : secondaryTextColor,
                                   fontSize: 9,
                                   fontWeight: FontWeight.w600),
                               maxLines: 1,
@@ -1524,7 +1659,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
                               style: TextStyle(
                                   color: isTotal
                                       ? AppColors.accentPink
-                                      : AppColors.textWhite,
+                                      : textColor,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold)),
                         ],

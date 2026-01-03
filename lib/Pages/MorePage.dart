@@ -1,13 +1,18 @@
+import 'package:efinfo_beta/Pages/FormationSuggesterPage.dart';
 import 'package:efinfo_beta/Others/positionskillchecker.dart';
 import 'package:efinfo_beta/Others/teambuilder.dart';
 import 'package:efinfo_beta/dataPlayers/CategoryPlayersPage.dart';
 import 'package:efinfo_beta/Others/PackTricksPage.dart';
+import 'package:efinfo_beta/Pages/PackSimulatorPage.dart';
 import 'package:efinfo_beta/dataPlayers/StandartPlayersPage.dart';
 import 'package:efinfo_beta/Others/ElementsPage.dart';
 import 'package:efinfo_beta/components/newBadge.dart';
 import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 class MorePage extends StatefulWidget {
   const MorePage({super.key});
@@ -21,6 +26,26 @@ class _MorePageState extends State<MorePage> {
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> moreData = [
       {
+        'title': 'Pack Simulator',
+        'subtitle': 'Omadingizni sinab ko\'ring',
+        'icon': "assets/images/elements.png",
+        'accent': Colors.amber,
+        'badge': true,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const PackSimulatorPage())),
+      },
+      {
+        'title': 'Taktik Sxema tavsiyalar',
+        'subtitle': 'Optimal jamoangizni quring',
+        'icon': "assets/images/team_playstyle.png",
+        'accent': AppColors.accentBlue,
+        'badge': true,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const FormationSuggesterPage())),
+      },
+      {
         'title': 'Skill Match Calculator',
         'subtitle': 'Skill moslik hisoblagich',
         'icon': "assets/images/skill_calculator.png",
@@ -31,11 +56,21 @@ class _MorePageState extends State<MorePage> {
             MaterialPageRoute(builder: (_) => const PositionSkillPage())),
       },
       {
+        'title': 'SuperSquad XI',
+        'subtitle': 'Team building',
+        'icon': "assets/images/formations.png",
+        'accent': const Color(0xFF06DF5D),
+        'badge': false,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const TeamBuilderScreen())),
+      },
+      {
         'title': 'eFootball Elements',
         'subtitle': 'Game mechanics',
         'icon': "assets/images/elements.png",
         'accent': AppColors.accentGreen,
-        'badge': true,
+        'badge': false,
         'isColoredIcon': true,
         'onTap': () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const ElementsPage())),
@@ -45,7 +80,7 @@ class _MorePageState extends State<MorePage> {
         'subtitle': 'Browse by type',
         'icon': "assets/images/category.png",
         'accent': AppColors.accentOrange,
-        'badge': true,
+        'badge': false,
         'isColoredIcon': false,
         'onTap': () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const CategoryPlayersPage())),
@@ -54,8 +89,8 @@ class _MorePageState extends State<MorePage> {
         'title': 'Standard Players',
         'subtitle': 'Full database',
         'icon': "assets/images/players.png",
-        'accent': AppColors.accentPink,
-        'badge': true,
+        'accent': const Color(0xFF06DF5D),
+        'badge': false,
         'isColoredIcon': false,
         'onTap': () => Navigator.push(
             context,
@@ -64,40 +99,30 @@ class _MorePageState extends State<MorePage> {
                     const StandartPlayersPage(title: 'Standard Players'))),
       },
       {
-        'title': 'SuperSquad XI',
-        'subtitle': 'Team building',
-        'icon': "assets/images/formations.png",
-        'accent': AppColors.accentPink,
-        'badge': false,
-        'isColoredIcon': false,
-        'onTap': () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const TeamBuilderScreen())),
-      },
-      {
         'title': 'Pack Tricks',
         'subtitle': 'Epik tushurish sirlari',
         'icon': "assets/images/elements.png",
         'accent': Colors.purpleAccent,
-        'badge': true,
+        'badge': false,
         'isColoredIcon': false,
         'onTap': () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const PackTricksPage())),
-      },
+      }
     ];
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(8),
           children: [
             GridView.builder(
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
                 childAspectRatio: 0.85,
               ),
               itemCount: moreData.length,
@@ -115,55 +140,53 @@ class _MorePageState extends State<MorePage> {
               },
             ),
             const SizedBox(height: 48),
-            _buildDisclaimer(),
-            const SizedBox(height: 40),
+            _buildDisclaimer(context),
+            const SizedBox(height: 100),
           ],
         ),
       ),
     );
   }
-}
 
-Widget _buildDisclaimer() {
-  return Container(
-    padding: const EdgeInsets.all(24),
-    decoration: BoxDecoration(
-      color: AppColors.cardSurface,
-      borderRadius: BorderRadius.circular(24),
-      border: Border.all(color: AppColors.border, width: 1),
-    ),
-    child: Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.info_outline_rounded,
-                color: AppColors.accentOrange, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              "Disclaimer",
-              style: GoogleFonts.outfit(
-                fontSize: 18,
-                color: AppColors.accentOrange,
-                fontWeight: FontWeight.bold,
+  Widget _buildDisclaimer(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
+    return GlassContainer(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.info_outline_rounded,
+                  color: AppColors.accentOrange, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                "Disclaimer",
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  color: AppColors.accentOrange,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Text(
-          "Unofficial fan-made app. Data from public sources like pesdb.net. Not affiliated with Konami. Built for PES community with love.",
-          textAlign: TextAlign.center,
-          style: GoogleFonts.outfit(
-            color: AppColors.textDim,
-            fontSize: 13,
-            height: 1.5,
-            fontWeight: FontWeight.w400,
+            ],
           ),
-        ),
-      ],
-    ),
-  );
+          const SizedBox(height: 12),
+          Text(
+            "Unofficial fan-made app. Data from public sources like pesdb.net. Not affiliated with Konami. Built for PES community with love.",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              color: isDark ? Colors.white54 : Colors.black54,
+              fontSize: 13,
+              height: 1.5,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _MoreItem extends StatelessWidget {
@@ -187,28 +210,20 @@ class _MoreItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return GestureDetector(
       onTap: onTap,
       child: NewBadgeWrapper(
         showBadge: badge,
         child: SizedBox.expand(
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.cardSurface,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.border, width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
+          child: GlassContainer(
+            borderRadius: 24,
             child: Stack(
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.all(15.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -221,8 +236,8 @@ class _MoreItem extends StatelessWidget {
                         ),
                         child: Image.asset(
                           icon,
-                          width: 48,
-                          height: 48,
+                          width: 42,
+                          height: 42,
                           color: isColoredIcon ? null : accent,
                         ),
                       ),
@@ -230,8 +245,8 @@ class _MoreItem extends StatelessWidget {
                       Text(
                         title,
                         style: GoogleFonts.outfit(
-                          fontSize: 15,
-                          color: AppColors.textWhite,
+                          fontSize: 14,
+                          color: isDark ? Colors.white : Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
                         maxLines: 2,
@@ -241,8 +256,8 @@ class _MoreItem extends StatelessWidget {
                       Text(
                         subtitle,
                         style: GoogleFonts.outfit(
-                          fontSize: 11,
-                          color: AppColors.textDim,
+                          fontSize: 10,
+                          color: isDark ? Colors.white54 : Colors.black54,
                           fontWeight: FontWeight.w500,
                         ),
                       ),

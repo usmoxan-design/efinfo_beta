@@ -1,12 +1,17 @@
-import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 class PackTricksPage extends StatelessWidget {
   const PackTricksPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     final List<Map<String, String>> tricks = [
       {
         "title": "3x Click Method",
@@ -139,17 +144,18 @@ class PackTricksPage extends StatelessWidget {
     ];
 
     return Scaffold(
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           "Pack Tricks",
           style: GoogleFonts.outfit(
-              color: Colors.white, fontWeight: FontWeight.bold),
+              color: isDark ? Colors.white : Colors.black,
+              fontWeight: FontWeight.bold),
         ),
-        backgroundColor: AppColors.background,
+        backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
       ),
-      backgroundColor: AppColors.background,
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -158,7 +164,7 @@ class PackTricksPage extends StatelessWidget {
             style: GoogleFonts.outfit(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: AppColors.accentOrange,
+              color: const Color(0xFFFF9500),
             ),
           ),
           const SizedBox(height: 20),
@@ -168,27 +174,30 @@ class PackTricksPage extends StatelessWidget {
             itemCount: tricks.length,
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              return _buildTrickItem(context, tricks[index]);
+              return _buildTrickItem(context, tricks[index], isDark);
             },
           ),
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.accent.withOpacity(0.1),
+              color: const Color(0xFF06DF5D).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.accent.withOpacity(0.5)),
+              border:
+                  Border.all(color: const Color(0xFF06DF5D).withOpacity(0.3)),
             ),
             child: Row(
               children: [
                 const Icon(Icons.warning_amber_rounded,
-                    color: AppColors.accentOrange, size: 24),
+                    color: Color(0xFFFF9500), size: 24),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     "Diqqat bular playerlarning tajribasi va superstition (irrim-sirim). Konami RNG (tasodif) ishlatadi, 100% kafolat yo'q! O'zingiz uchun saqlab qo'ying va sinab ko'ring.",
                     style: GoogleFonts.outfit(
-                      color: Colors.white.withOpacity(0.9),
+                      color: isDark
+                          ? Colors.white.withOpacity(0.9)
+                          : Colors.black87,
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
                     ),
@@ -203,55 +212,51 @@ class PackTricksPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTrickItem(BuildContext context, Map<String, String> trick) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardSurface,
+  Widget _buildTrickItem(
+      BuildContext context, Map<String, String> trick, bool isDark) {
+    return GlassContainer(
+      borderRadius: 16,
+      child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => _showTrickDetail(context, trick),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.auto_fix_high,
-                      color: AppColors.accent, size: 20),
+        onTap: () => _showTrickDetail(context, trick, isDark),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF06DF5D).withOpacity(0.1),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    trick['title']!,
-                    style: GoogleFonts.outfit(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+                child: const Icon(Icons.auto_fix_high,
+                    color: Color(0xFF06DF5D), size: 20),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  trick['title']!,
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
-                const Icon(Icons.chevron_right, color: Colors.white54),
-              ],
-            ),
+              ),
+              Icon(Icons.chevron_right,
+                  color: isDark ? Colors.white54 : Colors.black38),
+            ],
           ),
         ),
       ),
     );
   }
 
-  void _showTrickDetail(BuildContext context, Map<String, String> trick) {
+  void _showTrickDetail(
+      BuildContext context, Map<String, String> trick, bool isDark) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.cardSurface,
+      backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -267,7 +272,7 @@ class PackTricksPage extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white10,
+                    color: isDark ? Colors.white10 : Colors.black12,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -276,14 +281,14 @@ class PackTricksPage extends StatelessWidget {
               Row(
                 children: [
                   const Icon(Icons.auto_fix_high,
-                      color: AppColors.accent, size: 28),
+                      color: Color(0xFF06DF5D), size: 28),
                   const SizedBox(width: 12),
                   Text(
                     trick['title']!,
                     style: GoogleFonts.outfit(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
                   ),
                 ],
@@ -293,7 +298,7 @@ class PackTricksPage extends StatelessWidget {
                 "Qanday qilish kerak:",
                 style: GoogleFonts.outfit(
                   fontSize: 14,
-                  color: AppColors.textDim,
+                  color: isDark ? Colors.white54 : Colors.black54,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -303,7 +308,8 @@ class PackTricksPage extends StatelessWidget {
                 style: GoogleFonts.outfit(
                   fontSize: 16,
                   height: 1.5,
-                  color: Colors.white.withOpacity(0.9),
+                  color:
+                      isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
                 ),
               ),
               const SizedBox(height: 30),
@@ -312,7 +318,7 @@ class PackTricksPage extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
+                    backgroundColor: const Color(0xFF06DF5D),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),

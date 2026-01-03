@@ -1,7 +1,11 @@
 import 'dart:convert';
 import 'package:efinfo_beta/models/positionsmodel.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class PositionsPage extends StatefulWidget {
   const PositionsPage({super.key});
@@ -45,13 +49,22 @@ class _PositionsPageState extends State<PositionsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
+        backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
         appBar: AppBar(
-          title: const Text(
+          title: Text(
             "Pozitsiyalar",
-            // style: TextStyle(color: Colors.white),
+            style: GoogleFonts.outfit(
+              color: isDark ? Colors.white : Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          // backgroundColor: const Color(0xFF2E7BFF),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
         ),
         body: playerPositions.isEmpty
             ? const Center(child: CircularProgressIndicator())
@@ -74,50 +87,56 @@ class _PositionsPageState extends State<PositionsPage> {
                       itemBuilder: (context, index) {
                         final style = filteredPositions[index];
 
-                        return Card(
-                          // color: Colors.white,
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          elevation: 1,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          child: GlassContainer(
+                            padding: const EdgeInsets.all(12),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                SizedBox(
-                                  width: 120,
-                                  // color: Colors.black,
+                                Container(
+                                  width: 100,
+                                  height: 100,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color:
+                                        (isDark ? Colors.white : Colors.black)
+                                            .withOpacity(0.05),
+                                  ),
+                                  padding: const EdgeInsets.all(8),
                                   child: Image.asset(
                                     style.image,
-                                    fit: BoxFit.cover,
+                                    fit: BoxFit.contain,
                                   ),
                                 ),
-                                const SizedBox(
-                                    width: 8), // rasm bilan matn orasiga joy
+                                const SizedBox(width: 16),
                                 Expanded(
-                                  // 🟢 Eng muhim qism
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         style.title,
-                                        style: const TextStyle(
+                                        style: GoogleFonts.outfit(
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 16,
+                                          fontSize: 18,
+                                          color: isDark
+                                              ? Colors.white
+                                              : Colors.black,
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
+                                      const SizedBox(height: 6),
                                       Text(
                                         style.description,
                                         softWrap: true,
-                                        overflow: TextOverflow
-                                            .visible, // yoki ellipsis
-                                        style: const TextStyle(fontSize: 14),
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 14,
+                                          color: isDark
+                                              ? Colors.white70
+                                              : Colors.black87,
+                                        ),
                                       ),
-                                      const SizedBox(height: 6),
                                     ],
                                   ),
                                 ),

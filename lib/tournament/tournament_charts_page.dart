@@ -1,9 +1,12 @@
-import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:efinfo_beta/tournament/service/league_service.dart';
 import 'package:efinfo_beta/tournament/tournament_model.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:math';
+import 'package:provider/provider.dart';
 
 class LeagueTournamentChartsPage extends StatelessWidget {
   final TournamentModel tournament;
@@ -15,15 +18,23 @@ class LeagueTournamentChartsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
     final leagueService = LeagueService();
     final stats = leagueService.getTournamentStats(tournament);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text("Turnir Statistikasi"),
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
+        title: Text(
+          "Turnir Statistikasi",
+          style: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -31,7 +42,7 @@ class LeagueTournamentChartsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Summary Cards
-            _buildGlobalSummary(stats),
+            _buildGlobalSummary(stats, isDark),
             const SizedBox(height: 24),
 
             // Pie Charts Row
@@ -44,22 +55,23 @@ class LeagueTournamentChartsPage extends StatelessWidget {
                       PieChartSectionData(
                           value: stats.totalWins.toDouble(),
                           title: "G'alaba",
-                          color: Colors.green,
+                          color: const Color(0xFF06DF5D),
                           radius: 50,
-                          titleStyle: const TextStyle(
+                          titleStyle: GoogleFonts.outfit(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white)),
+                              color: Colors.black)),
                       PieChartSectionData(
                           value: stats.totalDraws.toDouble(),
                           title: "Durang",
-                          color: Colors.orange,
+                          color: Colors.orangeAccent,
                           radius: 50,
-                          titleStyle: const TextStyle(
+                          titleStyle: GoogleFonts.outfit(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white)),
+                              color: Colors.black)),
                     ],
+                    isDark,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -70,22 +82,23 @@ class LeagueTournamentChartsPage extends StatelessWidget {
                       PieChartSectionData(
                           value: stats.homeGoals.toDouble(),
                           title: "Uy",
-                          color: Colors.blue,
+                          color: Colors.blueAccent,
                           radius: 50,
-                          titleStyle: const TextStyle(
+                          titleStyle: GoogleFonts.outfit(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               color: Colors.white)),
                       PieChartSectionData(
                           value: stats.awayGoals.toDouble(),
                           title: "Mehmon",
-                          color: Colors.purple,
+                          color: Colors.purpleAccent,
                           radius: 50,
-                          titleStyle: const TextStyle(
+                          titleStyle: GoogleFonts.outfit(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               color: Colors.white)),
                     ],
+                    isDark,
                   ),
                 ),
               ],
@@ -93,20 +106,21 @@ class LeagueTournamentChartsPage extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Top Scoring Teams Chart
-            _buildSectionTitle("Eng ko'p gol urgan jamoalar"),
+            _buildSectionTitle("Eng ko'p gol urgan jamoalar", isDark),
             const SizedBox(height: 12),
-            _buildGoalsChart(stats.topScoringTeams),
+            _buildGoalsChart(stats.topScoringTeams, isDark),
             const SizedBox(height: 32),
 
             // Wins/Losses Distribution (Optional: Pie Chart)
-            _buildSectionTitle("Eng yaxshi himoyalar (O'tkazilgan gollar)"),
+            _buildSectionTitle(
+                "Eng yaxshi himoyalar (O'tkazilgan gollar)", isDark),
             const SizedBox(height: 12),
-            _buildDefenseChart(stats.bestDefenses),
+            _buildDefenseChart(stats.bestDefenses, isDark),
 
             const SizedBox(height: 32),
-            _buildSectionTitle("G'alabalar"),
+            _buildSectionTitle("G'alabalar", isDark),
             const SizedBox(height: 12),
-            _buildWinsList(stats.mostWins),
+            _buildWinsList(stats.mostWins, isDark),
 
             const SizedBox(height: 100),
           ],
@@ -115,57 +129,64 @@ class LeagueTournamentChartsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, bool isDark) {
     return Text(
       title,
-      style: const TextStyle(
-          color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+      style: GoogleFonts.outfit(
+          color: isDark ? Colors.white : Colors.black,
+          fontSize: 18,
+          fontWeight: FontWeight.bold),
     );
   }
 
-  Widget _buildGlobalSummary(TournamentStats stats) {
-    return Container(
+  Widget _buildGlobalSummary(TournamentStats stats, bool isDark) {
+    return GlassContainer(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient:
-            LinearGradient(colors: [Colors.blue[900]!, Colors.blue[600]!]),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildSummaryItem(
-              "O'yinlar", "${stats.matchesPlayed}/${stats.totalMatches}"),
-          _buildSummaryItem("Gollar", stats.totalGoals.toString()),
-          _buildSummaryItem(
-              "O'rtacha", stats.avgGoalsPerMatch.toStringAsFixed(2)),
-        ],
+      borderRadius: 16,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [
+            const Color(0xFF06DF5D).withOpacity(0.2),
+            Colors.blueAccent.withOpacity(0.2)
+          ]),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildSummaryItem("O'yinlar",
+                "${stats.matchesPlayed}/${stats.totalMatches}", isDark),
+            _buildSummaryItem("Gollar", stats.totalGoals.toString(), isDark),
+            _buildSummaryItem(
+                "O'rtacha", stats.avgGoalsPerMatch.toStringAsFixed(2), isDark),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSummaryItem(String label, String value) {
+  Widget _buildSummaryItem(String label, String value, bool isDark) {
     return Column(
       children: [
         Text(label,
-            style: const TextStyle(color: Colors.white70, fontSize: 12)),
+            style: GoogleFonts.outfit(
+                color: isDark ? Colors.white70 : Colors.black54, fontSize: 12)),
         const SizedBox(height: 4),
         Text(value,
-            style: const TextStyle(
-                color: Colors.white,
+            style: GoogleFonts.outfit(
+                color: isDark ? Colors.white : Colors.black,
                 fontSize: 18,
                 fontWeight: FontWeight.bold)),
       ],
     );
   }
 
-  Widget _buildGoalsChart(List<LeagueStats> topScoring) {
-    return Container(
+  Widget _buildGoalsChart(List<LeagueStats> topScoring, bool isDark) {
+    return GlassContainer(
       height: 250,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(16)),
+      borderRadius: 16,
       child: BarChart(
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
@@ -185,8 +206,9 @@ class LeagueTournamentChartsPage extends StatelessWidget {
                       child: Text(
                         topScoring[idx].team.name.substring(
                             0, min(3, topScoring[idx].team.name.length)),
-                        style:
-                            const TextStyle(color: Colors.grey, fontSize: 10),
+                        style: GoogleFonts.outfit(
+                            color: isDark ? Colors.white38 : Colors.black38,
+                            fontSize: 10),
                       ),
                     );
                   }
@@ -209,7 +231,7 @@ class LeagueTournamentChartsPage extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: entry.value.goalsFor.toDouble(),
-                  color: AppColors.accent,
+                  color: const Color(0xFF06DF5D),
                   width: 16,
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -221,13 +243,11 @@ class LeagueTournamentChartsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDefenseChart(List<LeagueStats> bestDefenses) {
-    return Container(
+  Widget _buildDefenseChart(List<LeagueStats> bestDefenses, bool isDark) {
+    return GlassContainer(
       height: 200,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(16)),
+      borderRadius: 16,
       child: BarChart(
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
@@ -247,8 +267,9 @@ class LeagueTournamentChartsPage extends StatelessWidget {
                       child: Text(
                         bestDefenses[idx].team.name.substring(
                             0, min(3, bestDefenses[idx].team.name.length)),
-                        style:
-                            const TextStyle(color: Colors.grey, fontSize: 10),
+                        style: GoogleFonts.outfit(
+                            color: isDark ? Colors.white38 : Colors.black38,
+                            fontSize: 10),
                       ),
                     );
                   }
@@ -283,48 +304,49 @@ class LeagueTournamentChartsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildWinsList(List<LeagueStats> mostWins) {
+  Widget _buildWinsList(List<LeagueStats> mostWins, bool isDark) {
     return Column(
       children: mostWins.map((stats) {
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 15,
-                backgroundColor: stats.team.color.withOpacity(0.2),
-                child: Icon(Icons.shield, color: stats.team.color, size: 16),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                  child: Text(stats.team.name,
-                      style: const TextStyle(color: Colors.white))),
-              Text("${stats.won} G'alaba",
-                  style: const TextStyle(
-                      color: Colors.green, fontWeight: FontWeight.bold)),
-            ],
+          child: GlassContainer(
+            borderRadius: 12,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 15,
+                  backgroundColor: stats.team.color.withOpacity(0.2),
+                  child: Icon(Icons.shield, color: stats.team.color, size: 16),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                    child: Text(stats.team.name,
+                        style: GoogleFonts.outfit(
+                            color: isDark ? Colors.white : Colors.black,
+                            fontWeight: FontWeight.w600))),
+                Text("${stats.won} G'alaba",
+                    style: GoogleFonts.outfit(
+                        color: const Color(0xFF06DF5D),
+                        fontWeight: FontWeight.bold)),
+              ],
+            ),
           ),
         );
       }).toList(),
     );
   }
 
-  Widget _buildPieChartCard(String title, List<PieChartSectionData> sections) {
-    return Container(
+  Widget _buildPieChartCard(
+      String title, List<PieChartSectionData> sections, bool isDark) {
+    return GlassContainer(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(16)),
+      borderRadius: 16,
       child: Column(
         children: [
           Text(title,
-              style: const TextStyle(
-                  color: Colors.white70,
+              style: GoogleFonts.outfit(
+                  color: isDark ? Colors.white70 : Colors.black54,
                   fontSize: 12,
                   fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),

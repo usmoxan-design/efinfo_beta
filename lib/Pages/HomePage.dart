@@ -1,6 +1,7 @@
 import 'package:efinfo_beta/Player/BoosterRecommendationPage.dart';
 import 'package:efinfo_beta/Player/SkillRecommendationPage.dart';
 import 'package:efinfo_beta/Player/player_skillspage.dart';
+import 'package:efinfo_beta/additional/colors.dart';
 import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:efinfo_beta/Player/playingstylespage.dart';
 import 'package:efinfo_beta/Player/positions.dart';
@@ -8,8 +9,11 @@ import 'package:efinfo_beta/Player/formations.dart';
 import 'package:efinfo_beta/Player/individual.dart';
 import 'package:efinfo_beta/manager/plstyles.dart';
 import 'package:efinfo_beta/components/newBadge.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../Player/playerStat.dart';
 
 class HomePage extends StatefulWidget {
@@ -37,8 +41,11 @@ class _HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,10 +54,13 @@ class _HomePageState extends State<HomePage>
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: TabBar(
                 controller: _tabController,
-                indicatorColor: AppColors.accentPink,
+                // overlayColor: isDark ? Colors.white : Colors.black,
+                indicatorColor: const Color(0xFF06DF5D),
                 indicatorWeight: 3,
-                labelColor: AppColors.textWhite,
-                unselectedLabelColor: AppColors.textDim,
+                dividerColor: dividerColor,
+                dividerHeight: 0.5,
+                labelColor: isDark ? Colors.white : Colors.black,
+                unselectedLabelColor: Colors.grey,
                 labelStyle: GoogleFonts.outfit(
                     fontWeight: FontWeight.bold, fontSize: 16),
                 tabs: const [
@@ -80,7 +90,7 @@ class _HomePageState extends State<HomePage>
         'title': 'Playing Styles',
         'subtitle': "O'yin stili",
         'icon': "assets/images/playing_styles.png",
-        'accent': AppColors.accentPink,
+        'accent': const Color(0xFF06DF5D),
         'badge': false,
         'isColoredIcon': false,
         'onTap': () => Navigator.push(context,
@@ -121,7 +131,7 @@ class _HomePageState extends State<HomePage>
         'subtitle': "Booster tavsiyalar",
         'icon': "assets/images/booster.png",
         'accent': AppColors.accentGreen,
-        'badge': true,
+        'badge': false,
         'isColoredIcon': true,
         'onTap': () => Navigator.push(
             context,
@@ -133,7 +143,7 @@ class _HomePageState extends State<HomePage>
         'subtitle': "Skill tavsiyalar",
         'icon': "assets/images/skill.png",
         'accent': AppColors.accentOrange,
-        'badge': true,
+        'badge': false,
         'isColoredIcon': true,
         'onTap': () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const SkillRecommendationPage())),
@@ -141,15 +151,15 @@ class _HomePageState extends State<HomePage>
     ];
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(8),
       children: [
         GridView.builder(
           physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
             childAspectRatio: 0.9,
           ),
           itemCount: gridData.length,
@@ -196,7 +206,7 @@ class _HomePageState extends State<HomePage>
         'title': 'Individual Instructions',
         'subtitle': "Shaxsiy ko'rsatmalar",
         'icon': "assets/images/individual_instruction.png",
-        'accent': AppColors.accentPink,
+        'accent': const Color(0xFF06DF5D),
         'badge': false,
         'isColoredIcon': false,
         'onTap': () => Navigator.push(
@@ -207,15 +217,15 @@ class _HomePageState extends State<HomePage>
     ];
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(8),
       children: [
         GridView.builder(
           physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
             childAspectRatio: 0.9,
           ),
           itemCount: managerData.length,
@@ -258,28 +268,20 @@ class _GridItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return GestureDetector(
       onTap: onTap,
       child: NewBadgeWrapper(
         showBadge: badge,
         child: SizedBox.expand(
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.cardSurface,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.border, width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
+          child: GlassContainer(
+            borderRadius: 24,
             child: Stack(
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.all(15.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -292,8 +294,8 @@ class _GridItem extends StatelessWidget {
                         ),
                         child: Image.asset(
                           icon,
-                          width: 48,
-                          height: 48,
+                          width: 42,
+                          height: 42,
                           color: isColoredIcon ? null : accent,
                         ),
                       ),
@@ -301,8 +303,8 @@ class _GridItem extends StatelessWidget {
                       Text(
                         title,
                         style: GoogleFonts.outfit(
-                          fontSize: 15,
-                          color: AppColors.textWhite,
+                          fontSize: 14,
+                          color: isDark ? Colors.white : Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
                         maxLines: 2,
@@ -312,8 +314,8 @@ class _GridItem extends StatelessWidget {
                       Text(
                         subtitle,
                         style: GoogleFonts.outfit(
-                          fontSize: 11,
-                          color: AppColors.textDim,
+                          fontSize: 10,
+                          color: isDark ? Colors.white54 : Colors.black54,
                           fontWeight: FontWeight.w500,
                         ),
                       ),

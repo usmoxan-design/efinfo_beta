@@ -2,7 +2,11 @@
 // 5. DETAIL SCREEN (SLIVER APP BAR + TABS)
 // -----------------------------------------------------------------------------
 
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../models/formationsmodel.dart';
 
@@ -13,42 +17,45 @@ class FormationDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       body: DefaultTabController(
         length: 3,
         child: NestedScrollView(
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
               SliverAppBar(
-                expandedHeight: 400, // Maydon balandligi
+                expandedHeight: 420, // Maydon balandligi
                 floating: false,
                 pinned: true,
-                backgroundColor: const Color(0xFF0D0D0D),
+                elevation: 0,
+                backgroundColor:
+                    themeProvider.getTheme().scaffoldBackgroundColor,
                 flexibleSpace: FlexibleSpaceBar(
+                  title: innerBoxIsScrolled
+                      ? Text(formation.name,
+                          style: GoogleFonts.outfit(
+                              color: isDark ? Colors.white : Colors.black,
+                              fontWeight: FontWeight.bold))
+                      : null,
                   background: Padding(
                     padding: const EdgeInsets.only(
-                        top: 80, bottom: 60, left: 20, right: 20),
+                        top: 100, bottom: 80, left: 30, right: 30),
                     child: Center(
                       child: AspectRatio(
                         aspectRatio: 2 / 3,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF2E7D32).withOpacity(0.4),
-                                blurRadius: 30,
-                                spreadRadius: -10,
-                              )
-                            ],
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white24, width: 2),
-                          ),
+                        child: GlassContainer(
+                          borderRadius: 24,
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(24),
                             child: CustomPaint(
                               painter: RealisticFieldPainter(
                                 positions: formation.positions,
                                 playerRadius: 10.0,
+                                isDark: isDark,
                               ),
                             ),
                           ),
@@ -57,14 +64,15 @@ class FormationDetailScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                bottom: const TabBar(
-                  indicatorColor: Color(0xFF00C853),
+                bottom: TabBar(
+                  indicatorColor: const Color(0xFF06DF5D),
                   indicatorWeight: 3,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.white38,
-                  labelStyle:
-                      TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                  tabs: [
+                  labelColor: isDark ? Colors.white : Colors.black,
+                  unselectedLabelColor:
+                      isDark ? Colors.white38 : Colors.black38,
+                  labelStyle: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold, fontSize: 13),
+                  tabs: const [
                     Tab(text: "UMUMIY"),
                     Tab(text: "STRATEGIYA"),
                     Tab(text: "TARKIB"),
@@ -76,23 +84,29 @@ class FormationDetailScreen extends StatelessWidget {
           body: TabBarView(
             children: [
               _buildInfoTab(
+                context: context,
                 icon: Icons.info_outline,
                 title: "Format haqida",
                 content: formation.description,
                 tagTitle: "Qiyinlik darajasi",
                 tagContent: formation.difficulty.name.toUpperCase(),
+                isDark: isDark,
               ),
               _buildInfoTab(
+                context: context,
                 icon: Icons.sports_soccer,
                 title: "O'yin Uslubi",
                 content: formation.bestFor,
                 extraNote: formation.warning,
+                isDark: isDark,
               ),
               _buildInfoTab(
+                context: context,
                 icon: Icons.people_outline,
                 title: "Tavsiya",
                 content: formation.playerRecommendations,
                 isList: true,
+                isDark: isDark,
               ),
             ],
           ),
@@ -102,6 +116,7 @@ class FormationDetailScreen extends StatelessWidget {
   }
 
   Widget _buildInfoTab({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String content,
@@ -109,6 +124,7 @@ class FormationDetailScreen extends StatelessWidget {
     String? tagContent,
     String? extraNote,
     bool isList = false,
+    required bool isDark,
   }) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -117,12 +133,12 @@ class FormationDetailScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, color: const Color(0xFF00C853), size: 28),
+              Icon(icon, color: const Color(0xFF06DF5D), size: 28),
               const SizedBox(width: 12),
               Text(
                 title.toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white70,
+                style: GoogleFonts.outfit(
+                  color: isDark ? Colors.white70 : Colors.black87,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.5,
@@ -135,36 +151,33 @@ class FormationDetailScreen extends StatelessWidget {
             Row(
               children: [
                 Text("$tagTitle: ",
-                    style: const TextStyle(color: Colors.white54)),
+                    style: GoogleFonts.outfit(
+                        color: isDark ? Colors.white54 : Colors.black54)),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                      color: Colors.white10,
-                      borderRadius: BorderRadius.circular(4)),
+                      color: const Color(0xFF06DF5D).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                          color: const Color(0xFF06DF5D).withOpacity(0.3))),
                   child: Text(tagContent!,
-                      style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: GoogleFonts.outfit(
+                          color: const Color(0xFF06DF5D),
+                          fontWeight: FontWeight.bold)),
                 )
               ],
             ),
             const SizedBox(height: 20),
           ],
-          Container(
+          GlassContainer(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white10),
-            ),
             child: Text(
               content,
-              style: TextStyle(
-                color: Colors.grey[300],
+              style: GoogleFonts.outfit(
+                color: isDark ? Colors.white : Colors.black,
                 fontSize: 16,
                 height: 1.6,
-                fontFamily:
-                    isList ? "Monospace" : null, // Ro'yxat uchun mos shrift
               ),
             ),
           ),
@@ -177,7 +190,7 @@ class FormationDetailScreen extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                     child: Text(extraNote,
-                        style: const TextStyle(
+                        style: GoogleFonts.outfit(
                             color: Colors.orange, fontSize: 13))),
               ],
             )
@@ -196,18 +209,26 @@ class RealisticFieldPainter extends CustomPainter {
   final List<List<double>> positions;
   final double playerRadius;
   final bool showPlayers;
+  final bool isDark;
 
   RealisticFieldPainter({
     required this.positions,
     this.playerRadius = 6.0,
     this.showPlayers = true,
+    this.isDark = true,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     // 1. Chim (Grass Stripes)
-    final paintGrass1 = Paint()..color = const Color(0xFF2E7D32); // To'q yashil
-    final paintGrass2 = Paint()..color = const Color(0xFF388E3C); // Och yashil
+    final paintGrass1 = Paint()
+      ..color = isDark
+          ? const Color(0xFF1B5E20)
+          : const Color(0xFF2E7D32); // To'q yashil
+    final paintGrass2 = Paint()
+      ..color = isDark
+          ? const Color(0xFF2E7D32)
+          : const Color(0xFF388E3C); // Och yashil
 
     // Maydon foni
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paintGrass1);

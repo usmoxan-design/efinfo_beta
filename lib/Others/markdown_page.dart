@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
 
 class MarkdownPage extends StatefulWidget {
   final String title;
@@ -36,48 +38,54 @@ class _MarkdownPageState extends State<MarkdownPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(widget.title),
-        // backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
+        title: Text(
+          widget.title,
+          style: GoogleFonts.outfit(
+            color: isDark ? Colors.white : Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
-      body: content.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : Markdown(
-              data: content,
-              shrinkWrap: true,
-              styleSheet: MarkdownStyleSheet(
-                horizontalRuleDecoration: const BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Color(0xFFD7D7D7), // Rang
-                      width: 1.5, // Qalinlik
-                    ),
-                  ),
-                ),
-                h1: const TextStyle(
-                    wordSpacing: 5,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-                h3: const TextStyle(
-                    wordSpacing: 5,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-                h2: const TextStyle(
-                    wordSpacing: 5,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: mainColor),
-                p: GoogleFonts.notoColorEmoji(
-                    letterSpacing: 0,
-                    wordSpacing: 0,
-                    fontSize: 16,
-                    height: 1.5,
-                    color: const Color(0xFF878787)),
+      body: Markdown(
+        data: content,
+        styleSheet: MarkdownStyleSheet(
+          horizontalRuleDecoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: isDark ? Colors.white10 : Colors.black12,
+                width: 1.5,
               ),
             ),
+          ),
+          h1: GoogleFonts.outfit(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black),
+          h2: GoogleFonts.outfit(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF06DF5D)),
+          h3: GoogleFonts.outfit(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black),
+          p: GoogleFonts.outfit(
+              fontSize: 16,
+              height: 1.6,
+              color: isDark ? Colors.white70 : Colors.black87),
+          listBullet: GoogleFonts.outfit(
+              color: isDark ? Colors.white70 : Colors.black87),
+        ),
+      ),
     );
   }
 }

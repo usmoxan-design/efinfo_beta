@@ -3,7 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:efinfo_beta/Others/imageSaver.dart';
-import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:efinfo_beta/Others/pitchpainter.dart';
 import 'package:efinfo_beta/models/pes_models.dart';
@@ -17,6 +18,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:efinfo_beta/utils/platform_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 class TeamBuilderScreen extends StatefulWidget {
   const TeamBuilderScreen({super.key});
@@ -587,50 +589,43 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
     final size = MediaQuery.of(context).size;
     final pitchHeight = size.height * 0.65;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text('SuperSquad Builder',
             style: GoogleFonts.outfit(
-                fontWeight: FontWeight.bold, color: Colors.white)),
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            icon: Icon(Icons.arrow_back_ios,
+                color: isDark ? Colors.white : Colors.black),
             onPressed: () => Navigator.pop(context)),
         actions: [
-          // IconButton(
-          //     icon: const Icon(Icons.auto_fix_high_rounded,
-          //         color: Colors.cyanAccent),
-          //     onPressed: _autoPick,
-          //     tooltip: 'Auto Pick'),
-          // IconButton(
-          //     icon: const Icon(Icons.grid_view_rounded, color: Colors.white),
-          //     onPressed: _showFormationDialog,
-          //     tooltip: 'Change Formation'),
-          // IconButton(
-          //     icon: const Icon(Icons.share_outlined, color: AppColors.accent),
-          //     onPressed: _shareSquad),
           IconButton(
-              icon: const Icon(Icons.save_alt_rounded, color: Colors.white70),
+              icon: Icon(Icons.save_alt_rounded,
+                  color: isDark ? Colors.white70 : Colors.black54),
               onPressed: _captureAndSave),
           const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
-          _buildStatsHeader(),
+          _buildStatsHeader(isDark),
           Expanded(
             child: Stack(
               children: [
                 _buildPitch(pitchHeight),
-                _buildFormationFab(),
-                if (_selectedSpot != null) _buildSearchOverlay(),
+                _buildFormationFab(isDark),
+                if (_selectedSpot != null) _buildSearchOverlay(isDark),
                 if (_isSearching && _selectedSpot == null)
-                  _buildAutoPickOverlay(),
+                  _buildAutoPickOverlay(isDark),
               ],
             ),
           ),
@@ -639,38 +634,31 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
     );
   }
 
-  Widget _buildStatsHeader() {
+  Widget _buildStatsHeader(bool isDark) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      decoration: BoxDecoration(
-        color: AppColors.cardSurface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white10),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black26, blurRadius: 10, offset: const Offset(0, 4))
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          // _statItem('Avg OVR', _averageOvr.toInt().toString(), Icons.bolt,
-          //     Colors.amber),
-          _statItem('Chemistry', '${_chemistry.toInt()}', Icons.auto_awesome,
-              Colors.cyanAccent),
-          GestureDetector(
-            onLongPress: _showFormationDialog,
-            onTap: _showFormationDialog,
-            child: _statItem('Formation', _currentFormation.name,
-                Icons.grid_view_rounded, Colors.purpleAccent),
-          ),
-        ],
+      child: GlassContainer(
+        borderRadius: 24,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _statItem('Chemistry', '${_chemistry.toInt()}', Icons.auto_awesome,
+                Colors.cyanAccent, isDark),
+            GestureDetector(
+              onLongPress: _showFormationDialog,
+              onTap: _showFormationDialog,
+              child: _statItem('Formation', _currentFormation.name,
+                  Icons.grid_view_rounded, Colors.purpleAccent, isDark),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _statItem(String label, String value, IconData icon, Color color) {
+  Widget _statItem(
+      String label, String value, IconData icon, Color color, bool isDark) {
     return Column(
       children: [
         Row(
@@ -679,14 +667,14 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
             const SizedBox(width: 4),
             Text(value,
                 style: GoogleFonts.outfit(
-                    color: Colors.white,
+                    color: isDark ? Colors.white : Colors.black,
                     fontSize: 18,
                     fontWeight: FontWeight.bold)),
           ],
         ),
         Text(label,
             style: GoogleFonts.outfit(
-                color: Colors.white38,
+                color: isDark ? Colors.white38 : Colors.black45,
                 fontSize: 10,
                 fontWeight: FontWeight.w500)),
       ],
@@ -694,6 +682,9 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
   }
 
   Widget _buildPitch(double height) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return LayoutBuilder(builder: (context, constraints) {
       // Get formation rows from bottom to top (GK first, attackers last)
       final rows = _getFormationRowsSimple();
@@ -714,7 +705,9 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
               controller: _screenshotController,
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1B5E20),
+                  color: isDark
+                      ? const Color(0xFF1B5E20)
+                      : const Color(0xFF2E7D32),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
@@ -859,6 +852,10 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
       onAcceptWithDetails: (details) =>
           _addPlayerToSpot(spotName, details.data),
       builder: (context, candidateData, rejectedData) {
+        final themeProvider =
+            Provider.of<ThemeProvider>(context, listen: false);
+        final isDark = themeProvider.isDarkMode;
+
         return GestureDetector(
           onLongPress: () {
             if (player != null) setState(() => _squad[spotName] = null);
@@ -872,13 +869,19 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                 height: cardHeight,
                 decoration: BoxDecoration(
                   color: candidateData.isNotEmpty
-                      ? Colors.white.withOpacity(0.3)
-                      : Colors.black.withOpacity(0.4),
+                      ? (isDark
+                          ? Colors.white.withOpacity(0.3)
+                          : Colors.black.withOpacity(0.1))
+                      : (isDark
+                          ? Colors.black.withOpacity(0.4)
+                          : Colors.white.withOpacity(0.4)),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                     color: player != null
                         ? Colors.white.withOpacity(0.8)
-                        : Colors.white.withOpacity(0.12),
+                        : (isDark
+                            ? Colors.white.withOpacity(0.12)
+                            : Colors.black.withOpacity(0.12)),
                     width: player != null ? 1.5 : 1,
                   ),
                 ),
@@ -1009,23 +1012,26 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
     );
   }
 
-  Widget _buildFormationFab() {
+  Widget _buildFormationFab(bool isDark) {
     return Positioned(
       bottom: 24,
       right: 24,
       child: FloatingActionButton.extended(
         onPressed: _showFormationDialog,
-        backgroundColor: AppColors.accent,
+        backgroundColor: const Color(0xFF06DF5D),
         label: Text('Formation',
             style: GoogleFonts.outfit(
-                color: Colors.black, fontWeight: FontWeight.bold)),
+                color: Colors.white, fontWeight: FontWeight.bold)),
         icon:
-            const Icon(Icons.dashboard_customize_rounded, color: Colors.black),
+            const Icon(Icons.dashboard_customize_rounded, color: Colors.white),
       ),
     );
   }
 
   void _showFormationDialog() {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isDark = themeProvider.isDarkMode;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1034,16 +1040,9 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
         return Container(
           height: MediaQuery.of(context).size.height * 0.75,
           decoration: BoxDecoration(
-            color: AppColors.background.withOpacity(0.98),
+            color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            border: Border.all(color: Colors.white10),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.accent.withOpacity(0.05),
-                blurRadius: 40,
-                spreadRadius: 10,
-              )
-            ],
+            border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
           ),
           child: Column(
             children: [
@@ -1052,7 +1051,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: isDark ? Colors.white24 : Colors.black12,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1060,7 +1059,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
               Text(
                 'TAKTKIK SXEMANI TANLANG',
                 style: GoogleFonts.outfit(
-                  color: Colors.white,
+                  color: isDark ? Colors.white : Colors.black,
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 1.2,
@@ -1070,7 +1069,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
               Text(
                 'Jamoangiz uchun eng mos variantni tanlang',
                 style: GoogleFonts.outfit(
-                  color: Colors.white38,
+                  color: isDark ? Colors.white38 : Colors.black45,
                   fontSize: 14,
                 ),
               ),
@@ -1097,22 +1096,17 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                         duration: const Duration(milliseconds: 300),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? AppColors.accent.withOpacity(0.1)
-                              : Colors.white.withOpacity(0.03),
+                              ? const Color(0xFF06DF5D).withOpacity(0.1)
+                              : (isDark
+                                  ? Colors.white.withOpacity(0.03)
+                                  : Colors.black.withOpacity(0.03)),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color:
-                                isSelected ? AppColors.accent : Colors.white10,
+                            color: isSelected
+                                ? const Color(0xFF06DF5D)
+                                : (isDark ? Colors.white10 : Colors.black12),
                             width: 2,
                           ),
-                          boxShadow: [
-                            if (isSelected)
-                              BoxShadow(
-                                color: AppColors.accent.withOpacity(0.15),
-                                blurRadius: 15,
-                                spreadRadius: 2,
-                              )
-                          ],
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -1121,15 +1115,19 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? AppColors.accent.withOpacity(0.1)
-                                    : Colors.white.withOpacity(0.05),
+                                    ? const Color(0xFF06DF5D).withOpacity(0.1)
+                                    : (isDark
+                                        ? Colors.white.withOpacity(0.05)
+                                        : Colors.black.withOpacity(0.05)),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
                                 Icons.grid_4x4_rounded,
                                 color: isSelected
-                                    ? AppColors.accent
-                                    : Colors.white38,
+                                    ? const Color(0xFF06DF5D)
+                                    : (isDark
+                                        ? Colors.white38
+                                        : Colors.black26),
                                 size: 32,
                               ),
                             ),
@@ -1138,8 +1136,8 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                               f.name,
                               style: GoogleFonts.outfit(
                                 color: isSelected
-                                    ? AppColors.accent
-                                    : Colors.white,
+                                    ? const Color(0xFF06DF5D)
+                                    : (isDark ? Colors.white : Colors.black),
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -1148,7 +1146,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                             Text(
                               '${f.positions.length} o\'yinchi',
                               style: GoogleFonts.outfit(
-                                color: Colors.white24,
+                                color: isDark ? Colors.white24 : Colors.black26,
                                 fontSize: 11,
                               ),
                             ),
@@ -1166,173 +1164,184 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
     );
   }
 
-  Widget _buildSearchOverlay() {
+  Widget _buildSearchOverlay(bool isDark) {
     return Positioned.fill(
-      child: FadeTransition(
-        opacity: const AlwaysStoppedAnimation(1),
-        child: Container(
-          color: Colors.black.withOpacity(0.95),
-          child: Column(
-            children: [
-              AppBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                leading: IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 28),
-                    onPressed: () => setState(() => _selectedSpot = null)),
-                title: TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  style: const TextStyle(color: Colors.white, fontSize: 18),
-                  decoration: InputDecoration(
-                    hintText:
-                        ' $_selectedSpot pozitsiyadagi o\'yinchi ismini yozing...',
-                    hintStyle: const TextStyle(color: Colors.white24),
-                    border: InputBorder.none,
-                  ),
-                  onSubmitted: _searchPlayers,
+      child: Container(
+        color: isDark
+            ? Colors.black.withOpacity(0.95)
+            : Colors.white.withOpacity(0.95),
+        child: Column(
+          children: [
+            AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                  icon: Icon(Icons.close_rounded,
+                      size: 28, color: isDark ? Colors.white : Colors.black),
+                  onPressed: () => setState(() => _selectedSpot = null)),
+              title: TextField(
+                controller: _searchController,
+                autofocus: true,
+                style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black, fontSize: 18),
+                decoration: InputDecoration(
+                  hintText:
+                      ' $_selectedSpot pozitsiyadagi o\'yinchi ismini yozing...',
+                  hintStyle: TextStyle(
+                      color: isDark ? Colors.white24 : Colors.black26),
+                  border: InputBorder.none,
                 ),
-                actions: [
-                  if (_isSearching)
-                    const Center(
-                        child: Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    color: AppColors.accent))))
-                  else
-                    IconButton(
-                        icon: const Icon(Icons.search_rounded,
-                            color: AppColors.accent),
-                        onPressed: () =>
-                            _searchPlayers(_searchController.text)),
-                ],
+                onSubmitted: _searchPlayers,
               ),
-              Expanded(
-                child: _searchResults.isEmpty && !_isSearching
-                    ? Center(
-                        child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.sports_soccer_rounded,
-                              size: 80, color: Colors.white10),
-                          const SizedBox(height: 20),
-                          Text('Build your dream team...',
-                              style: GoogleFonts.outfit(
-                                  color: Colors.white24, fontSize: 18)),
-                        ],
-                      ))
-                    : ListView.builder(
-                        itemCount: _searchResults.length,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        itemBuilder: (context, index) {
-                          final p = _searchResults[index];
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.04),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white10),
-                            ),
-                            child: Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: CachedNetworkImage(
-                                    imageUrl: kIsWeb
-                                        ? 'https://corsproxy.io/?${Uri.encodeComponent(p.imageUrl)}'
-                                        : p.imageUrl,
-                                    httpHeaders: PesService.headers,
-                                    width: 60,
-                                    height: 60,
-                                    fit: BoxFit.cover,
-                                    errorWidget: (context, url, error) =>
-                                        const Icon(Icons.person,
-                                            color: Colors.white24),
-                                  ),
+              actions: [
+                if (_isSearching)
+                  Center(
+                      child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: const Color(0xFF06DF5D)))))
+                else
+                  IconButton(
+                      icon: const Icon(Icons.search_rounded,
+                          color: Color(0xFF06DF5D)),
+                      onPressed: () => _searchPlayers(_searchController.text)),
+              ],
+            ),
+            Expanded(
+              child: _searchResults.isEmpty && !_isSearching
+                  ? Center(
+                      child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.sports_soccer_rounded,
+                            size: 80,
+                            color: isDark ? Colors.white10 : Colors.black12),
+                        const SizedBox(height: 20),
+                        Text('Build your dream team...',
+                            style: GoogleFonts.outfit(
+                                color: isDark ? Colors.white24 : Colors.black26,
+                                fontSize: 18)),
+                      ],
+                    ))
+                  : ListView.builder(
+                      itemCount: _searchResults.length,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      itemBuilder: (context, index) {
+                        final p = _searchResults[index];
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withOpacity(0.04)
+                                : Colors.black.withOpacity(0.04),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                                color:
+                                    isDark ? Colors.white10 : Colors.black12),
+                          ),
+                          child: Row(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: CachedNetworkImage(
+                                  imageUrl: kIsWeb
+                                      ? 'https://corsproxy.io/?${Uri.encodeComponent(p.imageUrl)}'
+                                      : p.imageUrl,
+                                  httpHeaders: PesService.headers,
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (context, url, error) => Icon(
+                                      Icons.person,
+                                      color: isDark
+                                          ? Colors.white24
+                                          : Colors.black26),
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(p.name,
-                                          style: GoogleFonts.outfit(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16)),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                          '${p.position} • ${p.club} • ${p.nationality}',
-                                          style: const TextStyle(
-                                              color: Colors.white54,
-                                              fontSize: 12)),
-                                      const SizedBox(height: 2),
-                                      Text('OVR: ${p.ovr}',
-                                          style: TextStyle(
-                                              color: AppColors.accent,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold)),
-                                    ],
-                                  ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(p.name,
+                                        style: GoogleFonts.outfit(
+                                            color: isDark
+                                                ? Colors.white
+                                                : Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16)),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                        '${p.position} • ${p.club} • ${p.nationality}',
+                                        style: TextStyle(
+                                            color: isDark
+                                                ? Colors.white54
+                                                : Colors.black54,
+                                            fontSize: 12)),
+                                    const SizedBox(height: 2),
+                                    Text('OVR: ${p.ovr}',
+                                        style: const TextStyle(
+                                            color: Color(0xFF06DF5D),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold)),
+                                  ],
                                 ),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.accent,
-                                    foregroundColor: Colors.black,
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 20),
-                                  ),
-                                  onPressed: () =>
-                                      _addPlayerToSpot(_selectedSpot!, p),
-                                  child: const Text('ADD',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w900)),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF06DF5D),
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
                                 ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
+                                onPressed: () =>
+                                    _addPlayerToSpot(_selectedSpot!, p),
+                                child: const Text('ADD',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.w900)),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildAutoPickOverlay() {
+  Widget _buildAutoPickOverlay(bool isDark) {
     return Container(
       color: Colors.black54,
       child: Center(
         child: Container(
           padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: AppColors.cardSurface,
+            color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+            border: Border.all(color: const Color(0xFF06DF5D).withOpacity(0.3)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(color: AppColors.accent),
+              const CircularProgressIndicator(color: Color(0xFF06DF5D)),
               const SizedBox(height: 24),
               Text(
                 'ENG KUCHLI TARKIB\nYIG\'ILMOQDA...',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
-                  color: Colors.white,
+                  color: isDark ? Colors.white : Colors.black,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.5,
@@ -1342,7 +1351,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
               Text(
                 'Bu biroz vaqt olishi mumkin',
                 style: GoogleFonts.outfit(
-                  color: Colors.white38,
+                  color: isDark ? Colors.white38 : Colors.black45,
                   fontSize: 12,
                 ),
               ),

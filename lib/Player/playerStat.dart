@@ -1,4 +1,8 @@
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PlayerStatPage extends StatefulWidget {
@@ -133,41 +137,49 @@ class _PlayerStatPageState extends State<PlayerStatPage> {
 
   // --- Yangi, sodda umumiy tutorial dialogi ---
   void _showGeneralTutorialDialog(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    //isDark ? Colors.white : Colors.black
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          backgroundColor: Colors.blueGrey.shade900,
-          title: const Text(
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: Theme.of(context).cardColor,
+          title: Text(
             '💡 Statistikalar Qanday Ishlaydi?',
             style: TextStyle(
-              color: Colors.white,
+              color: isDark ? Colors.white : Colors.black,
               fontWeight: FontWeight.bold,
             ),
           ),
-          content: const SingleChildScrollView(
+          content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
                 Text(
                   'Bu sahifada futbolchining barcha statistik ko‘rsatkichlari keltirilgan.',
-                  style: TextStyle(fontSize: 15, color: Colors.white70),
+                  style: TextStyle(
+                      fontSize: 15,
+                      color: isDark ? Colors.white : Colors.black),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Row(
                   children: [
-                    Icon(Icons.info_outline, size: 20, color: Colors.yellow),
-                    SizedBox(width: 10),
+                    const Icon(Icons.info_outline,
+                        size: 20, color: Colors.yellow),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'Har bir statistika nomi yonidagi (i) tugmasini bosing. Bu sizga o‘sha ko‘rsatkichning batafsil tushuntirishini ko‘rsatadi.',
-                        style: TextStyle(fontSize: 15, color: Colors.white),
+                        style: TextStyle(
+                            fontSize: 15,
+                            color: isDark ? Colors.white : Colors.black),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
               ],
             ),
           ),
@@ -210,10 +222,13 @@ class _PlayerStatPageState extends State<PlayerStatPage> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final themeProvider = Provider.of<ThemeProvider>(context);
+        final isDark = themeProvider.isDarkMode;
+        //isDark ? Colors.white : Colors.black
         return AlertDialog(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          backgroundColor: Theme.of(context).dialogBackgroundColor,
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: Theme.of(context).cardColor,
           title: Text(
             statName,
             style: TextStyle(
@@ -227,8 +242,10 @@ class _PlayerStatPageState extends State<PlayerStatPage> {
                 Text(
                   statDescriptions[statName] ??
                       'Bu statistika uchun ma\'lumot topilmadi.',
-                  style: const TextStyle(
-                      fontSize: 16, height: 1.5, color: Colors.white70),
+                  style: TextStyle(
+                      fontSize: 16,
+                      height: 1.5,
+                      color: isDark ? Colors.white : Colors.black),
                 ),
                 const SizedBox(height: 20),
                 // LinearProgressIndicator(
@@ -259,7 +276,8 @@ class _PlayerStatPageState extends State<PlayerStatPage> {
     );
   }
 
-  Widget _buildStatGroupHeader(BuildContext context, String title) {
+  Widget _buildStatGroupHeader(
+      BuildContext context, String title, bool isDark) {
     String subtitle = _groupSubtitles[title] ?? '';
 
     return Padding(
@@ -269,18 +287,18 @@ class _PlayerStatPageState extends State<PlayerStatPage> {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: GoogleFonts.outfit(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: isDark ? Colors.white : Colors.black,
             ),
           ),
           if (subtitle.isNotEmpty)
             Text(
               subtitle,
-              style: TextStyle(
+              style: GoogleFonts.outfit(
                 fontSize: 13,
-                color: Colors.grey.shade600,
+                color: isDark ? Colors.white38 : Colors.black38,
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -290,12 +308,15 @@ class _PlayerStatPageState extends State<PlayerStatPage> {
   }
 
   Widget _buildStatRow(
-      BuildContext context, String name, int value, int index) {
+      BuildContext context, String name, int value, int index, bool isDark) {
     Color statColor = _getStatColor(value);
 
     // Zebra effekti: toq indekslilar uchun ochroq fon
-    Color rowBackgroundColor =
-        index.isOdd ? const Color(0xFF212121) : const Color(0xFF121212);
+    Color rowBackgroundColor = index.isOdd
+        ? (isDark
+            ? Colors.white.withOpacity(0.04)
+            : Colors.black.withOpacity(0.04))
+        : Colors.transparent;
 
     return Container(
       color: rowBackgroundColor,
@@ -311,18 +332,18 @@ class _PlayerStatPageState extends State<PlayerStatPage> {
                 children: [
                   Text(
                     name,
-                    style: TextStyle(
+                    style: GoogleFonts.outfit(
                       fontSize: 16,
-                      color: statColor,
-                      fontWeight: FontWeight.w400,
+                      color: isDark ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(width: 5),
+                  const SizedBox(width: 8),
                   // INFO IKONKASI
                   Icon(
                     Icons.info_outline,
                     size: 16,
-                    color: Colors.grey.shade600,
+                    color: isDark ? Colors.white24 : Colors.black26,
                   ),
                 ],
               ),
@@ -333,7 +354,7 @@ class _PlayerStatPageState extends State<PlayerStatPage> {
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
               child: Text(
                 value.toString(),
-                style: const TextStyle(
+                style: GoogleFonts.outfit(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                   color: Colors.black,
@@ -350,6 +371,8 @@ class _PlayerStatPageState extends State<PlayerStatPage> {
   // --- Asosiy Build funksiyasi ---
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
     final List<String> attackingStats = [
       'Offensive Awareness',
       'Ball Control',
@@ -386,77 +409,87 @@ class _PlayerStatPageState extends State<PlayerStatPage> {
     ];
 
     return Scaffold(
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'O\'yinchi statistikasi',
-          // style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: GoogleFonts.outfit(
+              color: isDark ? Colors.white : Colors.black,
+              fontWeight: FontWeight.bold),
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             // Asosiy Ma'lumotlar
-            Container(
+            Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
+              child: GlassContainer(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
                       child: Image.asset(
                         'assets/images/player_stat.jpg',
+                        width: double.infinity,
+                        fit: BoxFit.cover,
                       ),
                     ),
-                  ),
-                  const Text(
-                    'Demo Futbolchi Statistikasi',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
+                    const SizedBox(height: 16),
+                    Text(
+                      'Demo Futbolchi Statistikasi',
+                      style: GoogleFonts.outfit(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
                     ),
-                  ),
-                  const Text(
-                    'Overall Rating: 106',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF44B1FF),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Overall Rating: 106',
+                      style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF06DF5D),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 
             // Hujum statistikasi
-            _buildStatGroupHeader(context, 'ATTACKING'),
+            _buildStatGroupHeader(context, 'ATTACKING', isDark),
             ...attackingStats.asMap().entries.map(
                   (entry) => _buildStatRow(context, entry.value,
-                      playerStats[entry.value] ?? 0, entry.key),
+                      playerStats[entry.value] ?? 0, entry.key, isDark),
                 ),
 
             // Jismoniy va Harakat
-            _buildStatGroupHeader(context, 'ATHLETICISM'),
+            _buildStatGroupHeader(context, 'ATHLETICISM', isDark),
             ...athleticismStats.asMap().entries.map(
                   (entry) => _buildStatRow(context, entry.value,
-                      playerStats[entry.value] ?? 0, entry.key),
+                      playerStats[entry.value] ?? 0, entry.key, isDark),
                 ),
 
             // Himoya Statistikasi
-            _buildStatGroupHeader(context, 'DEFENDING'),
+            _buildStatGroupHeader(context, 'DEFENDING', isDark),
             ...defendingStats.asMap().entries.map(
                   (entry) => _buildStatRow(context, entry.value,
-                      playerStats[entry.value] ?? 0, entry.key),
+                      playerStats[entry.value] ?? 0, entry.key, isDark),
                 ),
 
             // Darvozabon Statistikasi
-            _buildStatGroupHeader(context, 'GK STATS'),
+            _buildStatGroupHeader(context, 'GK STATS', isDark),
             ...gkStats.asMap().entries.map(
                   (entry) => _buildStatRow(context, entry.value,
-                      playerStats[entry.value] ?? 0, entry.key),
+                      playerStats[entry.value] ?? 0, entry.key, isDark),
                 ),
 
             const SizedBox(height: 40),

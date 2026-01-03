@@ -1,10 +1,14 @@
 import 'package:efinfo_beta/Pages/HomePage.dart';
 import 'package:efinfo_beta/Pages/MorePage.dart';
+import 'package:efinfo_beta/Pages/SettingsPage.dart';
 import 'package:efinfo_beta/tournament/TournamentMaker.dart';
 import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class MainPage extends StatefulWidget {
@@ -30,14 +34,22 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
+      extendBody: true,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: AppColors.surface,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: themeProvider.isGlassMode
+            ? const GlassContainer(
+                borderRadius: 0,
+                child: SizedBox.expand(),
+              )
+            : Container(color: isDark ? AppColors.surface : Colors.white),
         title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Image.asset(
               'assets/images/mainLogo.png',
@@ -45,16 +57,30 @@ class _MainPageState extends State<MainPage> {
             ),
             const SizedBox(width: 15),
             Text(
-              "Version 1.0.8",
-              textAlign: TextAlign.center,
+              "Version 1.0.9",
               style: GoogleFonts.outfit(
                 fontSize: 14,
-                color: AppColors.textDim,
+                color: isDark ? AppColors.textDim : Colors.grey[600],
                 fontWeight: FontWeight.w500,
               ),
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+            },
+            icon: Icon(
+              IonIcons.settings,
+              color: isDark ? Colors.white : Colors.black,
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: IndexedStack(
         index: _currentIndex,
@@ -64,7 +90,7 @@ class _MainPageState extends State<MainPage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildTelegramBanner(),
-          _buildBottomNavBar(),
+          _buildBottomNavBar(themeProvider),
         ],
       ),
     );
@@ -136,36 +162,59 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Widget _buildBottomNavBar() {
+  Widget _buildBottomNavBar(ThemeProvider themeProvider) {
+    final isDark = themeProvider.isDarkMode;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.border, width: 0.5)),
+        color: Colors.transparent,
+        border: Border(
+          top: BorderSide(
+            color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+            width: 0.5,
+          ),
+        ),
       ),
-      child: NavigationBar(
-        height: 65,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        indicatorColor: AppColors.accentPink.withOpacity(0.2),
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          setState(() => _currentIndex = index);
-        },
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        destinations: [
-          _buildNavDestination(IonIcons.apps, "Hub", 0),
-          _buildNavDestination(IonIcons.trophy, 'Turnirchi', 1),
-          _buildNavDestination(EvaIcons.grid, "Ko'proq", 2),
-        ],
+      child: ClipRRect(
+        child: themeProvider.isGlassMode
+            ? GlassContainer(
+                borderRadius: 0,
+                blur: 20,
+                opacity: isDark ? 0.05 : 0.1,
+                child: _navigationBar(themeProvider),
+              )
+            : Container(
+                color: isDark ? AppColors.surface : Colors.white,
+                child: _navigationBar(themeProvider),
+              ),
       ),
     );
   }
 
+  Widget _navigationBar(ThemeProvider themeProvider) {
+    final isDark = themeProvider.isDarkMode;
+    return NavigationBar(
+      height: 65,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      indicatorColor: const Color(0xFF06DF5D).withOpacity(0.2),
+      selectedIndex: _currentIndex,
+      onDestinationSelected: (index) {
+        setState(() => _currentIndex = index);
+      },
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      destinations: [
+        _buildNavDestination(IonIcons.apps, "Hub", 0, isDark),
+        _buildNavDestination(IonIcons.trophy, 'Turnirchi', 1, isDark),
+        _buildNavDestination(EvaIcons.grid, "Ko'proq", 2, isDark),
+      ],
+    );
+  }
+
   NavigationDestination _buildNavDestination(
-      IconData icon, String label, int index) {
+      IconData icon, String label, int index, bool isDark) {
     return NavigationDestination(
-      icon: Icon(icon, color: AppColors.textDim),
-      selectedIcon: Icon(icon, color: AppColors.accentPink),
+      icon: Icon(icon, color: isDark ? Colors.white54 : Colors.black54),
+      selectedIcon: Icon(icon, color: const Color(0xFF06DF5D)),
       label: label,
     );
   }

@@ -1,5 +1,8 @@
-import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 class PositionSkillPage extends StatefulWidget {
   const PositionSkillPage({super.key});
@@ -571,31 +574,37 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Skill Moslik Hisoblagich',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.background,
+        title: Text('Skill Moslik Hisoblagich',
+            style: GoogleFonts.outfit(
+                color: isDark ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold)),
+        backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
         actions: [
           IconButton(
               onPressed: _clearAll,
-              icon: const Icon(Icons.refresh, color: Colors.white70))
+              icon: Icon(Icons.refresh,
+                  color: isDark ? Colors.white70 : Colors.black54))
         ],
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             // Position Selector
-            const Padding(
-              padding: EdgeInsets.only(left: 16, top: 16, bottom: 8),
+            Padding(
+              padding: const EdgeInsets.only(left: 16, top: 16, bottom: 8),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text('1. Pozitsiyani tanlang',
-                    style: TextStyle(
-                        color: AppColors.accent,
+                    style: GoogleFonts.outfit(
+                        color: const Color(0xFF06DF5D),
                         fontSize: 16,
                         fontWeight: FontWeight.bold)),
               ),
@@ -611,17 +620,20 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
                   final pos = positions[index];
                   bool isSelected = selectedPosition == pos;
                   return ChoiceChip(
-                    label: Text(pos),
+                    label: Text(pos, style: GoogleFonts.outfit()),
                     selected: isSelected,
                     onSelected: (bool selected) {
                       setState(() {
                         selectedPosition = pos;
                       });
                     },
-                    backgroundColor: AppColors.cardSurface,
-                    selectedColor: AppColors.accent,
+                    backgroundColor:
+                        isDark ? const Color(0xFF1C1C1E) : Colors.grey[200],
+                    selectedColor: const Color(0xFF06DF5D),
                     labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : Colors.white70,
+                        color: isSelected
+                            ? Colors.white
+                            : (isDark ? Colors.white70 : Colors.black54),
                         fontWeight:
                             isSelected ? FontWeight.bold : FontWeight.normal),
                     side: BorderSide.none,
@@ -638,13 +650,13 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('2. Skillarni tanlang (${selectedSkills.length}/5)',
-                      style: const TextStyle(
-                          color: AppColors.accent,
+                      style: GoogleFonts.outfit(
+                          color: const Color(0xFF06DF5D),
                           fontSize: 16,
                           fontWeight: FontWeight.bold)),
                   if (validationMessage.isNotEmpty)
                     Text(validationMessage,
-                        style: const TextStyle(
+                        style: GoogleFonts.outfit(
                             color: Colors.redAccent, fontSize: 12)),
                 ],
               ),
@@ -658,46 +670,48 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
                 children: skillCategories.entries.map((entry) {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.cardSurface,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Theme(
-                      data: Theme.of(context)
-                          .copyWith(dividerColor: Colors.transparent),
-                      child: ExpansionTile(
-                        title: Text(entry.key,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold)),
-                        leading: _getCategoryIcon(entry.key),
-                        childrenPadding: const EdgeInsets.all(12),
-                        children: [
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: entry.value.map((s) {
-                              bool isSelected = selectedSkills.contains(s);
-                              return FilterChip(
-                                label: Text(s),
-                                selected: isSelected,
-                                onSelected: (_) => toggleSkill(s),
-                                backgroundColor: Colors.white10,
-                                selectedColor:
-                                    AppColors.accent.withOpacity(0.8),
-                                checkmarkColor: Colors.white,
-                                labelStyle: TextStyle(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : Colors.white70,
-                                    fontSize: 12),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                    side: BorderSide.none),
-                              );
-                            }).toList(),
-                          )
-                        ],
+                    child: GlassContainer(
+                      borderRadius: 16,
+                      child: Theme(
+                        data: Theme.of(context)
+                            .copyWith(dividerColor: Colors.transparent),
+                        child: ExpansionTile(
+                          title: Text(entry.key,
+                              style: GoogleFonts.outfit(
+                                  color: isDark ? Colors.white : Colors.black,
+                                  fontWeight: FontWeight.bold)),
+                          leading: _getCategoryIcon(entry.key, isDark),
+                          childrenPadding: const EdgeInsets.all(12),
+                          children: [
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: entry.value.map((s) {
+                                bool isSelected = selectedSkills.contains(s);
+                                return FilterChip(
+                                  label: Text(s,
+                                      style: GoogleFonts.outfit(fontSize: 12)),
+                                  selected: isSelected,
+                                  onSelected: (_) => toggleSkill(s),
+                                  backgroundColor:
+                                      isDark ? Colors.white10 : Colors.black12,
+                                  selectedColor:
+                                      const Color(0xFF06DF5D).withOpacity(0.8),
+                                  checkmarkColor: Colors.white,
+                                  labelStyle: TextStyle(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : (isDark
+                                              ? Colors.white70
+                                              : Colors.black87)),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      side: BorderSide.none),
+                                );
+                              }).toList(),
+                            )
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -709,7 +723,7 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
 
             // Analysis Result logic remains similar...
             if (selectedPosition != null && selectedSkills.isNotEmpty)
-              _buildAnalysisResult(),
+              _buildAnalysisResult(isDark),
 
             const SizedBox(height: 40),
           ],
@@ -718,7 +732,7 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
     );
   }
 
-  Icon _getCategoryIcon(String category) {
+  Icon _getCategoryIcon(String category, bool isDark) {
     switch (category) {
       case 'Shooting':
         return const Icon(Icons.sports_soccer, color: Colors.orangeAccent);
@@ -733,11 +747,11 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
       case 'Goalkeeper':
         return const Icon(Icons.front_hand, color: Colors.yellowAccent);
       default:
-        return const Icon(Icons.circle, color: Colors.white);
+        return Icon(Icons.circle, color: isDark ? Colors.white : Colors.black);
     }
   }
 
-  Widget _buildAnalysisResult() {
+  Widget _buildAnalysisResult(bool isDark) {
     int total = selectedSkills.fold(
         0, (sum, s) => sum + getCompatibility(s, selectedPosition!));
     double avg = total / selectedSkills.length;
@@ -759,30 +773,25 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Tahlil Natijasi',
-              style: TextStyle(
-                  color: AppColors.accent,
+          Text('Tahlil Natijasi',
+              style: GoogleFonts.outfit(
+                  color: const Color(0xFF06DF5D),
                   fontSize: 18,
                   fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
-          Container(
+          GlassContainer(
+            borderRadius: 20,
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [
-                  AppColors.accent.withOpacity(0.2),
-                  AppColors.cardSurface
-                ], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.accent.withOpacity(0.3))),
             child: Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Umumiy Reyting:',
-                        style: TextStyle(color: Colors.white70)),
+                    Text('Umumiy Reyting:',
+                        style: GoogleFonts.outfit(
+                            color: isDark ? Colors.white70 : Colors.black54)),
                     Text('${avg.toStringAsFixed(0)}%',
-                        style: TextStyle(
+                        style: GoogleFonts.outfit(
                             color: scoreColor,
                             fontSize: 24,
                             fontWeight: FontWeight.bold)),
@@ -790,7 +799,7 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(verdict,
-                    style: TextStyle(
+                    style: GoogleFonts.outfit(
                         color: scoreColor,
                         fontSize: 18,
                         fontWeight: FontWeight.bold)),
@@ -829,20 +838,21 @@ class _PositionSkillPageState extends State<PositionSkillPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(s,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500)),
+                                style: GoogleFonts.outfit(
+                                    color: isDark ? Colors.white : Colors.black,
+                                    fontSize: 13)),
                             Row(
                               children: [
                                 Text(statusText,
-                                    style: TextStyle(
+                                    style: GoogleFonts.outfit(
                                         color: barColor.withOpacity(0.8),
                                         fontSize: 10)),
                                 const SizedBox(width: 8),
                                 Text('$score',
-                                    style: TextStyle(
+                                    style: GoogleFonts.outfit(
                                         color: barColor,
-                                        fontWeight: FontWeight.bold)),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13)),
                               ],
                             ),
                           ],

@@ -1,4 +1,5 @@
-import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:efinfo_beta/tournament/match_model.dart';
 import 'package:efinfo_beta/tournament/service/league_service.dart';
 import 'package:efinfo_beta/tournament/team_model.dart';
@@ -6,6 +7,7 @@ import 'package:efinfo_beta/tournament/tournament_model.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class LeagueTeamStatsPage extends StatefulWidget {
   final TournamentModel tournament;
@@ -27,39 +29,44 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
     final stats =
         _leagueService.getTeamDetailedStats(widget.tournament, widget.teamId);
     final standings = _leagueService.calculateStandings(widget.tournament);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), // Dark blue/slate
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back,
+              color: isDark ? Colors.white : Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(stats.team.name,
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+            style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black)),
       ),
       body: Column(
         children: [
           // Header: Logo / Info (Cleaned as requested)
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: _buildTeamHeader(stats),
+            child: _buildTeamHeader(stats, isDark),
           ),
 
           // Tabs
-          _buildInternalTabs(),
+          _buildInternalTabs(isDark),
 
           const SizedBox(height: 16),
 
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _buildTabContent(stats, standings),
+              child: _buildTabContent(stats, standings, isDark),
             ),
           ),
         ],
@@ -67,7 +74,7 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
     );
   }
 
-  Widget _buildTeamHeader(TeamDetailedStats stats) {
+  Widget _buildTeamHeader(TeamDetailedStats stats, bool isDark) {
     return Row(
       children: [
         Container(
@@ -87,7 +94,7 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
             Text(
               stats.team.name,
               style: GoogleFonts.outfit(
-                  color: Colors.white,
+                  color: isDark ? Colors.white : Colors.black,
                   fontSize: 24,
                   fontWeight: FontWeight.bold),
             ),
@@ -97,8 +104,9 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
                 const SizedBox(width: 4),
                 Text(
                   "League Participant",
-                  style:
-                      GoogleFonts.outfit(color: Colors.grey[400], fontSize: 14),
+                  style: GoogleFonts.outfit(
+                      color: isDark ? Colors.white54 : Colors.black54,
+                      fontSize: 14),
                 ),
               ],
             ),
@@ -108,17 +116,17 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
     );
   }
 
-  Widget _buildInternalTabs() {
+  Widget _buildInternalTabs(bool isDark) {
     return Row(
       children: [
-        _buildTab(0, "Tafsilotlar"),
-        _buildTab(1, "O'yinlar"),
-        _buildTab(2, "Jadval"),
+        _buildTab(0, "Tafsilotlar", isDark),
+        _buildTab(1, "O'yinlar", isDark),
+        _buildTab(2, "Jadval", isDark),
       ],
     );
   }
 
-  Widget _buildTab(int index, String label) {
+  Widget _buildTab(int index, String label, bool isDark) {
     bool isActive = _selectedTabIndex == index;
     return Expanded(
       child: GestureDetector(
@@ -128,14 +136,18 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
             Text(
               label,
               style: GoogleFonts.outfit(
-                color: isActive ? Colors.white : Colors.grey,
+                color: isActive
+                    ? (isDark ? Colors.white : Colors.black)
+                    : (isDark ? Colors.white38 : Colors.black38),
                 fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
               ),
             ),
             const SizedBox(height: 8),
             Container(
               height: 2,
-              color: isActive ? Colors.white : Colors.transparent,
+              color: isActive
+                  ? (isDark ? Colors.white : Colors.black)
+                  : Colors.transparent,
             ),
           ],
         ),
@@ -144,44 +156,44 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
   }
 
   Widget _buildTabContent(
-      TeamDetailedStats stats, List<LeagueStats> standings) {
+      TeamDetailedStats stats, List<LeagueStats> standings, bool isDark) {
     if (_selectedTabIndex == 0) {
-      return _buildDetailsTab(stats);
+      return _buildDetailsTab(stats, isDark);
     } else if (_selectedTabIndex == 1) {
-      return _buildMatchesTab();
+      return _buildMatchesTab(isDark);
     } else {
-      return _buildStandingsTab(standings);
+      return _buildStandingsTab(standings, isDark);
     }
   }
 
-  Widget _buildDetailsTab(TeamDetailedStats stats) {
+  Widget _buildDetailsTab(TeamDetailedStats stats, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Next Match Card (if exists)
         if (stats.nextMatch != null) ...[
-          _buildSectionTitle("Kelgusi o'yin"),
+          _buildSectionTitle("Kelgusi o'yin", isDark),
           const SizedBox(height: 12),
-          _buildMatchTile(stats.nextMatch!),
+          _buildMatchTile(stats.nextMatch!, isDark),
           const SizedBox(height: 24),
         ],
 
         // Recent Form (Bars)
-        _buildSectionTitle("Oxirgi natijalar formasi"),
+        _buildSectionTitle("Oxirgi natijalar formasi", isDark),
         const SizedBox(height: 12),
-        _buildRecentForm(stats.form),
+        _buildRecentForm(stats.form, isDark),
         const SizedBox(height: 24),
 
         // Stats Grid
-        _buildSectionTitle("Mavsum statistikasi"),
+        _buildSectionTitle("Mavsum statistikasi", isDark),
         const SizedBox(height: 12),
-        _buildStatsGrid(stats),
+        _buildStatsGrid(stats, isDark),
         const SizedBox(height: 40),
       ],
     );
   }
 
-  Widget _buildMatchesTab() {
+  Widget _buildMatchesTab(bool isDark) {
     // Get all matches for this team
     final teamMatches = widget.tournament.matches
         .where(
@@ -199,31 +211,29 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (played.isNotEmpty) ...[
-          _buildSectionTitle("Natijalar"),
+          _buildSectionTitle("Natijalar", isDark),
           const SizedBox(height: 12),
-          ...played.map((m) => _buildMatchTile(m)),
+          ...played.map((m) => _buildMatchTile(m, isDark)),
           const SizedBox(height: 24),
         ],
         if (upcoming.isNotEmpty) ...[
-          _buildSectionTitle("Kelgusi o'yinlar"),
+          _buildSectionTitle("Kelgusi o'yinlar", isDark),
           const SizedBox(height: 12),
-          ...upcoming.map((m) => _buildMatchTile(m)),
+          ...upcoming.map((m) => _buildMatchTile(m, isDark)),
           const SizedBox(height: 40),
         ],
       ],
     );
   }
 
-  Widget _buildStandingsTab(List<LeagueStats> standings) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
+  Widget _buildStandingsTab(List<LeagueStats> standings, bool isDark) {
+    return GlassContainer(
+      borderRadius: 12,
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
-          _buildStandingsHeader(),
-          const Divider(height: 1),
+          _buildStandingsHeader(isDark),
+          Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12),
           // Rows
           ...standings.asMap().entries.map((entry) {
             int index = entry.key;
@@ -232,15 +242,19 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
             bool isTop4 = index < 4;
 
             return Container(
-              color: isMe ? Colors.blue.withOpacity(0.1) : Colors.transparent,
+              color: isMe
+                  ? const Color(0xFF06DF5D).withOpacity(0.1)
+                  : Colors.transparent,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: Row(
                 children: [
                   SizedBox(
                       width: 25,
                       child: Text("${index + 1}",
-                          style: TextStyle(
-                              color: isTop4 ? Colors.green[700] : Colors.black,
+                          style: GoogleFonts.outfit(
+                              color: isTop4
+                                  ? const Color(0xFF06DF5D)
+                                  : (isDark ? Colors.white : Colors.black),
                               fontWeight: FontWeight.bold,
                               fontSize: 13))),
                   Expanded(
@@ -248,16 +262,20 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
                     s.team.name,
                     style: GoogleFonts.outfit(
                         fontWeight: isMe ? FontWeight.bold : FontWeight.normal,
-                        color: Colors.black,
+                        color: isDark ? Colors.white : Colors.black,
                         fontSize: 14),
                     overflow: TextOverflow.ellipsis,
                   )),
-                  _buildStatCell(s.played.toString()),
-                  _buildStatCell(s.won.toString()),
-                  _buildStatCell(s.drawn.toString()),
-                  _buildStatCell(s.lost.toString()),
-                  _buildStatCell("${s.goalsFor}:${s.goalsAgainst}", width: 45),
-                  _buildStatCell(s.points.toString(), isBold: true),
+                  _buildStatCell(s.played.toString(), isDark: isDark),
+                  _buildStatCell(s.won.toString(), isDark: isDark),
+                  _buildStatCell(s.drawn.toString(), isDark: isDark),
+                  _buildStatCell(s.lost.toString(), isDark: isDark),
+                  _buildStatCell("${s.goalsFor}:${s.goalsAgainst}",
+                      isDark: isDark, width: 45),
+                  _buildStatCell(s.points.toString(),
+                      isDark: isDark,
+                      isBold: true,
+                      color: isDark ? Colors.white : Colors.black),
                 ],
               ),
             );
@@ -267,38 +285,49 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
     );
   }
 
-  Widget _buildStandingsHeader() {
+  Widget _buildStandingsHeader(bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [
-          const SizedBox(
+          SizedBox(
               width: 25,
               child: Text("#",
-                  style: TextStyle(color: Colors.grey, fontSize: 11))),
-          const Expanded(
+                  style: GoogleFonts.outfit(
+                      color: isDark ? Colors.white38 : Colors.black38,
+                      fontSize: 11))),
+          Expanded(
               child: Text("Jamoa",
-                  style: TextStyle(color: Colors.grey, fontSize: 11))),
-          _buildStatCell("O'", isHeader: true),
-          _buildStatCell("G'", isHeader: true),
-          _buildStatCell("D", isHeader: true),
-          _buildStatCell("M", isHeader: true),
-          _buildStatCell("Gollar", isHeader: true, width: 45),
-          _buildStatCell("OCH", isHeader: true),
+                  style: GoogleFonts.outfit(
+                      color: isDark ? Colors.white38 : Colors.black38,
+                      fontSize: 11))),
+          _buildStatCell("O'", isDark: isDark, isHeader: true),
+          _buildStatCell("G'", isDark: isDark, isHeader: true),
+          _buildStatCell("D", isDark: isDark, isHeader: true),
+          _buildStatCell("M", isDark: isDark, isHeader: true),
+          _buildStatCell("Gollar", isDark: isDark, isHeader: true, width: 45),
+          _buildStatCell("OCH", isDark: isDark, isHeader: true),
         ],
       ),
     );
   }
 
   Widget _buildStatCell(String text,
-      {bool isHeader = false, bool isBold = false, double width = 25}) {
+      {required bool isDark,
+      bool isHeader = false,
+      bool isBold = false,
+      double width = 25,
+      Color? color}) {
     return SizedBox(
       width: width,
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: TextStyle(
-          color: isHeader ? Colors.grey : Colors.black,
+        style: GoogleFonts.outfit(
+          color: color ??
+              (isHeader
+                  ? (isDark ? Colors.white38 : Colors.black38)
+                  : (isDark ? Colors.white70 : Colors.black87)),
           fontSize: isHeader ? 11 : 13,
           fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
         ),
@@ -306,44 +335,45 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, bool isDark) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
           style: GoogleFonts.outfit(
-              color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              color: isDark ? Colors.white : Colors.black,
+              fontSize: 18,
+              fontWeight: FontWeight.bold),
         ),
-        const Icon(Icons.info_outline, color: Colors.grey, size: 18),
+        Icon(Icons.info_outline,
+            color: isDark ? Colors.white24 : Colors.black26, size: 18),
       ],
     );
   }
 
-  Widget _buildMatchTile(MatchModel match) {
+  Widget _buildMatchTile(MatchModel match, bool isDark) {
     String dateStr = match.date != null
         ? DateFormat('dd.MM.yy HH:mm').format(match.date!)
         : "Round ${match.round}";
     bool isMeA = match.teamA?.id == widget.teamId;
     bool isMeB = match.teamB?.id == widget.teamId;
 
-    return Container(
+    return GlassContainer(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      borderRadius: 16,
       child: Column(
         children: [
           Row(
             children: [
-              const Icon(Icons.sports_soccer, size: 14, color: Colors.blue),
+              const Icon(Icons.sports_soccer,
+                  size: 14, color: Color(0xFF06DF5D)),
               const SizedBox(width: 6),
               Text(
                 dateStr,
                 style: GoogleFonts.outfit(
-                    color: Colors.grey,
+                    color: isDark ? Colors.white38 : Colors.black38,
                     fontSize: 12,
                     fontWeight: FontWeight.w500),
               ),
@@ -353,11 +383,11 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                      color: Colors.green[50],
+                      color: const Color(0xFF06DF5D).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10)),
                   child: Text("FT",
-                      style: TextStyle(
-                          color: Colors.green[700],
+                      style: GoogleFonts.outfit(
+                          color: const Color(0xFF06DF5D),
                           fontSize: 10,
                           fontWeight: FontWeight.bold)),
                 ),
@@ -367,7 +397,7 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
           Row(
             children: [
               Expanded(
-                child: _buildTeamRow(match.teamA!, isMeA, true),
+                child: _buildTeamRow(match.teamA!, isMeA, true, isDark),
               ),
               const SizedBox(width: 12),
               Column(
@@ -377,7 +407,7 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
                         style: GoogleFonts.outfit(
                             fontWeight: FontWeight.bold,
                             fontSize: 20,
-                            color: Colors.black))
+                            color: isDark ? Colors.white : Colors.black))
                   else
                     const Text("VS",
                         style: TextStyle(
@@ -388,7 +418,7 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildTeamRow(match.teamB!, isMeB, false),
+                child: _buildTeamRow(match.teamB!, isMeB, false, isDark),
               ),
             ],
           ),
@@ -397,7 +427,7 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
     );
   }
 
-  Widget _buildTeamRow(TeamModel team, bool isMe, bool isLeft) {
+  Widget _buildTeamRow(TeamModel team, bool isMe, bool isLeft, bool isDark) {
     return Row(
       mainAxisAlignment:
           isLeft ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -415,7 +445,7 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
             team.name,
             style: GoogleFonts.outfit(
                 fontWeight: isMe ? FontWeight.bold : FontWeight.w500,
-                color: Colors.black,
+                color: isDark ? Colors.white : Colors.black,
                 fontSize: 14),
             overflow: TextOverflow.ellipsis,
             textAlign: isLeft ? TextAlign.right : TextAlign.left,
@@ -433,14 +463,11 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
     );
   }
 
-  Widget _buildRecentForm(List<String> form) {
-    return Container(
+  Widget _buildRecentForm(List<String> form, bool isDark) {
+    return GlassContainer(
       height: 180,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      borderRadius: 16,
       child: Column(
         children: [
           Expanded(
@@ -486,14 +513,15 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
               }).toList(),
             ),
           ),
-          const Divider(height: 1, color: Colors.grey),
+          Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: form
                 .map((res) => Text(res,
                     style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold, color: Colors.black54)))
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white38 : Colors.black38)))
                 .toList(),
           ),
         ],
@@ -501,7 +529,7 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
     );
   }
 
-  Widget _buildStatsGrid(TeamDetailedStats stats) {
+  Widget _buildStatsGrid(TeamDetailedStats stats, bool isDark) {
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -510,33 +538,34 @@ class _LeagueTeamStatsPageState extends State<LeagueTeamStatsPage> {
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
       children: [
-        _buildStatCard("G'alaba", stats.totalWins.toString(), Colors.green),
-        _buildStatCard("Durang", stats.totalDraws.toString(), Colors.blue),
-        _buildStatCard("Mag'lubiyat", stats.totalLosses.toString(), Colors.red),
+        _buildStatCard("G'alaba", stats.totalWins.toString(),
+            const Color(0xFF06DF5D), isDark),
         _buildStatCard(
-            "Gollar", stats.totalGoalsScored.toString(), Colors.orange),
-        _buildStatCard(
-            "Quruq o'yin", stats.cleanSheets.toString(), Colors.purple),
+            "Durang", stats.totalDraws.toString(), Colors.blueAccent, isDark),
+        _buildStatCard("Mag'lubiyat", stats.totalLosses.toString(),
+            Colors.redAccent, isDark),
+        _buildStatCard("Gollar", stats.totalGoalsScored.toString(),
+            Colors.orangeAccent, isDark),
+        _buildStatCard("Quruq o'yin", stats.cleanSheets.toString(),
+            Colors.purpleAccent, isDark),
         _buildStatCard("O'rtacha gol", stats.avgGoalsScored.toStringAsFixed(1),
-            Colors.teal),
+            Colors.tealAccent, isDark),
       ],
     );
   }
 
-  Widget _buildStatCard(String label, String value, Color color) {
-    return Container(
+  Widget _buildStatCard(String label, String value, Color color, bool isDark) {
+    return GlassContainer(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
+      borderRadius: 12,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(label,
-              style: GoogleFonts.outfit(color: Colors.grey, fontSize: 13)),
+              style: GoogleFonts.outfit(
+                  color: isDark ? Colors.white38 : Colors.black38,
+                  fontSize: 13)),
           const SizedBox(height: 4),
           Text(value,
               style: GoogleFonts.outfit(

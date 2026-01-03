@@ -1,5 +1,8 @@
-import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class SkillRecommendationPage extends StatefulWidget {
   const SkillRecommendationPage({super.key});
@@ -341,14 +344,19 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("Skill Tavsiyalari",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.background,
+        title: Text("Skill Tavsiyalari",
+            style: GoogleFonts.outfit(
+                color: isDark ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
       ),
       body: Column(
         children: [
@@ -370,13 +378,24 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
                       selectedIndex = index;
                     });
                   },
-                  backgroundColor: AppColors.cardSurface,
-                  selectedColor: AppColors.accent,
-                  labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white70,
+                  backgroundColor: isDark
+                      ? Colors.white.withOpacity(0.05)
+                      : Colors.black.withOpacity(0.05),
+                  selectedColor: const Color(0xFF06DF5D).withOpacity(0.2),
+                  labelStyle: GoogleFonts.outfit(
+                      color: isSelected
+                          ? const Color(0xFF06DF5D)
+                          : (isDark ? Colors.white70 : Colors.black54),
                       fontWeight:
                           isSelected ? FontWeight.bold : FontWeight.normal),
-                  side: BorderSide.none,
+                  side: BorderSide(
+                    color: isSelected
+                        ? const Color(0xFF06DF5D)
+                        : Colors.transparent,
+                    width: 1,
+                  ),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 );
               },
             ),
@@ -391,37 +410,43 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
                     skillData[positions[selectedIndex]]!.firstWhere(
                         (e) => e['type'] == 'must_have',
                         orElse: () => {})['skills'],
-                    const Color(0xFF6495ED)), // Cornflower Blue
+                    const Color(0xFF6495ED),
+                    isDark), // Cornflower Blue
                 _buildSection(
                     "Special (Maxsus)",
                     skillData[positions[selectedIndex]]!.firstWhere(
                         (e) => e['type'] == 'special',
                         orElse: () => {})['skills'],
-                    Colors.orange),
+                    Colors.orange,
+                    isDark),
                 _buildSection(
                     "Useful (Foydali)",
                     skillData[positions[selectedIndex]]!.firstWhere(
                         (e) => e['type'] == 'useful',
                         orElse: () => {})['skills'],
-                    const Color(0xFF90EE90)), // Light Green
+                    const Color(0xFF90EE90),
+                    isDark), // Light Green
                 _buildSection(
                     "Useful, not necessary (Kamroq foydali)",
                     skillData[positions[selectedIndex]]!.firstWhere(
                         (e) => e['type'] == 'useful_low',
                         orElse: () => {})['skills'],
-                    const Color(0xFFF0E68C)), // Khaki
+                    const Color(0xFFF0E68C),
+                    isDark), // Khaki
                 _buildSection(
                     "Not necessary (Shart emas)",
                     skillData[positions[selectedIndex]]!.firstWhere(
                         (e) => e['type'] == 'not_necessary',
                         orElse: () => {})['skills'],
-                    const Color(0xFFFF7F7F)), // Light Red
+                    const Color(0xFFFF7F7F),
+                    isDark), // Light Red
                 _buildSection(
                     "Do not give (Bermang)",
                     skillData[positions[selectedIndex]]!.firstWhere(
                         (e) => e['type'] == 'do_not_give',
                         orElse: () => {})['skills'],
-                    Colors.black87),
+                    Colors.black87,
+                    isDark),
               ],
             ),
           ),
@@ -430,7 +455,8 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
     );
   }
 
-  Widget _buildSection(String title, List<dynamic>? skills, Color color) {
+  Widget _buildSection(
+      String title, List<dynamic>? skills, Color color, bool isDark) {
     if (skills == null || skills.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -438,48 +464,56 @@ class _SkillRecommendationPageState extends State<SkillRecommendationPage> {
       children: [
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
           decoration: BoxDecoration(
             color: color.withOpacity(0.8),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           ),
           child: Text(
             title,
-            style: TextStyle(
+            style: GoogleFonts.outfit(
                 color: (color == Colors.black87)
                     ? Colors.redAccent
                     : Colors.black87,
                 fontWeight: FontWeight.bold,
-                fontSize: 14),
+                fontSize: 15),
           ),
         ),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-              color: AppColors.cardSurface,
-              borderRadius:
-                  const BorderRadius.vertical(bottom: Radius.circular(10)),
-              border: Border.all(color: color.withOpacity(0.5))),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: skills
-                .map((skill) => Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white10,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(skill.toString(),
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 13)),
-                    ))
-                .toList(),
+        GlassContainer(
+          borderRadius: 0,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+                borderRadius:
+                    const BorderRadius.vertical(bottom: Radius.circular(16)),
+                border: Border.all(color: color.withOpacity(0.3))),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: skills
+                  .map((skill) => Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.05)
+                              : Colors.black.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: isDark ? Colors.white10 : Colors.black12),
+                        ),
+                        child: Text(skill.toString(),
+                            style: GoogleFonts.outfit(
+                                color: isDark ? Colors.white : Colors.black,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500)),
+                      ))
+                  .toList(),
+            ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
       ],
     );
   }

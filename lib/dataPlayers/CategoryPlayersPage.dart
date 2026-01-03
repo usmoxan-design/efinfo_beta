@@ -1,9 +1,12 @@
-import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../services/pes_service.dart';
 import '../models/pes_models.dart';
 import '../widgets/error_display_widget.dart';
-import 'StandartPlayersPage.dart'; // Navigate to this
+import 'StandartPlayersPage.dart';
 
 class CategoryPlayersPage extends StatefulWidget {
   const CategoryPlayersPage({super.key});
@@ -62,11 +65,14 @@ class _CategoryPlayersPageState extends State<CategoryPlayersPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     Widget content;
 
     if (_isLoading) {
       content = const Center(
-          child: CircularProgressIndicator(color: AppColors.accent));
+          child: CircularProgressIndicator(color: Color(0xFF06DF5D)));
     } else if (_errorType != null) {
       content = ErrorDisplayWidget(
         errorType: _errorType!,
@@ -85,12 +91,11 @@ class _CategoryPlayersPageState extends State<CategoryPlayersPage> {
         itemCount: _categories.length,
         itemBuilder: (context, index) {
           final category = _categories[index];
-          // Use different accent colors for variety
           final accents = [
-            AppColors.accent,
-            AppColors.accentGreen,
-            AppColors.accentOrange,
-            AppColors.accentBlue
+            const Color(0xFF06DF5D),
+            Colors.greenAccent,
+            Colors.orangeAccent,
+            Colors.blueAccent
           ];
           final color = accents[index % accents.length];
 
@@ -107,62 +112,34 @@ class _CategoryPlayersPageState extends State<CategoryPlayersPage> {
                 ),
               );
             },
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.cardSurface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.border, width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  // Positioned(
-                  //   top: -10,
-                  //   right: -10,
-                  //   child: Container(
-                  //     width: 50,
-                  //     height: 50,
-                  //     decoration: BoxDecoration(
-                  //       color: color.withOpacity(0.1),
-                  //       shape: BoxShape.circle,
-                  //     ),
-                  //   ),
-                  // ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: color.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child:
-                              Icon(Icons.bolt_rounded, color: color, size: 20),
-                        ),
-                        const Spacer(),
-                        Text(
-                          category.name,
-                          style: const TextStyle(
-                            color: AppColors.textWhite,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+            child: GlassContainer(
+              borderRadius: 20,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(Icons.bolt_rounded, color: color, size: 20),
                     ),
-                  ),
-                ],
+                    const Spacer(),
+                    Text(
+                      category.name,
+                      style: GoogleFonts.outfit(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -171,16 +148,21 @@ class _CategoryPlayersPageState extends State<CategoryPlayersPage> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Categories'),
-        backgroundColor: AppColors.background,
+        title: Text('Categories',
+            style: GoogleFonts.outfit(
+                color: isDark ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold)),
+        backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
         elevation: 0,
         centerTitle: false,
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
         actions: [
           IconButton(
             onPressed: _loadCategories,
-            icon: const Icon(Icons.refresh_rounded, color: AppColors.textGrey),
+            icon: Icon(Icons.refresh_rounded,
+                color: isDark ? Colors.white54 : Colors.black54),
             tooltip: 'Refresh Categories',
           ),
           const SizedBox(width: 8),

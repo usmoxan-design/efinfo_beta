@@ -5,24 +5,35 @@ class LevelToggleHeaderDelegate extends SliverPersistentHeaderDelegate {
   final bool isMaxLevel;
   final Function(bool) onToggle;
 
+  final Color backgroundColor;
+  final Color surfaceColor;
+  final Color borderColor;
+  final Color textColor;
+  final Color secondaryTextColor;
+
   LevelToggleHeaderDelegate({
     required this.isMaxLevel,
     required this.onToggle,
+    required this.backgroundColor,
+    required this.surfaceColor,
+    required this.borderColor,
+    required this.textColor,
+    required this.secondaryTextColor,
   });
 
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: AppColors.background,
+      color: backgroundColor,
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Center(
         child: Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: surfaceColor,
             borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: AppColors.border, width: 1),
+            border: Border.all(color: borderColor, width: 1),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -58,7 +69,7 @@ class LevelToggleHeaderDelegate extends SliverPersistentHeaderDelegate {
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : AppColors.textDim,
+            color: isSelected ? Colors.white : secondaryTextColor,
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
@@ -75,6 +86,9 @@ class LevelToggleHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant LevelToggleHeaderDelegate oldDelegate) {
-    return oldDelegate.isMaxLevel != isMaxLevel;
+    return oldDelegate.isMaxLevel != isMaxLevel ||
+        oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.surfaceColor != surfaceColor ||
+        oldDelegate.borderColor != borderColor;
   }
 }

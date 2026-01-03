@@ -1,11 +1,14 @@
-import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:efinfo_beta/tournament/match_model.dart';
 import 'package:efinfo_beta/tournament/service/league_service.dart';
 import 'package:efinfo_beta/tournament/tournament_model.dart';
 import 'package:efinfo_beta/tournament/team_stats_page.dart';
 import 'package:efinfo_beta/tournament/tournament_charts_page.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class LeagueTableWidget extends StatefulWidget {
   final TournamentModel tournament;
@@ -53,36 +56,38 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
     List<LeagueStats> standings =
         _leagueService.calculateStandings(widget.tournament, mode: _currentTab);
 
     return Column(
       children: [
         // Tabs (All, Home, Away)
-        _buildTabs(),
+        _buildTabs(isDark),
         const SizedBox(height: 16),
 
         // Standings Table
-        _buildStandingsTable(standings),
+        _buildStandingsTable(standings, isDark),
 
         const SizedBox(height: 24),
 
         // Round Selector and Matches
-        _buildRoundMatches(),
+        _buildRoundMatches(isDark),
       ],
     );
   }
 
-  Widget _buildTabs() {
+  Widget _buildTabs(bool isDark) {
     return Column(
       children: [
         Row(
           children: [
-            _buildTabButton('all', 'Barchasi'),
+            _buildTabButton('all', 'Barchasi', isDark),
             const SizedBox(width: 8),
-            _buildTabButton('home', 'Uyda'),
+            _buildTabButton('home', 'Uyda', isDark),
             const SizedBox(width: 8),
-            _buildTabButton('away', 'Mehmon'),
+            _buildTabButton('away', 'Mehmon', isDark),
             const Spacer(),
             GestureDetector(
               onTap: () {
@@ -98,16 +103,23 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.blue[700],
+                  color: const Color(0xFF06DF5D).withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                      color: const Color(0xFF06DF5D).withOpacity(0.3)),
                 ),
                 child: Row(
-                  children: const [
-                    Icon(Icons.show_chart, color: Colors.white, size: 16),
-                    SizedBox(width: 4),
+                  children: [
+                    Icon(Icons.show_chart,
+                        color:
+                            isDark ? const Color(0xFF06DF5D) : Colors.black87,
+                        size: 16),
+                    const SizedBox(width: 4),
                     Text("Statistika",
-                        style: TextStyle(
-                            color: Colors.white,
+                        style: GoogleFonts.outfit(
+                            color: isDark
+                                ? const Color(0xFF06DF5D)
+                                : Colors.black87,
                             fontWeight: FontWeight.bold,
                             fontSize: 13)),
                   ],
@@ -119,36 +131,44 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
         const SizedBox(height: 12),
         Row(
           children: [
-            const Text("Ko'rinish:",
-                style: TextStyle(color: Colors.grey, fontSize: 13)),
+            Text("Ko'rinish:",
+                style: GoogleFonts.outfit(
+                    color: isDark ? Colors.white54 : Colors.black54,
+                    fontSize: 13)),
             const SizedBox(width: 8),
-            _buildModeButton('min', 'Kichik'),
+            _buildModeButton('min', 'Kichik', isDark),
             const SizedBox(width: 4),
-            _buildModeButton('max', 'To\'liq'),
+            _buildModeButton('max', 'To\'liq', isDark),
             const SizedBox(width: 4),
-            _buildModeButton('form', 'Forma'),
+            _buildModeButton('form', 'Forma', isDark),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildModeButton(String mode, String label) {
+  Widget _buildModeButton(String mode, String label, bool isDark) {
     bool isSelected = _tableMode == mode;
     return GestureDetector(
       onTap: () => setState(() => _tableMode = mode),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.blue[800] : Colors.white.withOpacity(0.05),
+          color: isSelected
+              ? const Color(0xFF06DF5D).withOpacity(0.2)
+              : (isDark ? Colors.white : Colors.black).withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-              color: isSelected ? Colors.blue : Colors.white.withOpacity(0.1)),
+              color: isSelected
+                  ? const Color(0xFF06DF5D)
+                  : (isDark ? Colors.white10 : Colors.black12)),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey,
+          style: GoogleFonts.outfit(
+            color: isSelected
+                ? (isDark ? Colors.white : Colors.black)
+                : (isDark ? Colors.white38 : Colors.black38),
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
@@ -157,20 +177,24 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
     );
   }
 
-  Widget _buildTabButton(String tab, String label) {
+  Widget _buildTabButton(String tab, String label, bool isDark) {
     bool isSelected = _currentTab == tab;
     return GestureDetector(
       onTap: () => setState(() => _currentTab = tab),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.black : Colors.white.withOpacity(0.1),
+          color: isSelected
+              ? const Color(0xFF06DF5D)
+              : (isDark ? Colors.white : Colors.black).withOpacity(0.1),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey,
+          style: GoogleFonts.outfit(
+            color: isSelected
+                ? Colors.black
+                : (isDark ? Colors.white54 : Colors.black54),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -178,30 +202,21 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
     );
   }
 
-  Widget _buildStandingsTable(List<LeagueStats> standings) {
+  Widget _buildStandingsTable(List<LeagueStats> standings, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 8),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text("Jadval",
-              style: TextStyle(
-                  color: Colors.white,
+              style: GoogleFonts.outfit(
+                  color: isDark ? Colors.white : Colors.black,
                   fontSize: 18,
                   fontWeight: FontWeight.bold)),
         ),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
+        GlassContainer(
+          borderRadius: 12,
+          padding: EdgeInsets.zero,
           child: Column(
             children: [
               // Header
@@ -210,32 +225,28 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
-                    const SizedBox(
-                        width: 25,
-                        child: Text("#",
-                            style:
-                                TextStyle(color: Colors.grey, fontSize: 13))),
-                    const Expanded(
-                        child: Text("Jamoa",
-                            style:
-                                TextStyle(color: Colors.grey, fontSize: 13))),
+                    _buildHeaderCell("#", 25, isDark),
+                    Expanded(
+                        child: _buildHeaderCell("Jamoa", 0, isDark,
+                            textAlign: TextAlign.start)),
                     if (_tableMode == 'max') ...[
-                      _buildHeaderCell("O'", 30),
-                      _buildHeaderCell("G'", 30),
-                      _buildHeaderCell("D", 30),
-                      _buildHeaderCell("M", 30),
-                      _buildHeaderCell("Gollar", 50),
+                      _buildHeaderCell("O'", 30, isDark),
+                      _buildHeaderCell("G'", 30, isDark),
+                      _buildHeaderCell("D", 30, isDark),
+                      _buildHeaderCell("M", 30, isDark),
+                      _buildHeaderCell("Gollar", 50, isDark),
                     ] else if (_tableMode == 'min') ...[
-                      _buildHeaderCell("O'", 30),
-                      _buildHeaderCell("+/-", 40),
+                      _buildHeaderCell("O'", 30, isDark),
+                      _buildHeaderCell("+/-", 40, isDark),
                     ] else if (_tableMode == 'form') ...[
-                      _buildHeaderCell("Oxirgi 6 o'yin", 120),
+                      _buildHeaderCell("Oxirgi 6 o'yin", 120, isDark),
                     ],
-                    _buildHeaderCell("OCH", 35),
+                    _buildHeaderCell("OCH", 35, isDark),
                   ],
                 ),
               ),
-              const Divider(height: 1),
+              Divider(
+                  height: 1, color: isDark ? Colors.white10 : Colors.black12),
               // Rows
               ...standings.asMap().entries.map((entry) {
                 int index = entry.key;
@@ -270,86 +281,93 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
                               ? CircleAvatar(
                                   radius: 10,
                                   backgroundColor: isTop4
-                                      ? Colors.green[700]
-                                      : Colors.blue[800],
+                                      ? const Color(0xFF06DF5D)
+                                      : Colors.blueAccent,
                                   child: Text("${index + 1}",
-                                      style: const TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.white,
+                                      style: GoogleFonts.outfit(
+                                          fontSize: 10,
+                                          color: Colors.black,
                                           fontWeight: FontWeight.bold)),
                                 )
                               : Text("${index + 1}",
-                                  style: const TextStyle(
+                                  style: GoogleFonts.outfit(
                                       fontSize: 13,
-                                      color: Colors.black,
+                                      color:
+                                          isDark ? Colors.white : Colors.black,
                                       fontWeight: FontWeight.bold)),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             stats.team.name,
-                            style: const TextStyle(
+                            style: GoogleFonts.outfit(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black,
+                                color: isDark ? Colors.white : Colors.black,
                                 fontSize: 14),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (_tableMode == 'max') ...[
-                          _buildDataCell("${stats.played}", 30),
-                          _buildDataCell("${stats.won}", 30,
-                              color: Colors.green[800]),
-                          _buildDataCell("${stats.drawn}", 30),
-                          _buildDataCell("${stats.lost}", 30,
-                              color: Colors.red[800]),
+                          _buildDataCell("${stats.played}", 30, isDark),
+                          _buildDataCell("${stats.won}", 30, isDark,
+                              color: const Color(0xFF06DF5D)),
+                          _buildDataCell("${stats.drawn}", 30, isDark),
+                          _buildDataCell("${stats.lost}", 30, isDark,
+                              color: Colors.redAccent),
                           _buildDataCell(
-                              "${stats.goalsFor}:${stats.goalsAgainst}", 50,
+                              "${stats.goalsFor}:${stats.goalsAgainst}",
+                              50,
+                              isDark,
                               fontSize: 12),
                         ] else if (_tableMode == 'min') ...[
-                          _buildDataCell("${stats.played}", 30),
+                          _buildDataCell("${stats.played}", 30, isDark),
                           _buildDataCell(
                               "${stats.goalDifference > 0 ? '+' : ''}${stats.goalDifference}",
                               40,
+                              isDark,
                               color: stats.goalDifference >= 0
-                                  ? Colors.blue[800]
-                                  : Colors.red[800]),
+                                  ? const Color(0xFF06DF5D)
+                                  : Colors.redAccent),
                         ] else if (_tableMode == 'form') ...[
                           _buildFormCell(stats.team.id, 120),
                         ],
-                        _buildDataCell("${stats.points}", 35,
-                            isBold: true, color: Colors.black),
+                        _buildDataCell("${stats.points}", 35, isDark,
+                            isBold: true,
+                            color: isDark ? Colors.white : Colors.black),
                       ],
                     ),
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         ),
         const SizedBox(height: 12),
-        _buildInfoSection(),
+        _buildInfoSection(isDark),
       ],
     );
   }
 
-  Widget _buildHeaderCell(String label, double width) {
+  Widget _buildHeaderCell(String label, double width, bool isDark,
+      {TextAlign textAlign = TextAlign.center}) {
     return SizedBox(
-      width: width,
+      width: width == 0 ? null : width,
       child: Text(label,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.grey, fontSize: 11)),
+          textAlign: textAlign,
+          style: GoogleFonts.outfit(
+              color: isDark ? Colors.white38 : Colors.black38, fontSize: 11)),
     );
   }
 
-  Widget _buildDataCell(String value, double width,
+  Widget _buildDataCell(String value, double width, bool isDark,
       {Color? color, bool isBold = false, double fontSize = 13}) {
     return SizedBox(
       width: width,
       child: Text(
         value,
         textAlign: TextAlign.center,
-        style: TextStyle(
-          color: color ?? Colors.black,
+        style: GoogleFonts.outfit(
+          color: color ?? (isDark ? Colors.white70 : Colors.black87),
           fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
           fontSize: fontSize,
         ),
@@ -395,29 +413,26 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
     );
   }
 
-  Widget _buildInfoSection() {
+  Widget _buildInfoSection(bool isDark) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(10),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildInfoRow("O'", "O'ynalgan o'yinlar soni"),
-          _buildInfoRow("G'", "G'alabalar soni"),
-          _buildInfoRow("D", "Duranglar soni"),
-          _buildInfoRow("M", "Mag'lubiyatlar soni"),
-          _buildInfoRow("+/-", "To'plar farqi (Urilgan - O'tkazib yuborilgan)"),
+          _buildInfoRow("O'", "O'ynalgan o'yinlar soni", isDark),
+          _buildInfoRow("G'", "G'alabalar soni", isDark),
+          _buildInfoRow("D", "Duranglar soni", isDark),
+          _buildInfoRow("M", "Mag'lubiyatlar soni", isDark),
           _buildInfoRow(
-              "OCH", "To'plangan umumiy ochkolar (3 g'alaba, 1 durang)"),
+              "+/-", "To'plar farqi (Urilgan - O'tkazib yuborilgan)", isDark),
+          _buildInfoRow("OCH",
+              "To'plangan umumiy ochkolar (3 g'alaba, 1 durang)", isDark),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(String symbol, String desc) {
+  Widget _buildInfoRow(String symbol, String desc, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
@@ -426,22 +441,26 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
           SizedBox(
             width: 35,
             child: Text(symbol,
-                style: const TextStyle(
-                    color: Colors.blueAccent,
+                style: GoogleFonts.outfit(
+                    color: const Color(0xFF06DF5D),
                     fontWeight: FontWeight.bold,
                     fontSize: 12)),
           ),
-          const Text("- ", style: TextStyle(color: Colors.grey)),
+          Text("- ",
+              style: GoogleFonts.outfit(
+                  color: isDark ? Colors.white38 : Colors.black38)),
           Expanded(
             child: Text(desc,
-                style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                style: GoogleFonts.outfit(
+                    color: isDark ? Colors.white38 : Colors.black38,
+                    fontSize: 12)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildRoundMatches() {
+  Widget _buildRoundMatches(bool isDark) {
     int totalRounds = _getTotalRounds();
     if (totalRounds == 0) return const SizedBox();
 
@@ -456,20 +475,22 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             IconButton(
-              icon: const Icon(Icons.chevron_left, color: Colors.white),
+              icon: Icon(Icons.chevron_left,
+                  color: isDark ? Colors.white : Colors.black),
               onPressed: _currentRound > 1
                   ? () => setState(() => _currentRound--)
                   : null,
             ),
             Text(
               "$_currentRound-Tur",
-              style: const TextStyle(
-                  color: Colors.white,
+              style: GoogleFonts.outfit(
+                  color: isDark ? Colors.white : Colors.black,
                   fontSize: 18,
                   fontWeight: FontWeight.bold),
             ),
             IconButton(
-              icon: const Icon(Icons.chevron_right, color: Colors.white),
+              icon: Icon(Icons.chevron_right,
+                  color: isDark ? Colors.white : Colors.black),
               onPressed: _currentRound < totalRounds
                   ? () => setState(() => _currentRound++)
                   : null,
@@ -477,28 +498,26 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
           ],
         ),
         const SizedBox(height: 8),
-        ...roundMatches.map((match) => _buildMatchTile(match)).toList(),
+        ...roundMatches.map((match) => _buildMatchTile(match, isDark)),
       ],
     );
   }
 
-  Widget _buildMatchTile(MatchModel match) {
+  Widget _buildMatchTile(MatchModel match, bool isDark) {
     return GestureDetector(
       onTap: () => widget.onMatchTap(match),
-      child: Container(
+      child: GlassContainer(
+        borderRadius: 12,
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
-        ),
         child: Column(
           children: [
             if (match.date != null) ...[
               Text(
                 DateFormat('dd.MM.yy HH:mm').format(match.date!),
-                style: const TextStyle(color: Colors.grey, fontSize: 10),
+                style: GoogleFonts.outfit(
+                    color: isDark ? Colors.white38 : Colors.black38,
+                    fontSize: 10),
               ),
               const SizedBox(height: 8),
             ],
@@ -509,8 +528,9 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
                   child: Text(
                     match.teamA?.name ?? "TBD",
                     textAlign: TextAlign.end,
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w500),
+                    style: GoogleFonts.outfit(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontWeight: FontWeight.w500),
                   ),
                 ),
                 Expanded(
@@ -520,8 +540,9 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     decoration: BoxDecoration(
                       color: match.isPlayed
-                          ? AppColors.accent
-                          : Colors.grey.withOpacity(0.2),
+                          ? const Color(0xFF06DF5D)
+                          : (isDark ? Colors.white : Colors.black)
+                              .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -529,8 +550,10 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
                           ? "${match.scoreA} : ${match.scoreB}"
                           : "vs",
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: match.isPlayed ? Colors.black : Colors.grey,
+                      style: GoogleFonts.outfit(
+                        color: match.isPlayed
+                            ? Colors.black
+                            : (isDark ? Colors.white38 : Colors.black38),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -541,8 +564,9 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
                   child: Text(
                     match.teamB?.name ?? "TBD",
                     textAlign: TextAlign.start,
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w500),
+                    style: GoogleFonts.outfit(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontWeight: FontWeight.w500),
                   ),
                 ),
               ],

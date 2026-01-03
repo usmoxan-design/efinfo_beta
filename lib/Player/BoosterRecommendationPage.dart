@@ -1,5 +1,8 @@
-import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class BoosterRecommendationPage extends StatelessWidget {
   const BoosterRecommendationPage({super.key});
@@ -101,14 +104,19 @@ class BoosterRecommendationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("Booster Tavsiyalari",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.background,
+        title: Text("Booster Tavsiyalari",
+            style: GoogleFonts.outfit(
+                color: isDark ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
       ),
       body: ListView.separated(
         padding: const EdgeInsets.all(16),
@@ -118,17 +126,7 @@ class BoosterRecommendationPage extends StatelessWidget {
           final item = recommendations[index];
           List<String> boosters = item['boosters'];
 
-          return Container(
-            decoration: BoxDecoration(
-                color: AppColors.cardSurface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4))
-                ]),
+          return GlassContainer(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,17 +136,17 @@ class BoosterRecommendationPage extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                          color: AppColors.accent.withOpacity(0.2),
+                          color: const Color(0xFF06DF5D).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8)),
                       child: const Icon(Icons.flash_on,
-                          color: AppColors.accent, size: 20),
+                          color: Color(0xFF06DF5D), size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         item['playstyle'],
-                        style: const TextStyle(
-                            color: Colors.white,
+                        style: GoogleFonts.outfit(
+                            color: isDark ? Colors.white : Colors.black,
                             fontSize: 18,
                             fontWeight: FontWeight.bold),
                       ),
@@ -158,14 +156,16 @@ class BoosterRecommendationPage extends StatelessWidget {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: _buildBoosterChip(boosters[0], 1)),
+                    Expanded(child: _buildBoosterChip(boosters[0], 1, isDark)),
                     if (boosters.length > 1) ...[
                       const SizedBox(width: 8),
-                      Expanded(child: _buildBoosterChip(boosters[1], 2)),
+                      Expanded(
+                          child: _buildBoosterChip(boosters[1], 2, isDark)),
                     ],
                     if (boosters.length > 2) ...[
                       const SizedBox(width: 8),
-                      Expanded(child: _buildBoosterChip(boosters[2], 3)),
+                      Expanded(
+                          child: _buildBoosterChip(boosters[2], 3, isDark)),
                     ]
                   ],
                 )
@@ -177,7 +177,7 @@ class BoosterRecommendationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBoosterChip(String label, int rank) {
+  Widget _buildBoosterChip(String label, int rank, bool isDark) {
     Color rankColor;
     Color bgColor;
     String rankLabel;
@@ -206,7 +206,7 @@ class BoosterRecommendationPage extends StatelessWidget {
         children: [
           Text(
             rankLabel,
-            style: TextStyle(
+            style: GoogleFonts.outfit(
                 color: rankColor,
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
@@ -216,8 +216,10 @@ class BoosterRecommendationPage extends StatelessWidget {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-                color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+            style: GoogleFonts.outfit(
+                color: isDark ? Colors.white : Colors.black,
+                fontSize: 12,
+                fontWeight: FontWeight.bold),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),

@@ -3,19 +3,22 @@ import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:efinfo_beta/Others/imageSaver.dart';
-import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
 import 'package:efinfo_beta/tournament/match_model.dart';
 import 'package:efinfo_beta/tournament/service/bracket_service.dart';
 import 'package:efinfo_beta/tournament/service/league_service.dart';
 import 'package:efinfo_beta/tournament/team_model.dart';
 import 'package:efinfo_beta/tournament/tournament_model.dart';
 import 'package:efinfo_beta/tournament/league_table.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:ui' as ui;
 import 'dart:math';
+import 'package:provider/provider.dart';
 
 class TournamentBracketPage extends StatefulWidget {
   final TournamentModel tournament;
@@ -74,6 +77,7 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
     showDialog(
       context: context,
       builder: (context) {
+        final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
         int scoreA = match.scoreA;
         int scoreB = match.scoreB;
         final TextEditingController scoreAController =
@@ -82,10 +86,14 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
             TextEditingController(text: scoreB.toString());
 
         return AlertDialog(
-          backgroundColor: const Color(0xFF1E1E1E),
+          backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Text(
             "${match.teamA!.name} vs ${match.teamB!.name}",
-            style: const TextStyle(color: Colors.white),
+            style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -93,11 +101,14 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
               TextField(
                 decoration: InputDecoration(
                   labelText: "${match.teamA!.name} Hisobi",
-                  labelStyle: const TextStyle(color: Colors.grey),
-                  enabledBorder: const UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey)),
+                  labelStyle: GoogleFonts.outfit(
+                      color: isDark ? Colors.white54 : Colors.black54),
+                  enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(
+                          color: isDark ? Colors.white10 : Colors.black12)),
                 ),
-                style: const TextStyle(color: Colors.white),
+                style: GoogleFonts.outfit(
+                    color: isDark ? Colors.white : Colors.black),
                 keyboardType: TextInputType.number,
                 controller: scoreAController,
                 onChanged: (value) => scoreA = int.tryParse(value) ?? 0,
@@ -106,11 +117,14 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
               TextField(
                 decoration: InputDecoration(
                   labelText: "${match.teamB!.name} Hisobi",
-                  labelStyle: const TextStyle(color: Colors.grey),
-                  enabledBorder: const UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey)),
+                  labelStyle: GoogleFonts.outfit(
+                      color: isDark ? Colors.white54 : Colors.black54),
+                  enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(
+                          color: isDark ? Colors.white10 : Colors.black12)),
                 ),
-                style: const TextStyle(color: Colors.white),
+                style: GoogleFonts.outfit(
+                    color: isDark ? Colors.white : Colors.black),
                 keyboardType: TextInputType.number,
                 controller: scoreBController,
                 onChanged: (value) => scoreB = int.tryParse(value) ?? 0,
@@ -120,11 +134,14 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text("Bekor qilish",
-                    style: TextStyle(color: Colors.grey))),
+                child: Text("Bekor qilish",
+                    style: GoogleFonts.outfit(
+                        color: isDark ? Colors.white38 : Colors.black38))),
             ElevatedButton(
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: AppColors.accent),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF06DF5D),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12))),
               onPressed: () {
                 try {
                   TournamentModel updatedTournament;
@@ -178,8 +195,9 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                   Navigator.pop(context);
                 }
               },
-              child:
-                  const Text("Saqlash", style: TextStyle(color: Colors.black)),
+              child: Text("Saqlash",
+                  style: GoogleFonts.outfit(
+                      color: Colors.black, fontWeight: FontWeight.bold)),
             ),
           ],
         );
@@ -233,7 +251,7 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
     ));
   }
 
-  List<Widget> _buildContent() {
+  List<Widget> _buildContent(bool isDark) {
     if (!_currentTournament.isDrawDone) {
       return [
         Center(
@@ -242,20 +260,26 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   "Qura tashlanmagan. Boshlash uchun tugmani bosing.",
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                  style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      color: isDark ? Colors.white38 : Colors.black38),
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton.icon(
                   onPressed: _performDraw,
-                  icon: const Icon(BoxIcons.bx_dice_5),
-                  label: const Text("Qura Tashlash"),
+                  icon: const Icon(BoxIcons.bx_dice_5, color: Colors.black),
+                  label: Text("Qura Tashlash",
+                      style: GoogleFonts.outfit(
+                          color: Colors.black, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: const Color(0xFF06DF5D),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 30, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
                   ),
                 ),
               ],
@@ -296,16 +320,16 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                 padding: const EdgeInsets.symmetric(vertical: 10.0),
                 child: Text(
                   _bracketService.getRoundTitle(r, totalRounds),
-                  style: const TextStyle(
+                  style: GoogleFonts.outfit(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.accent,
+                    color: const Color(0xFF06DF5D),
                   ),
                 ),
               ),
               ...currentRoundMatches
                   .toList()
-                  .map((match) => _buildMatchCard(match, totalRounds)),
+                  .map((match) => _buildMatchCard(match, totalRounds, isDark)),
             ],
           ),
         ),
@@ -329,14 +353,14 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                 padding: const EdgeInsets.symmetric(vertical: 10.0),
                 child: Text(
                   _bracketService.getRoundTitle(99, totalRounds),
-                  style: const TextStyle(
+                  style: GoogleFonts.outfit(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange,
+                    color: Colors.orangeAccent,
                   ),
                 ),
               ),
-              _buildMatchCard(thirdPlaceMatch, totalRounds),
+              _buildMatchCard(thirdPlaceMatch, totalRounds, isDark),
             ],
           ),
         ),
@@ -346,35 +370,34 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
     return roundWidgets;
   }
 
-  Widget _buildMatchCard(MatchModel match, int totalRounds) {
+  Widget _buildMatchCard(MatchModel match, int totalRounds, bool isDark) {
     bool hasWinner = match.winnerId != null;
-    Color cardColor = match.round == 99
-        ? Colors.orange[50]!
-        : (hasWinner ? Colors.green[50]! : Colors.white);
 
     double width = 200;
 
     return InkWell(
       onTap: () => _editScore(match),
-      child: Card(
+      child: GlassContainer(
         margin: const EdgeInsets.symmetric(vertical: 8),
-        elevation: 4,
-        color: cardColor,
-        child: Container(
+        borderRadius: 16,
+        padding: const EdgeInsets.all(10),
+        child: SizedBox(
           width: width,
-          padding: const EdgeInsets.all(10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildTeamScore(
-                  match.teamA, match.scoreA, hasWinner, match.winnerId),
-              const Center(
+                  match.teamA, match.scoreA, hasWinner, match.winnerId, isDark),
+              Center(
                   child: Text("vs",
-                      style: TextStyle(
-                          fontStyle: FontStyle.italic, color: Colors.grey))),
+                      style: GoogleFonts.outfit(
+                          fontStyle: FontStyle.italic,
+                          color: isDark ? Colors.white24 : Colors.black26,
+                          fontSize: 12))),
               _buildTeamScore(
-                  match.teamB, match.scoreB, hasWinner, match.winnerId),
-              const Divider(height: 10),
+                  match.teamB, match.scoreB, hasWinner, match.winnerId, isDark),
+              Divider(
+                  height: 10, color: isDark ? Colors.white10 : Colors.black12),
               Center(
                 child: Text(
                   hasWinner
@@ -382,8 +405,10 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                       : (match.teamA != null && match.teamB != null
                           ? "Natijani kiriting"
                           : "Kutilmoqda"),
-                  style: TextStyle(
-                      color: hasWinner ? Colors.green : Colors.red,
+                  style: GoogleFonts.outfit(
+                      color: hasWinner
+                          ? const Color(0xFF06DF5D)
+                          : Colors.redAccent,
                       fontWeight: FontWeight.bold,
                       fontSize: 12),
                   textAlign: TextAlign.center,
@@ -396,11 +421,13 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
     );
   }
 
-  Widget _buildTeamScore(
-      TeamModel? team, int score, bool hasWinner, String? winnerId) {
+  Widget _buildTeamScore(TeamModel? team, int score, bool hasWinner,
+      String? winnerId, bool isDark) {
     if (team == null) {
-      return const Text("TBD",
-          style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic));
+      return Text("TBD",
+          style: GoogleFonts.outfit(
+              color: isDark ? Colors.white38 : Colors.black38,
+              fontStyle: FontStyle.italic));
     }
 
     bool isWinner = hasWinner && team.id == winnerId;
@@ -416,17 +443,21 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
         Expanded(
           child: Text(
             team.name,
-            style: TextStyle(
+            style: GoogleFonts.outfit(
               fontWeight: isWinner ? FontWeight.w900 : FontWeight.w500,
-              color: isWinner ? Colors.black : Colors.black87,
+              color: isWinner
+                  ? (isDark ? Colors.white : Colors.black)
+                  : (isDark ? Colors.white70 : Colors.black87),
             ),
           ),
         ),
         Text(
           score.toString(),
-          style: TextStyle(
+          style: GoogleFonts.outfit(
             fontWeight: isWinner ? FontWeight.w900 : FontWeight.bold,
-            color: isWinner ? Colors.green : Colors.black,
+            color: isWinner
+                ? const Color(0xFF06DF5D)
+                : (isDark ? Colors.white : Colors.black),
           ),
         ),
       ],
@@ -435,6 +466,9 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     String? championName;
     if (_currentTournament.championId != null) {
       try {
@@ -480,13 +514,19 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
         return false;
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
         appBar: AppBar(
-          title: Text(_currentTournament.name),
-          backgroundColor: AppColors.background,
+          title: Text(
+            _currentTournament.name,
+            style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black),
+          ),
+          backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: Icon(Icons.arrow_back,
+                color: isDark ? Colors.white : Colors.black),
             onPressed: () => Navigator.pop(context, _currentTournament),
           ),
           actions: [
@@ -495,14 +535,15 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                 padding: const EdgeInsets.only(right: 15.0),
                 child: Center(
                   child: Text("🏆 G'olib: $championName",
-                      style: const TextStyle(
+                      style: GoogleFonts.outfit(
                           fontWeight: FontWeight.bold,
                           color: Colors.amberAccent)),
                 ),
               ),
             if (!_currentTournament.isDrawDone)
               IconButton(
-                icon: const Icon(BoxIcons.bx_dice_5),
+                icon: Icon(BoxIcons.bx_dice_5,
+                    color: isDark ? Colors.white : Colors.black),
                 onPressed: _performDraw,
                 tooltip: "Qura tashlash",
               ),
@@ -513,9 +554,12 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                 child: ElevatedButton(
                   onPressed: captureAndSave,
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      foregroundColor: Colors.black),
-                  child: const Text("Saqlash"),
+                      backgroundColor: const Color(0xFF06DF5D),
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12))),
+                  child: Text("Saqlash",
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
                 ),
               )
           ],
@@ -541,7 +585,7 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                           key: pitchBoundaryKey,
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: _buildContent(),
+                            children: _buildContent(isDark),
                           ),
                         ),
                       ),

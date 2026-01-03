@@ -1,5 +1,8 @@
-import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 class ElementsPage extends StatelessWidget {
   const ElementsPage({super.key});
@@ -90,7 +93,7 @@ class ElementsPage extends StatelessWidget {
       'title': 'Chance Deal',
       'description': 'O\'yinchiga tasodifiy o\'yinchi berish uchun.',
       'details':
-          "• **Nima uchun ishlatiladi?** O\'yinchiga tasodifiy o\'yinchi imzolash uchun (Chance Deal paketidagi maxsus ro\'yxatdan biri tanlanadi, odatda 50 tagacha o\'yinchi, shu jumladan Epic yoki Showtime kartalar). Ko\'pincha kampaniyalarda bepul beriladi va yuqori reytingli o\'yinchilarni olish imkonini beradi.\n\n• **Cheklovlar:** Random; past reytingli (masalan, 1-3 yulduzli) o\'yinchilar chiqishi mumkin, hatto Epic paketlarda ham; kafolat yo\'q, ko\'p spin (21-81 ta) kerak bo\'lishi mumkin; ba\'zi kampaniyalarda Selection Contract bilan birga beriladi.",
+          "• **Nima uchun ishlatiladi?** O'yinchiga tasodifiy o'yinchi imzolash uchun (Chance Deal paketidagi maxsus ro'yxatdan biri tanlanadi, odatda 50 tagacha o'yinchi, shu jumladan Epic yoki Showtime kartalar). Ko'pincha kampaniyalarda bepul beriladi va yuqori reytingli o'yinchilarni olish imkonini beradi.\n\n• **Cheklovlar:** Random; past reytingli (masalan, 1-3 yulduzli) o'yinchilar chiqishi mumkin, hatto Epic paketlarda ham; kafolat yo'q, ko'p spin (21-81 ta) kerak bo'lishi mumkin; ba'zi kampaniyalarda Selection Contract bilan birga beriladi.",
       'image': 'assets/images/elements/chance_deal.png'
     },
     {
@@ -104,14 +107,19 @@ class ElementsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
         elevation: 0,
-        title: const Text("eFootball Elements",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text("eFootball Elements",
+            style: GoogleFonts.outfit(
+                color: isDark ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold)),
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
       ),
       body: ListView.separated(
         padding: const EdgeInsets.all(16),
@@ -119,20 +127,20 @@ class ElementsPage extends StatelessWidget {
         separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final item = elements[index];
-          return Card(
-            color: AppColors.cardSurface,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          return GlassContainer(
+            borderRadius: 16,
             child: InkWell(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               onTap: () {
                 showModalBottomSheet(
                   context: context,
-                  backgroundColor: AppColors.cardSurface,
+                  backgroundColor:
+                      isDark ? const Color(0xFF1C1C1E) : Colors.white,
                   shape: const RoundedRectangleBorder(
                       borderRadius:
                           BorderRadius.vertical(top: Radius.circular(20))),
-                  builder: (context) => _DetailPopup(item: item),
+                  builder: (context) =>
+                      _DetailPopup(item: item, isDark: isDark),
                 );
               },
               child: Padding(
@@ -143,15 +151,15 @@ class ElementsPage extends StatelessWidget {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                          color: Colors.white10,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.white24)),
+                          color: isDark ? Colors.white10 : Colors.black12,
+                          borderRadius: BorderRadius.circular(10)),
                       child: Center(
                         child: item['image'] != null
                             ? Image.asset(item['image']!,
                                 width: 30, height: 30, fit: BoxFit.cover)
                             : Icon(Icons.image,
-                                color: Colors.white38, size: 30),
+                                color: isDark ? Colors.white38 : Colors.black38,
+                                size: 30),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -161,23 +169,25 @@ class ElementsPage extends StatelessWidget {
                         children: [
                           Text(
                             item['title']!,
-                            style: const TextStyle(
-                                color: Colors.white,
+                            style: GoogleFonts.outfit(
+                                color: isDark ? Colors.white : Colors.black,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             item['description']!,
-                            style: const TextStyle(
-                                color: Colors.white70, fontSize: 12),
+                            style: GoogleFonts.outfit(
+                                color: isDark ? Colors.white70 : Colors.black54,
+                                fontSize: 12),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right, color: Colors.white38),
+                    Icon(Icons.chevron_right,
+                        color: isDark ? Colors.white38 : Colors.black38),
                   ],
                 ),
               ),
@@ -191,12 +201,17 @@ class ElementsPage extends StatelessWidget {
 
 class _DetailPopup extends StatelessWidget {
   final Map<String, String> item;
-  const _DetailPopup({required this.item});
+  final bool isDark;
+  const _DetailPopup({required this.item, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -207,7 +222,7 @@ class _DetailPopup extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: isDark ? Colors.white24 : Colors.black12,
                     borderRadius: BorderRadius.circular(2)),
               ),
             ),
@@ -218,19 +233,21 @@ class _DetailPopup extends StatelessWidget {
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                      color: Colors.white10,
+                      color: isDark ? Colors.white10 : Colors.black12,
                       borderRadius: BorderRadius.circular(10)),
                   child: item['image'] != null
                       ? Image.asset(item['image']!,
                           width: 30, height: 30, fit: BoxFit.cover)
-                      : Icon(Icons.image, color: Colors.white38, size: 30),
+                      : Icon(Icons.image,
+                          color: isDark ? Colors.white38 : Colors.black38,
+                          size: 30),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
                     item['title']!,
-                    style: const TextStyle(
-                        color: Colors.white,
+                    style: GoogleFonts.outfit(
+                        color: isDark ? Colors.white : Colors.black,
                         fontSize: 22,
                         fontWeight: FontWeight.bold),
                   ),
@@ -241,23 +258,23 @@ class _DetailPopup extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.black26,
+                color: isDark ? Colors.black26 : Colors.grey[100],
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: _buildRichText(item['details']!),
+              child: _buildRichText(item['details']!, isDark),
             ),
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accent,
+                  backgroundColor: const Color(0xFF06DF5D),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)),
                 ),
                 onPressed: () => Navigator.pop(context),
-                child: const Text("Tushunarli",
-                    style: TextStyle(
+                child: Text("Tushunarli",
+                    style: GoogleFonts.outfit(
                         color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             )
@@ -267,7 +284,7 @@ class _DetailPopup extends StatelessWidget {
     );
   }
 
-  Widget _buildRichText(String text) {
+  Widget _buildRichText(String text, bool isDark) {
     List<String> parts = text.split('**');
     List<TextSpan> spans = [];
 
@@ -275,13 +292,15 @@ class _DetailPopup extends StatelessWidget {
       if (i % 2 == 0) {
         spans.add(TextSpan(
             text: parts[i],
-            style: const TextStyle(
-                color: Colors.white70, fontSize: 14, height: 1.5)));
+            style: GoogleFonts.outfit(
+                color: isDark ? Colors.white70 : Colors.black87,
+                fontSize: 14,
+                height: 1.5)));
       } else {
         spans.add(TextSpan(
             text: parts[i],
-            style: const TextStyle(
-                color: Colors.white,
+            style: GoogleFonts.outfit(
+                color: isDark ? Colors.white : Colors.black,
                 fontSize: 14,
                 height: 1.5,
                 fontWeight: FontWeight.bold)));

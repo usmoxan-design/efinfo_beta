@@ -1,6 +1,8 @@
-import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 // --- 1. MODEL VA MA'LUMOTLAR QISMI (DATA LAYER) ---
 
@@ -149,49 +151,49 @@ Quick Counter va Long Ball Counter uslubida gol soni 2-3 baravar oshadi!
             title: "Anchoring",
             description: anchoringText,
             icon: Icons.anchor,
-            color: AppColors.accentOrange,
+            color: Color(0xFFFF9500),
             type: InstructionType.attack,
             imageAsset: 'anchoring.jpg'),
         const InstructionModel(
             title: "Offensive",
             description: offensiveText,
             icon: Icons.arrow_circle_up,
-            color: AppColors.accentGreen,
+            color: Color(0xFF06DF5D),
             type: InstructionType.attack,
             imageAsset: 'offensive.jpg'),
         const InstructionModel(
             title: "Defensive",
             description: defensiveText,
             icon: Icons.shield,
-            color: AppColors.accentPink,
+            color: Color(0xFFFF2D55),
             type: InstructionType.attack,
             imageAsset: 'defensive.jpg'),
         const InstructionModel(
             title: "Man Marking",
             description: manMarkingText,
             icon: Icons.person_pin_circle,
-            color: AppColors.accentBlue,
+            color: Color(0xFF007AFF),
             type: InstructionType.defense,
             imageAsset: 'man_marking.jpg'),
         const InstructionModel(
             title: "Tight Marking",
             description: tightMarkingText,
             icon: Icons.compress,
-            color: AppColors.accentOrange,
+            color: Color(0xFFFF9500),
             type: InstructionType.defense,
             imageAsset: 'tight_marking.jpg'),
         const InstructionModel(
             title: "Deep Line",
             description: deepLineText,
             icon: Icons.vertical_align_bottom,
-            color: AppColors.accentBlue,
+            color: Color(0xFF007AFF),
             type: InstructionType.defense,
             imageAsset: 'deep_line.jpg'),
         const InstructionModel(
             title: "Counter Target",
             description: counterTargetText,
             icon: Icons.track_changes,
-            color: AppColors.accentGreen,
+            color: Color(0xFF06DF5D),
             type: InstructionType.defense,
             imageAsset: 'counter_target.jpg'),
       ];
@@ -202,6 +204,9 @@ class ModernInstructionsListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     final attackList = AppData.instructions
         .where((e) => e.type == InstructionType.attack)
         .toList();
@@ -210,20 +215,20 @@ class ModernInstructionsListPage extends StatelessWidget {
         .toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: AppColors.textWhite),
-          onPressed: () => Navigator.pop(context),
-        ),
+        // leading: IconButton(
+        //   icon: Icon(Icons.arrow_back_ios_new_rounded,
+        //       color: isDark ? Colors.white : Colors.black),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
         centerTitle: true,
         title: Text(
           "Individual Instructions",
           style: GoogleFonts.outfit(
-            color: AppColors.textWhite,
+            color: isDark ? Colors.white : Colors.black,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -233,31 +238,32 @@ class ModernInstructionsListPage extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         physics: const BouncingScrollPhysics(),
         children: [
-          _buildHeader(),
+          _buildHeader(isDark),
           const SizedBox(height: 32),
           ClipRRect(
             borderRadius: BorderRadius.circular(24),
             child: Container(
               decoration: BoxDecoration(
-                border: Border.all(color: AppColors.border, width: 1),
+                border: Border.all(
+                    color: isDark ? Colors.white10 : Colors.black12, width: 1),
               ),
               child:
                   Image.asset('assets/images/indivins.jpg', fit: BoxFit.cover),
             ),
           ),
           const SizedBox(height: 32),
-          _buildSectionHeader("Offense", AppColors.accentPink),
-          ...attackList.map((e) => _InstructionCard(item: e)),
+          _buildSectionHeader("Offense", const Color(0xFFFF2D55), isDark),
+          ...attackList.map((e) => _InstructionCard(item: e, isDark: isDark)),
           const SizedBox(height: 24),
-          _buildSectionHeader("Defense", AppColors.accentBlue),
-          ...defenseList.map((e) => _InstructionCard(item: e)),
+          _buildSectionHeader("Defense", const Color(0xFF007AFF), isDark),
+          ...defenseList.map((e) => _InstructionCard(item: e, isDark: isDark)),
           const SizedBox(height: 40),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -265,7 +271,7 @@ class ModernInstructionsListPage extends StatelessWidget {
           "Tactics Info,",
           style: GoogleFonts.outfit(
             fontSize: 16,
-            color: AppColors.textDim,
+            color: isDark ? Colors.white54 : Colors.black54,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -274,7 +280,7 @@ class ModernInstructionsListPage extends StatelessWidget {
           "Game Strategy",
           style: GoogleFonts.outfit(
             fontSize: 28,
-            color: AppColors.textWhite,
+            color: isDark ? Colors.white : Colors.black,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -282,7 +288,7 @@ class ModernInstructionsListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, Color color) {
+  Widget _buildSectionHeader(String title, Color color, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -296,7 +302,7 @@ class ModernInstructionsListPage extends StatelessWidget {
           Text(
             title,
             style: GoogleFonts.outfit(
-              color: AppColors.textWhite,
+              color: isDark ? Colors.white : Colors.black,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -309,63 +315,62 @@ class ModernInstructionsListPage extends StatelessWidget {
 
 class _InstructionCard extends StatelessWidget {
   final InstructionModel item;
+  final bool isDark;
 
-  const _InstructionCard({required this.item});
+  const _InstructionCard({required this.item, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: AppColors.cardSurface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border, width: 1),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        onTap: () {
-          Navigator.push(
-            context,
-            PageRouteBuilder(
-              transitionDuration: const Duration(milliseconds: 400),
-              pageBuilder: (_, __, ___) =>
-                  ModernInstructionDetailPage(item: item),
-              transitionsBuilder: (_, animation, __, child) {
-                return FadeTransition(opacity: animation, child: child);
-              },
+      child: GlassContainer(
+        borderRadius: 24,
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(16),
+          onTap: () {
+            Navigator.push(
+              context,
+              PageRouteBuilder(
+                transitionDuration: const Duration(milliseconds: 400),
+                pageBuilder: (_, __, ___) =>
+                    ModernInstructionDetailPage(item: item),
+                transitionsBuilder: (_, animation, __, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+              ),
+            );
+          },
+          leading: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: item.color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
             ),
-          );
-        },
-        leading: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: item.color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
+            child: Icon(item.icon, color: item.color, size: 24),
           ),
-          child: Icon(item.icon, color: item.color, size: 24),
-        ),
-        title: Text(
-          item.title,
-          style: GoogleFonts.outfit(
-            color: AppColors.textWhite,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            item.description.split('\n')[2],
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          title: Text(
+            item.title,
             style: GoogleFonts.outfit(
-              color: AppColors.textDim,
-              fontSize: 13,
+              color: isDark ? Colors.white : Colors.black,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              item.description.split('\n')[2],
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.outfit(
+                color: isDark ? Colors.white54 : Colors.black54,
+                fontSize: 13,
+              ),
+            ),
+          ),
+          trailing: Icon(Icons.arrow_forward_ios_rounded,
+              color: isDark ? Colors.white24 : Colors.black26, size: 16),
         ),
-        trailing: Icon(Icons.arrow_forward_ios_rounded,
-            color: AppColors.textDim.withOpacity(0.3), size: 16),
       ),
     );
   }
@@ -380,21 +385,24 @@ class ModernInstructionDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: AppColors.textWhite),
-          onPressed: () => Navigator.pop(context),
-        ),
+        // leading: IconButton(
+        //   icon: Icon(Icons.arrow_back_ios_new_rounded,
+        //       color: isDark ? Colors.white : Colors.black),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
         centerTitle: true,
         title: Text(
           "Instruction Detail",
           style: GoogleFonts.outfit(
-            color: AppColors.textWhite,
+            color: isDark ? Colors.white : Colors.black,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -404,16 +412,16 @@ class ModernInstructionDetailPage extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         physics: const BouncingScrollPhysics(),
         children: [
-          _buildHeroSection(),
+          _buildHeroSection(isDark),
           const SizedBox(height: 32),
-          _buildContentCard(context),
+          _buildContentCard(context, isDark),
           const SizedBox(height: 40),
         ],
       ),
     );
   }
 
-  Widget _buildHeroSection() {
+  Widget _buildHeroSection(bool isDark) {
     return Center(
       child: Column(
         children: [
@@ -434,7 +442,7 @@ class ModernInstructionDetailPage extends StatelessWidget {
           Text(
             item.title,
             style: GoogleFonts.outfit(
-              color: AppColors.textWhite,
+              color: isDark ? Colors.white : Colors.black,
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
@@ -462,18 +470,14 @@ class ModernInstructionDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildContentCard(BuildContext context) {
-    return Container(
+  Widget _buildContentCard(BuildContext context, bool isDark) {
+    return GlassContainer(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.cardSurface,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: AppColors.border, width: 1),
-      ),
+      borderRadius: 32,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionTitle("Tactical Diagram"),
+          _buildSectionTitle("Tactical Diagram", isDark),
           const SizedBox(height: 16),
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
@@ -484,19 +488,20 @@ class ModernInstructionDetailPage extends StatelessWidget {
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    color: AppColors.surface,
+                    color: isDark ? Colors.white10 : Colors.black12,
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.image_not_supported_rounded,
-                              color: AppColors.textDim.withOpacity(0.3),
+                              color: isDark ? Colors.white38 : Colors.black26,
                               size: 32),
                           const SizedBox(height: 8),
                           Text(
                             "Diagram not available",
                             style: GoogleFonts.outfit(
-                                color: AppColors.textDim, fontSize: 12),
+                                color: isDark ? Colors.white38 : Colors.black45,
+                                fontSize: 12),
                           ),
                         ],
                       ),
@@ -507,12 +512,12 @@ class ModernInstructionDetailPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 32),
-          _buildSectionTitle("Description"),
+          _buildSectionTitle("Description", isDark),
           const SizedBox(height: 12),
           Text(
             item.description.trim(),
             style: GoogleFonts.outfit(
-              color: AppColors.textDim,
+              color: isDark ? Colors.white70 : Colors.black87,
               fontSize: 15,
               height: 1.6,
             ),
@@ -533,7 +538,7 @@ class ModernInstructionDetailPage extends StatelessWidget {
                 ),
               ),
               child: Text(
-                "Got it",
+                "Tushundim",
                 style: GoogleFonts.outfit(
                     fontWeight: FontWeight.bold, fontSize: 16),
               ),
@@ -544,11 +549,11 @@ class ModernInstructionDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, bool isDark) {
     return Text(
       title,
       style: GoogleFonts.outfit(
-        color: AppColors.textWhite,
+        color: isDark ? Colors.white : Colors.black,
         fontSize: 18,
         fontWeight: FontWeight.bold,
       ),

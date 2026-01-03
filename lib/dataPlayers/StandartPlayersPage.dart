@@ -1,6 +1,9 @@
-import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:efinfo_beta/widgets/pes_player_card_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../services/pes_service.dart';
 import '../models/pes_models.dart';
 import '../widgets/error_display_widget.dart';
@@ -175,10 +178,13 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
   void _showFilterModal() {
     bool isCategoryView = widget.initialUrl != null;
 
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isDark = themeProvider.isDarkMode;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.cardSurface,
+      backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -207,10 +213,10 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
+                  Text(
                     "Search Conditions",
-                    style: TextStyle(
-                        color: Colors.white,
+                    style: GoogleFonts.outfit(
+                        color: isDark ? Colors.white : Colors.black,
                         fontSize: 18,
                         fontWeight: FontWeight.bold),
                   ),
@@ -220,9 +226,11 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                   if (!isCategoryView)
                     Row(
                       children: [
-                        const Text(
+                        Text(
                           "Filter: ",
-                          style: TextStyle(color: Colors.white70, fontSize: 16),
+                          style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black,
+                              fontSize: 16),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -234,10 +242,13 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                             ),
                             child: DropdownButton<String>(
                               value: _selectedPlayerType,
-                              dropdownColor: AppColors.cardSurface,
+                              dropdownColor: isDark
+                                  ? const Color(0xFF1C1C1E)
+                                  : Colors.white,
                               isExpanded: true,
                               underline: const SizedBox(),
-                              style: const TextStyle(color: Colors.white),
+                              style: GoogleFonts.outfit(
+                                  color: isDark ? Colors.white : Colors.black),
                               items: const [
                                 DropdownMenuItem(
                                   value: "Standard Players",
@@ -269,9 +280,11 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                   // Or if user WANTS to see it? The request said: "Featured Player filter ko'rinmayapti".
                   // This means it was hidden or empty.
                   if (!isCategoryView && _featuredOptions.isNotEmpty) ...[
-                    const Text(
+                    Text(
                       "Featured Players:",
-                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                      style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                          fontSize: 16),
                     ),
                     const SizedBox(height: 8),
                     Container(
@@ -282,10 +295,12 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                       ),
                       child: DropdownButton<String?>(
                         value: _selectedFeaturedId,
-                        dropdownColor: AppColors.cardSurface,
+                        dropdownColor:
+                            isDark ? const Color(0xFF1C1C1E) : Colors.white,
                         isExpanded: true,
                         underline: const SizedBox(),
-                        style: const TextStyle(color: Colors.white),
+                        style: GoogleFonts.outfit(
+                            color: isDark ? Colors.white : Colors.black),
                         hint: const Text("None",
                             style: TextStyle(color: Colors.white60)),
                         items: [
@@ -318,52 +333,26 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                   TextField(
                     decoration: InputDecoration(
                       labelText: "Player Name",
-                      labelStyle: const TextStyle(color: Colors.white70),
+                      labelStyle: GoogleFonts.outfit(
+                          color: isDark ? Colors.white70 : Colors.black54),
                       hintText: "E.g. Messi",
-                      hintStyle: const TextStyle(color: Colors.white30),
+                      hintStyle: GoogleFonts.outfit(
+                          color: isDark ? Colors.white30 : Colors.black26),
                       filled: true,
-                      fillColor: Colors.black12,
+                      fillColor: isDark ? Colors.black12 : Colors.grey[200],
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12)),
                       prefixIcon:
-                          const Icon(Icons.search, color: Colors.white70),
+                          const Icon(Icons.search, color: Color(0xFF06DF5D)),
                     ),
-                    style: const TextStyle(color: Colors.white),
+                    style: GoogleFonts.outfit(
+                        color: isDark ? Colors.white : Colors.black),
                     onChanged: (val) {
                       _nameFilter = val;
                     },
                     controller: TextEditingController(text: _nameFilter),
                   ),
                   const SizedBox(height: 16),
-
-                  // Position Filter - Hide if in category view
-                  if (!isCategoryView) ...[
-                    const Text("Position",
-                        style: TextStyle(color: Colors.white70, fontSize: 14)),
-                    const SizedBox(height: 8),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _buildPositionChip("All", "", setModalState),
-                          _buildPositionChip("CF", "cf", setModalState),
-                          _buildPositionChip("SS", "ss", setModalState),
-                          _buildPositionChip("LWF", "lwf", setModalState),
-                          _buildPositionChip("RWF", "rwf", setModalState),
-                          _buildPositionChip("AMF", "amf", setModalState),
-                          _buildPositionChip("CMF", "cmf", setModalState),
-                          _buildPositionChip("DMF", "dmf", setModalState),
-                          _buildPositionChip("LMF", "lmf", setModalState),
-                          _buildPositionChip("RMF", "rmf", setModalState),
-                          _buildPositionChip("LB", "lb", setModalState),
-                          _buildPositionChip("RB", "rb", setModalState),
-                          _buildPositionChip("CB", "cb", setModalState),
-                          _buildPositionChip("GK", "gk", setModalState),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
 
                   // Sort & Order
                   Row(
@@ -372,9 +361,12 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text("Sort",
-                                style: TextStyle(
-                                    color: Colors.white70, fontSize: 14)),
+                            Text("Sort",
+                                style: GoogleFonts.outfit(
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black54,
+                                    fontSize: 14)),
                             const SizedBox(height: 8),
                             Container(
                               padding:
@@ -385,10 +377,14 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                               ),
                               child: DropdownButton<String>(
                                 value: _sort,
-                                dropdownColor: AppColors.cardSurface,
+                                dropdownColor: isDark
+                                    ? const Color(0xFF1C1C1E)
+                                    : Colors.white,
                                 isExpanded: true,
                                 underline: const SizedBox(),
-                                style: const TextStyle(color: Colors.white),
+                                style: GoogleFonts.outfit(
+                                    color:
+                                        isDark ? Colors.white : Colors.black),
                                 items: const [
                                   DropdownMenuItem(
                                       value: "overall_at_max_level",
@@ -419,9 +415,12 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text("Order",
-                                style: TextStyle(
-                                    color: Colors.white70, fontSize: 14)),
+                            Text("Order",
+                                style: GoogleFonts.outfit(
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black54,
+                                    fontSize: 14)),
                             const SizedBox(height: 8),
                             Container(
                               padding:
@@ -432,10 +431,14 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                               ),
                               child: DropdownButton<String>(
                                 value: _order,
-                                dropdownColor: AppColors.cardSurface,
+                                dropdownColor: isDark
+                                    ? const Color(0xFF1C1C1E)
+                                    : Colors.white,
                                 isExpanded: true,
                                 underline: const SizedBox(),
-                                style: const TextStyle(color: Colors.white),
+                                style: GoogleFonts.outfit(
+                                    color:
+                                        isDark ? Colors.white : Colors.black),
                                 items: const [
                                   DropdownMenuItem(
                                       value: "d", child: Text("Descending")),
@@ -474,10 +477,13 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                             });
                           },
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            side: const BorderSide(color: Colors.white30),
+                            foregroundColor:
+                                isDark ? Colors.white : Colors.black,
+                            side: BorderSide(
+                                color:
+                                    isDark ? Colors.white30 : Colors.black26),
                           ),
-                          child: const Text("Clear All"),
+                          child: Text("Clear All", style: GoogleFonts.outfit()),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -488,10 +494,12 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                             _performSearch();
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.accent,
+                            backgroundColor: const Color(0xFF06DF5D),
                             foregroundColor: Colors.white,
                           ),
-                          child: const Text("Search"),
+                          child: Text("Search",
+                              style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],
@@ -550,7 +558,7 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
   }
 
   Widget _buildPositionChip(
-      String label, String value, StateSetter setStateFunc) {
+      String label, String value, StateSetter setStateFunc, bool isDark) {
     bool isSelected = _selectedPosition == value;
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
@@ -562,36 +570,43 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
             _selectedPosition = selected ? value : "";
           });
         },
-        backgroundColor: Colors.black12,
-        selectedColor: AppColors.accent.withOpacity(0.3),
-        checkmarkColor: AppColors.accent,
-        labelStyle:
-            TextStyle(color: isSelected ? AppColors.accent : Colors.white70),
+        backgroundColor: isDark ? Colors.black12 : Colors.grey[200],
+        selectedColor: const Color(0xFF06DF5D).withOpacity(0.3),
+        checkmarkColor: const Color(0xFF06DF5D),
+        labelStyle: TextStyle(
+            color: isSelected
+                ? const Color(0xFF06DF5D)
+                : (isDark ? Colors.white70 : Colors.black54)),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
             side: BorderSide(
-                color: isSelected ? AppColors.accent : Colors.white10)),
+                color: isSelected
+                    ? const Color(0xFF06DF5D)
+                    : (isDark ? Colors.white10 : Colors.black12))),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             pinned: true,
-            backgroundColor: AppColors.background,
+            backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
             surfaceTintColor: Colors.transparent,
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   widget.title,
-                  style: const TextStyle(
-                    color: AppColors.textWhite,
+                  style: GoogleFonts.outfit(
+                    color: isDark ? Colors.white : Colors.black,
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
                   ),
@@ -599,8 +614,8 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                 if (!_isLoading)
                   Text(
                     "Bu sahifada ${_players.length} ta o'yinchi topildi",
-                    style: const TextStyle(
-                      color: AppColors.textDim,
+                    style: GoogleFonts.outfit(
+                      color: isDark ? Colors.white54 : Colors.black54,
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
                     ),
@@ -610,13 +625,13 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
             actions: [
               IconButton(
                 onPressed: _showFilterModal,
-                icon: const Icon(Icons.tune_rounded, color: AppColors.accent),
+                icon: const Icon(Icons.tune_rounded, color: Color(0xFF06DF5D)),
                 tooltip: 'Filter',
               ),
               IconButton(
                 onPressed: _refresh,
-                icon: const Icon(Icons.refresh_rounded,
-                    color: AppColors.textGrey),
+                icon: Icon(Icons.refresh_rounded,
+                    color: isDark ? Colors.white54 : Colors.grey),
                 tooltip: 'Refresh',
               ),
               const SizedBox(width: 8),
@@ -630,7 +645,8 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                 totalPages: _totalPages,
                 onNext: () => _goToPage(_currentPage + 1),
                 onPrev: () => _goToPage(_currentPage - 1),
-                isLoading: _isLoading),
+                isLoading: _isLoading,
+                themeProvider: themeProvider),
             pinned: true,
           ),
 
@@ -659,7 +675,7 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                         ),
                         delegate: SliverChildBuilderDelegate((context, index) {
                           final player = _players[index];
-                          return _buildModernPlayerCard(player);
+                          return _buildModernPlayerCard(player, isDark);
                         }, childCount: _players.length),
                       ),
                     ),
@@ -678,14 +694,16 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                   FloatingActionButton.small(
                     heroTag: "prev",
                     onPressed: () => _goToPage(_currentPage - 1),
-                    backgroundColor: AppColors.cardSurface,
-                    child: const Icon(Icons.chevron_left, color: Colors.white),
+                    backgroundColor:
+                        isDark ? const Color(0xFF1C1C1E) : Colors.white,
+                    child: Icon(Icons.chevron_left,
+                        color: isDark ? Colors.white : Colors.black),
                   ),
                 const SizedBox(width: 10),
                 FloatingActionButton.small(
                   heroTag: "next",
                   onPressed: () => _goToPage(_currentPage + 1),
-                  backgroundColor: AppColors.accent,
+                  backgroundColor: const Color(0xFF06DF5D),
                   child: const Icon(Icons.chevron_right, color: Colors.white),
                 ),
               ],
@@ -694,7 +712,7 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
     );
   }
 
-  Widget _buildModernPlayerCard(PesPlayer player) {
+  Widget _buildModernPlayerCard(PesPlayer player, bool isDark) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -704,66 +722,52 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
           ),
         );
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.cardSurface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+      child: GlassContainer(
+        borderRadius: 20,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  PesPlayerCardWidget(player: player),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    player.name,
+                    style: GoogleFonts.outfit(
+                      color: isDark ? Colors.white : Colors.black,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    player.club,
+                    style: GoogleFonts.outfit(
+                      color: isDark ? Colors.white54 : Colors.black54,
+                      fontSize: 10,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    PesPlayerCardWidget(player: player),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: const BoxDecoration(
-                  color: AppColors.surface,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      player.name,
-                      style: const TextStyle(
-                        color: AppColors.textWhite,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      player.club,
-                      style: const TextStyle(
-                        color: AppColors.textDim,
-                        fontSize: 10,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -776,54 +780,62 @@ class _PaginationHeaderDelegate extends SliverPersistentHeaderDelegate {
   final VoidCallback onNext;
   final VoidCallback onPrev;
   final bool isLoading;
+  final ThemeProvider themeProvider;
 
   _PaginationHeaderDelegate(
       {required this.page,
       required this.totalPages,
       required this.onNext,
       required this.onPrev,
-      required this.isLoading});
+      required this.isLoading,
+      required this.themeProvider});
 
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final isDark = themeProvider.isDarkMode;
     return SizedBox.expand(
-      child: Container(
-        color: AppColors.background.withOpacity(0.95),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Previous
-            TextButton.icon(
-              onPressed: (page > 1 && !isLoading) ? onPrev : null,
-              icon: const Icon(Icons.chevron_left),
-              label: const Text("Oldingi"),
-              style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  disabledForegroundColor: Colors.white24),
-            ),
+      child: GlassContainer(
+        borderRadius: 0,
+        blur: 10,
+        opacity: isDark ? 0.05 : 0.1,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Previous
+              TextButton.icon(
+                onPressed: (page > 1 && !isLoading) ? onPrev : null,
+                icon: const Icon(Icons.chevron_left),
+                label: Text("Oldingi", style: GoogleFonts.outfit()),
+                style: TextButton.styleFrom(
+                    foregroundColor: isDark ? Colors.white : Colors.black,
+                    disabledForegroundColor:
+                        isDark ? Colors.white24 : Colors.black26),
+              ),
 
-            // Info
-            Text(
-              "Sahifa: $page",
-              style: const TextStyle(
-                  color: AppColors.accent, fontWeight: FontWeight.bold),
-            ),
+              // Info
+              Text(
+                "Sahifa: $page",
+                style: GoogleFonts.outfit(
+                    color: const Color(0xFF06DF5D),
+                    fontWeight: FontWeight.bold),
+              ),
 
-            // Next
-            TextButton.icon(
-              onPressed: (!isLoading && page < totalPages)
-                  ? onNext
-                  : null, // Assuming standard max
-              icon: const Icon(Icons.chevron_right),
-              label: const Text("Keyingi"),
-              style: TextButton.styleFrom(
-                  iconAlignment: IconAlignment.end,
-                  foregroundColor: Colors.white,
-                  disabledForegroundColor: Colors.white24),
-            ),
-          ],
+              // Next
+              TextButton.icon(
+                onPressed: (!isLoading && page < totalPages) ? onNext : null,
+                icon: const Icon(Icons.chevron_right),
+                label: Text("Keyingi", style: GoogleFonts.outfit()),
+                style: TextButton.styleFrom(
+                    iconAlignment: IconAlignment.end,
+                    foregroundColor: isDark ? Colors.white : Colors.black,
+                    disabledForegroundColor:
+                        isDark ? Colors.white24 : Colors.black26),
+              ),
+            ],
+          ),
         ),
       ),
     );

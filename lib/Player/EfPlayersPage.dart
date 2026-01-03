@@ -208,9 +208,12 @@
 // }
 import 'dart:convert';
 import 'package:efinfo_beta/Player/EfPlayerDetailsPage.dart';
-import 'package:efinfo_beta/theme/app_colors.dart';
+import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class EfPlayersPage extends StatefulWidget {
   const EfPlayersPage({super.key});
@@ -267,12 +270,22 @@ class _EfPlayersPageState extends State<EfPlayersPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("eFootBox", style: TextStyle(color: Colors.white)),
-        backgroundColor: AppColors.surface,
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text(
+          "eFootBox",
+          style: GoogleFonts.outfit(
+            color: isDark ? Colors.white : Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
         actions: [
           IconButton(onPressed: () {}, icon: const Icon(Icons.list)),
         ],
@@ -281,30 +294,36 @@ class _EfPlayersPageState extends State<EfPlayersPage> {
         children: [
           // Filter bar placeholder
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: "Search",
-                hintStyle: const TextStyle(color: Colors.white54),
-                prefixIcon: const Icon(Icons.search, color: Colors.white54),
-                filled: true,
-                fillColor: AppColors.surface,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none),
+            padding: const EdgeInsets.all(12.0),
+            child: GlassContainer(
+              padding: EdgeInsets.zero,
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: "Search",
+                  hintStyle: GoogleFonts.outfit(
+                      color: isDark ? Colors.white38 : Colors.black38),
+                  prefixIcon: Icon(Icons.search,
+                      color: isDark ? Colors.white38 : Colors.black38),
+                  filled: false,
+                  border: InputBorder.none,
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                ),
+                style: GoogleFonts.outfit(
+                    color: isDark ? Colors.white : Colors.black),
               ),
-              style: const TextStyle(color: Colors.white),
             ),
           ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                _buildFilterChip("Filter"),
-                _buildFilterChip("Sort"),
-                _buildFilterChip("DT"),
-                _buildFilterChip("2025 DP7.0", textColor: Colors.blueAccent),
+                _buildFilterChip("Filter", isDark),
+                _buildFilterChip("Sort", isDark),
+                _buildFilterChip("DT", isDark),
+                _buildFilterChip("2025 DP7.0", isDark,
+                    textColor: const Color(0xFF06DF5D)),
               ],
             ),
           ),
@@ -312,14 +331,13 @@ class _EfPlayersPageState extends State<EfPlayersPage> {
           Expanded(
             child: isLoading
                 ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.accent))
+                    child: CircularProgressIndicator(color: Color(0xFF06DF5D)))
                 : GridView.builder(
                     padding: const EdgeInsets.all(8),
-                    // Agar 'players' listi bo'sh bo'lsa, xabar ko'rsatish
                     itemCount: players.isEmpty ? 0 : players.length,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3, // 3 columns like screenshot
+                      crossAxisCount: 3,
                       childAspectRatio: 0.65,
                       mainAxisSpacing: 10,
                       crossAxisSpacing: 10,
@@ -335,19 +353,20 @@ class _EfPlayersPageState extends State<EfPlayersPage> {
     );
   }
 
-  Widget _buildFilterChip(String label, {Color? textColor}) {
-    // ... avvalgi kod bilan bir xil
+  Widget _buildFilterChip(String label, bool isDark, {Color? textColor}) {
     return Container(
       margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
+      child: GlassContainer(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        borderRadius: 20,
+        child: Text(
+          label,
+          style: GoogleFonts.outfit(
+              color: textColor ?? (isDark ? Colors.white70 : Colors.black87),
+              fontWeight: FontWeight.bold,
+              fontSize: 12),
+        ),
       ),
-      child: Text(label,
-          style: TextStyle(
-              color: textColor ?? AppColors.accent,
-              fontWeight: FontWeight.bold)),
     );
   }
 

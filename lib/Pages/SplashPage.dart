@@ -29,7 +29,7 @@ class SplashPage extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             const Text(
-              ' v1.0.8',
+              ' v1.0.9',
               style: TextStyle(fontSize: 20, color: mainColor),
             ),
             const Spacer(),
