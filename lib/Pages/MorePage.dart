@@ -1,3 +1,4 @@
+import 'package:efinfo_beta/Pages/PlayerModelPage.dart';
 import 'package:efinfo_beta/Pages/FormationSuggesterPage.dart';
 import 'package:efinfo_beta/Others/positionskillchecker.dart';
 import 'package:efinfo_beta/Others/teambuilder.dart';
@@ -26,16 +27,6 @@ class _MorePageState extends State<MorePage> {
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> moreData = [
       {
-        'title': 'Pack Simulator',
-        'subtitle': 'Omadingizni sinab ko\'ring',
-        'icon': "assets/images/elements.png",
-        'accent': Colors.amber,
-        'badge': true,
-        'isColoredIcon': false,
-        'onTap': () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const PackSimulatorPage())),
-      },
-      {
         'title': 'Taktik Sxema tavsiyalar',
         'subtitle': 'Optimal jamoangizni quring',
         'icon': "assets/images/team_playstyle.png",
@@ -44,6 +35,26 @@ class _MorePageState extends State<MorePage> {
         'isColoredIcon': false,
         'onTap': () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const FormationSuggesterPage())),
+      },
+      {
+        'title': 'Player Model',
+        'subtitle': 'Hidden physique stats',
+        'icon': "assets/images/players.png",
+        'accent': Colors.tealAccent,
+        'badge': true,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const PlayerModelPage())),
+      },
+      {
+        'title': 'Pack Simulator',
+        'subtitle': 'Omadingizni sinab ko\'ring',
+        'icon': "assets/images/elements.png",
+        'accent': Colors.amber,
+        'badge': true,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const PackSimulatorPage())),
       },
       {
         'title': 'Skill Match Calculator',
@@ -107,7 +118,7 @@ class _MorePageState extends State<MorePage> {
         'isColoredIcon': false,
         'onTap': () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const PackTricksPage())),
-      }
+      },
     ];
 
     return Scaffold(

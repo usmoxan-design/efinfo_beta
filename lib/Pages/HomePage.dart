@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage>
                 labelStyle: GoogleFonts.outfit(
                     fontWeight: FontWeight.bold, fontSize: 16),
                 tabs: const [
-                  Tab(text: "Futbolchilar"),
+                  Tab(text: "Futbolchi"),
                   Tab(text: "Menejer"),
                 ],
               ),
