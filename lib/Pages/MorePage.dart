@@ -38,7 +38,7 @@ class _MorePageState extends State<MorePage> {
       },
       {
         'title': 'Player Model',
-        'subtitle': 'Hidden physique stats',
+        'subtitle': 'eFHUBdagi player model tushuntirish',
         'icon': "assets/images/players.png",
         'accent': Colors.tealAccent,
         'badge': true,

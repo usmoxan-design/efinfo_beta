@@ -147,10 +147,10 @@ class PlayerModelPage extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _buildGaugeItem(
-          "Torso Collision (Tana to'qnashuvi)",
+          "Torso Collision (Gavdasi (ko‘krak–bel qismi)",
           54.8,
           100,
-          "Tana (torso) bilan to'qnashuv kuchi va maydoni. Physical duelda (shoulder charge) va to'pni tanasi bilan himoya qilishda katta ta'sir ko'rsatadi.",
+          "Raqib bilan to‘qnashuvdagi ta’sir zonasi va kuchi Jismoniy duelda (yelkama-yelka) va to'pni tanasi bilan himoya qilishda katta ta'sir ko'rsatadi.",
           isDark,
         ),
         const SizedBox(height: 16),
