@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "802735861500",
+    "project_id": "efinfo-hub",
+    "storage_bucket": "efinfo-hub.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:802735861500:android:1c999bffdd2b19d991b179",
+        "android_client_info": {
+          "package_name": "com.usmoxan.efinfo_beta"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwJvoFQWRcDVXVzcPGYc2_FbBEk-fpxSU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

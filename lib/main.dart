@@ -1,10 +1,28 @@
 import 'package:efinfo_beta/theme/theme_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:efinfo_beta/Pages/SplashPage.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Firebase initialization
+  try {
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+          apiKey: "AIzaSyDooKufViiKuIw5Q_8g8iK0qWYjuzR_ZWM",
+          authDomain: "efinfo-hub.firebaseapp.com",
+          projectId: "efinfo-hub",
+          storageBucket: "efinfo-hub.firebasestorage.app",
+          messagingSenderId: "802735861500",
+          appId: "1:802735861500:web:8785b5f4d6f1797691b179"),
+    );
+  } catch (e) {
+    debugPrint("Firebase initialization error: $e");
+  }
+
   runApp(
     MultiProvider(
       providers: [

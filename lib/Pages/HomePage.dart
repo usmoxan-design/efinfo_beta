@@ -14,6 +14,8 @@ import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:efinfo_beta/Player/ai_playing_styles_page.dart';
+import 'package:efinfo_beta/manager/managers_list_page.dart';
 import '../Player/playerStat.dart';
 
 class HomePage extends StatefulWidget {
@@ -148,6 +150,16 @@ class _HomePageState extends State<HomePage>
         'onTap': () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const SkillRecommendationPage())),
       },
+      {
+        'title': "AI Playing Styles",
+        'subtitle': "AI o'yin uslublari",
+        'icon': "assets/images/playing_styles.png",
+        'accent': AppColors.accentBlue,
+        'badge': true,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const AiPlayingStylesPage())),
+      },
     ];
 
     return ListView(
@@ -213,6 +225,16 @@ class _HomePageState extends State<HomePage>
             context,
             MaterialPageRoute(
                 builder: (_) => const ModernInstructionsListPage())),
+      },
+      {
+        'title': 'Managers',
+        'subtitle': 'Menejerlar ro\'yxati',
+        'icon': "assets/images/team_playstyle.png",
+        'accent': AppColors.accentOrange,
+        'badge': true,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const ManagersListPage())),
       },
     ];
 

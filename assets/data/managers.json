@@ -1,0 +1,19 @@
+[
+    {
+        "name": "Pep Guardiola",
+        "fullName": "Pep Guardiola",
+        "team": "Free",
+        "nationality": "Spain",
+        "type": "Default",
+        "age": 59,
+        "coachingAffinity": "None",
+        "teamPlaystyle": {
+            "Possession Game": 88,
+            "Quick Counter": 74,
+            "Long Ball Counter": 37,
+            "Out Wide": 68,
+            "Long Ball": 32
+        },
+        "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Image_created_with_a_mobile_phone.png/250px-Image_created_with_a_mobile_phone.png"
+    }
+]

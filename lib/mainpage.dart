@@ -11,6 +11,8 @@ import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:efinfo_beta/chat/chat_page.dart';
+
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
@@ -23,6 +25,7 @@ class _MainPageState extends State<MainPage> {
 
   final List<Widget> _pages = const [
     HomePage(),
+    ChatPage(),
     TournamentListPage(),
     MorePage(),
   ];
@@ -57,7 +60,7 @@ class _MainPageState extends State<MainPage> {
             ),
             const SizedBox(width: 15),
             Text(
-              "Version 1.0.9",
+              "Version 1.0.10",
               style: GoogleFonts.outfit(
                 fontSize: 14,
                 color: isDark ? AppColors.textDim : Colors.grey[600],
@@ -89,7 +92,7 @@ class _MainPageState extends State<MainPage> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildTelegramBanner(),
+          if (_currentIndex != 1) _buildTelegramBanner(),
           _buildBottomNavBar(themeProvider),
         ],
       ),
@@ -204,8 +207,9 @@ class _MainPageState extends State<MainPage> {
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: [
         _buildNavDestination(IonIcons.apps, "Hub", 0, isDark),
-        _buildNavDestination(IonIcons.trophy, 'Turnirchi', 1, isDark),
-        _buildNavDestination(EvaIcons.grid, "Ko'proq", 2, isDark),
+        _buildNavDestination(IonIcons.chatbox_ellipses, "Chat", 1, isDark),
+        _buildNavDestination(IonIcons.trophy, 'Turnirchi', 2, isDark),
+        _buildNavDestination(EvaIcons.grid, "Ko'proq", 3, isDark),
       ],
     );
   }
