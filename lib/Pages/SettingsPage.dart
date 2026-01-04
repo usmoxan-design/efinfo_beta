@@ -68,7 +68,7 @@ class SettingsPage extends StatelessWidget {
                 context,
                 icon: IonIcons.information_circle,
                 title: "Versiya",
-                subtitle: "1.0.9",
+                subtitle: "1.0.10",
                 trailing: const Icon(Icons.chevron_right, color: Colors.grey),
               ),
               const SizedBox(height: 15),
