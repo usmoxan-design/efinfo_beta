@@ -9,6 +9,11 @@ import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:share_plus/share_plus.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TournamentListPage extends StatefulWidget {
   const TournamentListPage({super.key});
@@ -25,6 +30,10 @@ class _TournamentListPageState extends State<TournamentListPage> {
   void initState() {
     super.initState();
     _loadTournaments();
+    // Webda LateInitializationError oldini olish uchun plaginni oldindan uyg'otamiz
+    try {
+      FilePicker.platform;
+    } catch (_) {}
   }
 
   // --- Saqlash/Yuklash Mantig'i ---
@@ -136,6 +145,157 @@ class _TournamentListPageState extends State<TournamentListPage> {
     _showSnackbar("Turnir o'chirildi: ${tournament.name}", Colors.red);
   }
 
+  Future<void> _exportTournaments() async {
+    if (_tournaments.isEmpty) {
+      _showSnackbar(
+          "Eksport qilish uchun turnirlar mavjud emas", Colors.orange);
+      return;
+    }
+
+    try {
+      final List<Map<String, dynamic>> jsonList =
+          _tournaments.map((t) => t.toJson()).toList();
+      final String jsonString = jsonEncode(jsonList);
+
+      // Web platformasida download qilish eng ishonchli yo'li (Permission denied xatosini oldini oladi)
+      if (kIsWeb) {
+        final Uri uri = Uri.parse(
+            "data:application/json;charset=utf-8,${Uri.encodeComponent(jsonString)}");
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri);
+          _showSnackbar("Turnir nusxasi yuklab olindi", Colors.green);
+          return;
+        }
+      }
+
+      final Uint8List bytes = Uint8List.fromList(utf8.encode(jsonString));
+      final xFile = XFile.fromData(
+        bytes,
+        mimeType: 'application/json',
+        name: 'efinfo_tournaments_backup.json',
+      );
+
+      await Share.shareXFiles(
+        [xFile],
+        text: "eFootball Info Hub - Turnir ma'lumotlari nusxasi",
+      );
+    } catch (e) {
+      _showSnackbar("Eksport qilishda xatolik: $e", Colors.red);
+    }
+  }
+
+  Future<void> _importTournaments() async {
+    try {
+      // Plaginni xavfsiz chaqirish
+      FilePickerResult? result;
+      try {
+        result = await FilePicker.platform.pickFiles(
+          type: kIsWeb ? FileType.any : FileType.custom,
+          allowedExtensions: kIsWeb ? null : ['json'],
+          withData: true,
+        );
+      } catch (e) {
+        // LateInitializationError yoki boshqa plagin xatolarini ushlash
+        debugPrint("FilePicker error: $e");
+        _showSnackbar(
+            "Plagin yuklanishda xato. Sahifani qayta yangilang (Ctrl+F5)",
+            Colors.red);
+        return;
+      }
+
+      if (result != null && result.files.isNotEmpty) {
+        final platformFile = result.files.first;
+
+        // Webda fayl kengaytmasini qo'lda tekshiramiz
+        if (kIsWeb &&
+            platformFile.name.split('.').last.toLowerCase() != 'json') {
+          _showSnackbar("Faqat .json fayllarini tanlang", Colors.orange);
+          return;
+        }
+
+        if (platformFile.bytes == null) {
+          _showSnackbar("Faylni o'qib bo'lmadi", Colors.red);
+          return;
+        }
+
+        final String content = utf8.decode(platformFile.bytes!);
+        final List<dynamic> jsonList = jsonDecode(content);
+
+        final List<TournamentModel> importedTournaments = jsonList
+            .map((json) =>
+                TournamentModel.fromJson(json as Map<String, dynamic>))
+            .toList();
+
+        if (importedTournaments.isEmpty) {
+          _showSnackbar("Faylda turnirlar topilmadi", Colors.orange);
+          return;
+        }
+
+        // Tasdiqlash dialogni ko'rsatamiz
+        if (!mounted) return;
+        bool? confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            final isDark =
+                Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
+            return AlertDialog(
+              backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24)),
+              title: Text(
+                "Importni tasdiqlang",
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+              content: Text(
+                "${importedTournaments.length} ta turnir aniqlandi. Ularni joriy ro'yxatga qo'shishni xohlaysizmi?\n\n(Bir xil ID dagi turnirlar yangilanadi)",
+                style: GoogleFonts.outfit(
+                  color: isDark ? Colors.white70 : Colors.black87,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text("Bekor qilish",
+                      style: GoogleFonts.outfit(color: Colors.grey)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text("Import",
+                      style: GoogleFonts.outfit(
+                          color: const Color(0xFF06DF5D),
+                          fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
+        );
+
+        if (confirm == true) {
+          setState(() {
+            for (var imported in importedTournaments) {
+              int index = _tournaments.indexWhere((t) => t.id == imported.id);
+              if (index != -1) {
+                _tournaments[index] = imported;
+              } else {
+                _tournaments.add(imported);
+              }
+            }
+            _saveTournaments();
+          });
+          _showSnackbar(
+              "${importedTournaments.length} ta turnir import qilindi",
+              Colors.green);
+        }
+      }
+    } catch (e) {
+      debugPrint("Import error: $e");
+      _showSnackbar("Import qilishda xatolik yuz berdi", Colors.red);
+    }
+  }
+
   void _showSnackbar(String message, Color color) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -161,13 +321,81 @@ class _TournamentListPageState extends State<TournamentListPage> {
           : ListView.builder(
               padding: const EdgeInsets.only(
                   left: 12.0, right: 12.0, top: 12.0, bottom: 180.0),
-              itemCount: _tournaments.length + 1,
+              itemCount: _tournaments.length + 2,
               itemBuilder: (context, index) {
-                if (index == 0) return _buildAddTournamentCard(isDark);
-                final tournament = _tournaments[index - 1];
+                if (index == 0) return _buildImportExportButtons(isDark);
+                if (index == 1) return _buildAddTournamentCard(isDark);
+                final tournament = _tournaments[index - 2];
                 return _buildTournamentTile(tournament, isDark);
               },
             ),
+    );
+  }
+
+  Widget _buildImportExportButtons(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _exportTournaments,
+                borderRadius: BorderRadius.circular(16),
+                child: GlassContainer(
+                  borderRadius: 16,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(BoxIcons.bx_export,
+                          color: Colors.blueAccent, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Eksport",
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _importTournaments,
+                borderRadius: BorderRadius.circular(16),
+                child: GlassContainer(
+                  borderRadius: 16,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(BoxIcons.bx_import,
+                          color: Color(0xFF06DF5D), size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Import",
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
