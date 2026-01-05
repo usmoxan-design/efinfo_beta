@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -21,19 +22,47 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final ChatService _chatService = ChatService();
   final TextEditingController _messageController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
+  final ItemScrollController _itemScrollController = ItemScrollController();
+  final ItemPositionsListener _itemPositionsListener =
+      ItemPositionsListener.create();
 
   String? _myId;
   String? _myName;
   bool _isLoading = true;
   bool _isAdmin = false;
-  bool _isChatPaused = false;
+  final bool _isChatPaused = false;
   final Set<String> _readMessages = {};
+  ChatMessage? _replyMessage;
+  String? _highlightedMessageId;
+  bool _showScrollDownButton = false;
 
   @override
   void initState() {
     super.initState();
     _loadUserInfo();
+    _itemPositionsListener.itemPositions.addListener(_scrollListener);
+  }
+
+  void _scrollListener() {
+    final positions = _itemPositionsListener.itemPositions.value;
+    if (positions.isNotEmpty) {
+      final minIndex = positions
+          .where((ItemPosition position) => position.itemTrailingEdge > 0)
+          .reduce((ItemPosition min, ItemPosition position) =>
+              position.index < min.index ? position : min)
+          .index;
+
+      final show = minIndex > 3;
+      if (show != _showScrollDownButton) {
+        setState(() => _showScrollDownButton = show);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _itemPositionsListener.itemPositions.removeListener(_scrollListener);
+    super.dispose();
   }
 
   Future<void> _loadUserInfo() async {
@@ -63,25 +92,62 @@ class _ChatPageState extends State<ChatPage> {
         return AlertDialog(
           backgroundColor: isDark ? AppColors.surface : Colors.white,
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            "Ismingizni kiriting",
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-          ),
-          content: TextField(
-            controller: nameController,
-            decoration: InputDecoration(
-              hintText: "Ism...",
-              hintStyle: GoogleFonts.outfit(color: Colors.grey),
-              filled: true,
-              fillColor:
-                  isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF06DF5D).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  color: Color(0xFF06DF5D),
+                  size: 32,
+                ),
               ),
-            ),
-            style: GoogleFonts.outfit(),
+              const SizedBox(height: 16),
+              Text(
+                "Chatda ishtirok eting!",
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Xabarlaringiz boshqalarga qaysi ism bilan ko'rinishini istaysiz? Ismingizni kiriting.",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  fontSize: 13,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: nameController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: "Ismingiz yoki Taxallusingiz...",
+                  hintStyle:
+                      GoogleFonts.outfit(color: Colors.grey, fontSize: 14),
+                  filled: true,
+                  fillColor:
+                      isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+                  prefixIcon: const Icon(Icons.person_outline, size: 20),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                style: GoogleFonts.outfit(),
+              ),
+            ],
           ),
           actions: [
             if (_myName != null && _myName!.isNotEmpty)
@@ -92,7 +158,7 @@ class _ChatPageState extends State<ChatPage> {
                   style: GoogleFonts.outfit(color: Colors.grey),
                 ),
               ),
-            TextButton(
+            ElevatedButton(
               onPressed: () async {
                 if (nameController.text.trim().isNotEmpty) {
                   await _chatService.saveUserName(nameController.text.trim());
@@ -102,10 +168,19 @@ class _ChatPageState extends State<ChatPage> {
                   Navigator.pop(context);
                 }
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF06DF5D),
+                foregroundColor: Colors.black,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
               child: Text(
                 "Saqlash",
                 style: GoogleFonts.outfit(
-                  color: const Color(0xFF06DF5D),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -183,12 +258,19 @@ class _ChatPageState extends State<ChatPage> {
     }
 
     final text = _messageController.text.trim();
+    final replyTo = _replyMessage;
     _messageController.clear();
+    setState(() => _replyMessage = null);
 
     try {
-      await _chatService.sendMessage(text, _myId!, _myName!, _isAdmin);
-      _scrollController.animateTo(0,
-          duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+      await _chatService.sendMessage(text, _myId!, _myName!, _isAdmin,
+          replyToId: replyTo?.id,
+          replyToName: replyTo?.senderName,
+          replyToText: replyTo?.text,
+          replyToSenderId: replyTo?.senderId);
+      if (_itemScrollController.isAttached) {
+        _itemScrollController.jumpTo(index: 0);
+      }
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(e.toString())));
@@ -225,12 +307,15 @@ class _ChatPageState extends State<ChatPage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "Ommaviy Chat",
-                        style: GoogleFonts.outfit(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black,
+                      GestureDetector(
+                        onLongPress: _showAdminLoginDialog,
+                        child: Text(
+                          "Ommaviy Chat",
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
                         ),
                       ),
                       StreamBuilder<int>(
@@ -297,25 +382,6 @@ class _ChatPageState extends State<ChatPage> {
                           const Icon(Icons.delete_sweep, color: Colors.orange),
                       tooltip: "Chatni tozalash",
                     ),
-                    GestureDetector(
-                      onLongPress: _showAdminLoginDialog,
-                      child: TextButton.icon(
-                        onPressed: _showNameDialog,
-                        icon: const Icon(
-                          Icons.edit_note,
-                          size: 20,
-                          color: Color(0xFF06DF5D),
-                        ),
-                        label: Text(
-                          "Ismni o'zgartirish",
-                          style: GoogleFonts.outfit(
-                            color: isDark ? Colors.white70 : Colors.black54,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
                 ]),
               ),
@@ -336,6 +402,7 @@ class _ChatPageState extends State<ChatPage> {
                     }
 
                     final messages = snapshot.data!;
+
                     if (messages.isEmpty) {
                       return Center(
                         child: Text(
@@ -346,8 +413,9 @@ class _ChatPageState extends State<ChatPage> {
                       );
                     }
 
-                    return ListView.builder(
-                      controller: _scrollController,
+                    return ScrollablePositionedList.builder(
+                      itemScrollController: _itemScrollController,
+                      itemPositionsListener: _itemPositionsListener,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                       reverse: true,
@@ -365,7 +433,8 @@ class _ChatPageState extends State<ChatPage> {
                           _chatService.markMessageAsRead(message.id, _myId!);
                         }
 
-                        return _buildMessageBubble(message, isMe, isDark);
+                        return _buildMessageBubble(
+                            message, isMe, isDark, messages);
                       },
                     );
                   },
@@ -374,9 +443,25 @@ class _ChatPageState extends State<ChatPage> {
 
               // Input Area
               _buildInputArea(true, isDark),
-              const SizedBox(height: 100), // Bottom nav space
+              const SizedBox(height: 80), // Bottom nav space
             ],
           ),
+          floatingActionButton: _showScrollDownButton
+              ? FloatingActionButton(
+                  mini: true,
+                  onPressed: () {
+                    _itemScrollController.scrollTo(
+                      index: 0,
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeInOut,
+                    );
+                  },
+                  backgroundColor: const Color(0xFF06DF5D),
+                  elevation: 4,
+                  child: const Icon(Icons.keyboard_arrow_down_rounded,
+                      color: Colors.black),
+                )
+              : null,
         );
       },
     );
@@ -388,56 +473,87 @@ class _ChatPageState extends State<ChatPage> {
     showDialog(
       context: context,
       builder: (context) {
-        final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
-        return AlertDialog(
-          backgroundColor: isDark ? AppColors.surface : Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text("Xabarni tahrirlash",
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-          content: TextField(
-            controller: editController,
-            maxLines: null,
-            decoration: InputDecoration(
-              hintText: "Xabar...",
-              filled: true,
-              fillColor:
-                  isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none),
+        bool isSaving = false;
+        return StatefulBuilder(builder: (context, setDialogState) {
+          final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+          return AlertDialog(
+            backgroundColor: isDark ? AppColors.surface : Colors.white,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: Text("Xabarni tahrirlash",
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isSaving)
+                  const Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: CircularProgressIndicator(color: Color(0xFF06DF5D)),
+                  )
+                else
+                  TextField(
+                    controller: editController,
+                    maxLines: 5,
+                    minLines: 1,
+                    decoration: InputDecoration(
+                      hintText: "Xabar...",
+                      filled: true,
+                      fillColor: isDark
+                          ? Colors.white10
+                          : Colors.black.withOpacity(0.05),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.all(16),
+                    ),
+                    style: GoogleFonts.outfit(),
+                  ),
+              ],
             ),
-            style: GoogleFonts.outfit(),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Bekor qilish",
-                  style: GoogleFonts.outfit(color: Colors.grey)),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (editController.text.trim().isNotEmpty) {
-                  try {
-                    await _chatService.updateMessage(
-                        message.id, editController.text.trim());
-                    if (mounted) Navigator.pop(context);
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Xatolik: $e")),
-                      );
-                    }
-                  }
-                }
-              },
-              child: Text("Saqlash",
-                  style: GoogleFonts.outfit(
-                      color: const Color(0xFF06DF5D),
-                      fontWeight: FontWeight.bold)),
-            ),
-          ],
-        );
+            actions: [
+              TextButton(
+                onPressed: isSaving ? null : () => Navigator.pop(context),
+                child: Text("Bekor qilish",
+                    style: GoogleFonts.outfit(color: Colors.grey)),
+              ),
+              ElevatedButton(
+                onPressed: isSaving
+                    ? null
+                    : () async {
+                        if (editController.text.trim().isNotEmpty) {
+                          setDialogState(() => isSaving = true);
+                          try {
+                            await _chatService.updateMessage(
+                                message.id, editController.text.trim());
+                            if (context.mounted) Navigator.pop(context);
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Xatolik: $e")),
+                              );
+                              Navigator.pop(context);
+                            }
+                          }
+                        } else {
+                          Navigator.pop(context);
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF06DF5D),
+                  foregroundColor: Colors.black,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                ),
+                child: Text("Saqlash",
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          );
+        });
       },
     );
   }
@@ -446,127 +562,241 @@ class _ChatPageState extends State<ChatPage> {
     showDialog(
       context: context,
       builder: (context) {
+        bool isDeleting = false;
+        return StatefulBuilder(builder: (context, setDialogState) {
+          final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+          return AlertDialog(
+            backgroundColor: isDark ? AppColors.surface : Colors.white,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: Text("Xabarni o'chirish",
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+            content: isDeleting
+                ? const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(color: Colors.red),
+                      SizedBox(width: 16),
+                      Text("O'chirilmoqda...")
+                    ],
+                  )
+                : Text("Rostdan ham ushbu xabarni o'chirmoqchimisiz?",
+                    style: GoogleFonts.outfit()),
+            actions: [
+              TextButton(
+                onPressed: isDeleting ? null : () => Navigator.pop(context),
+                child:
+                    Text("Yo'q", style: GoogleFonts.outfit(color: Colors.grey)),
+              ),
+              ElevatedButton(
+                onPressed: isDeleting
+                    ? null
+                    : () async {
+                        setDialogState(() => isDeleting = true);
+                        try {
+                          await _chatService.deleteMessage(message.id);
+                          if (context.mounted) Navigator.pop(context);
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Xatolik: $e")),
+                            );
+                            Navigator.pop(context);
+                          }
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                ),
+                child: Text("Ha, o'chirish",
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          );
+        });
+      },
+    );
+  }
+
+  void _showMessageActions(ChatMessage message) {
+    showDialog(
+      context: context,
+      builder: (context) {
         final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+        final isMe = message.senderId == _myId;
+
         return AlertDialog(
           backgroundColor: isDark ? AppColors.surface : Colors.white,
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text("Xabarni o'chirish",
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text("Amallar",
               style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-          content: Text("Rostdan ham ushbu xabarni o'chirmoqchimisiz?",
-              style: GoogleFonts.outfit()),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child:
-                  Text("Yo'q", style: GoogleFonts.outfit(color: Colors.grey)),
-            ),
-            TextButton(
-              onPressed: () async {
-                try {
-                  await _chatService.deleteMessage(message.id);
-                  if (mounted) Navigator.pop(context);
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Xatolik: $e")),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildActionItem(
+                icon: Icons.reply,
+                title: "Javob berish",
+                color: Colors.green,
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() => _replyMessage = message);
+                },
+              ),
+              _buildActionItem(
+                icon: Icons.copy,
+                title: "Nusxalash",
+                color: Colors.blueGrey,
+                onTap: () {
+                  Navigator.pop(context);
+                  Clipboard.setData(ClipboardData(text: message.text));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Xabar nusxalandi! 📋"),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
+              ),
+              if (isMe || _isAdmin) ...[
+                _buildActionItem(
+                  icon: Icons.edit,
+                  title: "Tahrirlash",
+                  color: Colors.blue,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showEditDialog(message);
+                  },
+                ),
+                _buildActionItem(
+                  icon: Icons.delete,
+                  title: "O'chirish",
+                  color: Colors.red,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showDeleteConfirm(message);
+                  },
+                ),
+              ],
+              if (_isAdmin && message.senderId != _myId) ...[
+                StreamBuilder<bool>(
+                  stream: _chatService.getUserStatus(message.senderId),
+                  builder: (context, snapshot) {
+                    final isBlocked = snapshot.data ?? false;
+                    return _buildActionItem(
+                      icon: isBlocked ? Icons.check_circle : Icons.block,
+                      title: isBlocked ? "Blokdan chiqarish" : "Bloklash",
+                      color: isBlocked ? Colors.green : Colors.orange,
+                      onTap: () {
+                        Navigator.pop(context);
+                        _chatService.toggleUserBlock(
+                            message.senderId, !isBlocked);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(isBlocked
+                                ? "Foydalanuvchi blokdan chiqarildi! ✅"
+                                : "Foydalanuvchi bloklandi! 🚫"),
+                          ),
+                        );
+                      },
                     );
-                  }
-                }
-              },
-              child: Text("Ha, o'chirish",
-                  style: GoogleFonts.outfit(
-                      color: Colors.red, fontWeight: FontWeight.bold)),
-            ),
-          ],
+                  },
+                ),
+              ],
+            ],
+          ),
         );
       },
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage message, bool isMe, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+  Widget _buildActionItem({
+    required IconData icon,
+    required String title,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: color),
+      title: Text(title, style: GoogleFonts.outfit()),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildMessageBubble(ChatMessage message, bool isMe, bool isDark,
+      List<ChatMessage> allMessages) {
+    final isHighlighted = _highlightedMessageId == message.id;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      decoration: BoxDecoration(
+        color: isHighlighted
+            ? (isDark
+                ? Colors.white.withOpacity(0.15)
+                : Colors.black.withOpacity(0.1))
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         crossAxisAlignment:
             isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          if (!isMe || message.isAdmin)
-            Padding(
-              padding: const EdgeInsets.only(left: 8, bottom: 2),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    message.senderName,
-                    style: GoogleFonts.outfit(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white54 : Colors.black54,
-                    ),
-                  ),
-                  if (message.isAdmin) ...[
-                    const SizedBox(width: 4),
-                    const Icon(Icons.verified, size: 10, color: Colors.blue),
-                  ],
-                ],
-              ),
-            ),
           Row(
             mainAxisAlignment:
                 isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               if (_isAdmin && message.senderId != _myId) ...[
-                IconButton(
-                  onPressed: () =>
-                      _chatService.toggleUserBlock(message.senderId, true),
-                  icon: const Icon(Icons.block, size: 14, color: Colors.orange),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-                const SizedBox(width: 4),
-              ],
-              if (isMe || _isAdmin) ...[
-                IconButton(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: message.text));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Xabar nusxalandi! 📋"),
-                        duration: Duration(seconds: 1),
+                StreamBuilder<bool>(
+                  stream: _chatService.getUserStatus(message.senderId),
+                  builder: (context, snapshot) {
+                    final isBlocked = snapshot.data ?? false;
+                    return IconButton(
+                      onPressed: () => _chatService.toggleUserBlock(
+                          message.senderId, !isBlocked),
+                      icon: Icon(
+                        isBlocked ? Icons.check_circle_outline : Icons.block,
+                        size: 16,
+                        color: isBlocked ? Colors.green : Colors.orange,
                       ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      tooltip: isBlocked ? "Blokdan chiqarish" : "Bloklash",
                     );
                   },
-                  icon:
-                      const Icon(Icons.copy, size: 14, color: Colors.blueGrey),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  tooltip: "Nusxalash",
                 ),
                 const SizedBox(width: 4),
-                IconButton(
-                  onPressed: () => _showEditDialog(message),
-                  icon: const Icon(Icons.edit, size: 14, color: Colors.blue),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-                const SizedBox(width: 4),
-                IconButton(
-                  onPressed: () => _showDeleteConfirm(message),
-                  icon: const Icon(Icons.delete, size: 14, color: Colors.red),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-                const SizedBox(width: 6),
               ],
+              if (isMe || _isAdmin || true)
+                IconButton(
+                  onPressed: () => _showMessageActions(message),
+                  icon: Icon(Icons.more_vert,
+                      size: 18,
+                      color: isMe
+                          ? const Color(0xFF000000).withOpacity(0.5)
+                          : (isDark ? Colors.white54 : Colors.black54)),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              const SizedBox(width: 6),
               Flexible(
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   margin: EdgeInsets.only(
-                    left: isMe ? 20 : 0, // Reduced from 50
-                    right: isMe ? 0 : 50,
+                    left: isMe ? 20 : 0,
+                    right: isMe
+                        ? 0
+                        : 20, // Reduced from 50 to make room for reply icon
                   ),
                   decoration: BoxDecoration(
                     color: isMe
@@ -582,8 +812,33 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (message.replyToName != null)
+                        _buildReplyInBubble(message, isDark, allMessages),
+                      if (!isMe || message.isAdmin) ...[
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              message.senderName,
+                              style: GoogleFonts.outfit(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: isMe
+                                    ? Colors.black.withOpacity(0.7)
+                                    : _getUserColor(message.senderId),
+                              ),
+                            ),
+                            if (message.isAdmin) ...[
+                              const SizedBox(width: 4),
+                              const Icon(Icons.verified,
+                                  size: 12, color: Colors.blue),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                      ],
                       _buildMessageText(message.text, isMe, isDark),
                       const SizedBox(height: 4),
                       Row(
@@ -627,6 +882,15 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                 ),
               ),
+              // const SizedBox(width: 4),
+              IconButton(
+                onPressed: () => setState(() => _replyMessage = message),
+                icon: Icon(Icons.reply,
+                    size: 18, color: isDark ? Colors.white54 : Colors.black54),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                tooltip: "Javob berish",
+              ),
             ],
           ),
         ],
@@ -666,55 +930,62 @@ class _ChatPageState extends State<ChatPage> {
             }
 
             // Otherwise, show normal input
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                border: Border(
-                  top: BorderSide(
-                    color: (isDark ? Colors.white : Colors.black)
-                        .withOpacity(0.05),
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: GlassContainer(
-                      borderRadius: 24,
-                      opacity: isDark ? 0.1 : 0.05,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: TextField(
-                          controller: _messageController,
-                          maxLines: 5,
-                          minLines: 1,
-                          keyboardType: TextInputType.multiline,
-                          decoration: InputDecoration(
-                            hintText: "Xabar yozing...",
-                            hintStyle: GoogleFonts.outfit(
-                                color: Colors.grey, fontSize: 14),
-                            border: InputBorder.none,
-                            contentPadding:
-                                const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          style: GoogleFonts.outfit(fontSize: 14),
-                        ),
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_replyMessage != null) _buildReplyPreview(isDark),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border(
+                      top: BorderSide(
+                        color: (isDark ? Colors.white : Colors.black)
+                            .withOpacity(0.05),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: _sendMessage,
-                    child: CircleAvatar(
-                      backgroundColor: const Color(0xFF06DF5D),
-                      radius: 24,
-                      child: const Icon(Icons.send_rounded,
-                          color: Colors.black, size: 22),
-                    ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GlassContainer(
+                          borderRadius: 24,
+                          opacity: isDark ? 0.1 : 0.05,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: TextField(
+                              controller: _messageController,
+                              maxLines: 5,
+                              minLines: 1,
+                              keyboardType: TextInputType.multiline,
+                              decoration: InputDecoration(
+                                hintText: "Xabar yozing...",
+                                hintStyle: GoogleFonts.outfit(
+                                    color: Colors.grey, fontSize: 14),
+                                border: InputBorder.none,
+                                contentPadding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                              style: GoogleFonts.outfit(fontSize: 14),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: _sendMessage,
+                        child: CircleAvatar(
+                          backgroundColor: const Color(0xFF06DF5D),
+                          radius: 24,
+                          child: const Icon(Icons.send_rounded,
+                              color: Colors.black, size: 22),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             );
           },
         );
@@ -814,5 +1085,134 @@ class _ChatPageState extends State<ChatPage> {
     return RichText(
       text: TextSpan(children: spans),
     );
+  }
+
+  Widget _buildReplyPreview(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.black26 : Colors.black.withOpacity(0.05),
+        border: Border(
+            left: const BorderSide(color: Color(0xFF06DF5D), width: 4),
+            top: BorderSide(
+                color:
+                    (isDark ? Colors.white : Colors.black).withOpacity(0.05))),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.reply, color: Color(0xFF06DF5D), size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _replyMessage?.senderName ?? "",
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF06DF5D),
+                  ),
+                ),
+                Text(
+                  _replyMessage?.text ?? "",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () => setState(() => _replyMessage = null),
+            icon: const Icon(Icons.close, size: 18),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReplyInBubble(
+      ChatMessage message, bool isDark, List<ChatMessage> allMessages) {
+    return GestureDetector(
+      onTap: () => _scrollToMessage(message.replyToId, allMessages),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(8),
+          border: const Border(
+            left: BorderSide(color: Color(0xFF06DF5D), width: 3),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message.replyToName ?? "",
+              style: GoogleFonts.outfit(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: Colors.white.withOpacity(0.7),
+              ),
+            ),
+            Text(
+              message.replyToText ?? "",
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.outfit(
+                fontSize: 11,
+                color: isDark ? Colors.white : Colors.black,
+                height: 1.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _scrollToMessage(String? messageId, List<ChatMessage> allMessages) {
+    if (messageId == null) return;
+    final index = allMessages.indexWhere((m) => m.id == messageId);
+    if (index != -1) {
+      _itemScrollController.scrollTo(
+        index: index,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+      // Highlight effect
+      setState(() => _highlightedMessageId = messageId);
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() => _highlightedMessageId = null);
+        }
+      });
+    }
+  }
+
+  Color _getUserColor(String userId) {
+    final List<Color> colors = [
+      Colors.blue,
+      Colors.redAccent,
+      Colors.orange,
+      Colors.purpleAccent,
+      Colors.teal,
+      Colors.pinkAccent,
+      Colors.indigoAccent,
+      Colors.brown,
+      Colors.deepOrange,
+      Colors.cyan,
+    ];
+    // Simple hash to pick a stable color for the same user
+    final int hash = userId.hashCode;
+    return colors[hash.abs() % colors.length];
   }
 }

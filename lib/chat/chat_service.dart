@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'chat_message.dart';
@@ -124,7 +125,11 @@ class ChatService {
   }
 
   Future<void> sendMessage(
-      String text, String senderId, String senderName, bool isAdmin) async {
+      String text, String senderId, String senderName, bool isAdmin,
+      {String? replyToId,
+      String? replyToName,
+      String? replyToText,
+      String? replyToSenderId}) async {
     if (text.trim().isEmpty) return;
 
     // Word/Character check
@@ -156,6 +161,10 @@ class ChatService {
         'timestamp': FieldValue.serverTimestamp(),
         'views': [senderId],
         'isAdmin': isAdmin,
+        'replyToId': replyToId,
+        'replyToName': replyToName,
+        'replyToText': replyToText,
+        'replyToSenderId': replyToSenderId,
       });
     } catch (e) {
       debugPrint("❌ Send Error: $e");
@@ -174,7 +183,10 @@ class ChatService {
     }
   }
 
-  Future<void> updateMessage(String messageId, String newText) async {
+  Future<void> updateMessage(
+    String messageId,
+    String newText,
+  ) async {
     try {
       await _firestore.collection(_collectionPath).doc(messageId).update({
         'text': newText.trim(),

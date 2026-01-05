@@ -145,25 +145,17 @@ class _TournamentListPageState extends State<TournamentListPage> {
     _showSnackbar("Turnir o'chirildi: ${tournament.name}", Colors.red);
   }
 
-  Future<void> _exportTournaments() async {
-    if (_tournaments.isEmpty) {
-      _showSnackbar(
-          "Eksport qilish uchun turnirlar mavjud emas", Colors.orange);
-      return;
-    }
-
+  Future<void> _exportTournament(TournamentModel tournament) async {
     try {
-      final List<Map<String, dynamic>> jsonList =
-          _tournaments.map((t) => t.toJson()).toList();
-      final String jsonString = jsonEncode(jsonList);
+      final String jsonString = jsonEncode(tournament.toJson());
 
-      // Web platformasida download qilish eng ishonchli yo'li (Permission denied xatosini oldini oladi)
       if (kIsWeb) {
         final Uri uri = Uri.parse(
             "data:application/json;charset=utf-8,${Uri.encodeComponent(jsonString)}");
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri);
-          _showSnackbar("Turnir nusxasi yuklab olindi", Colors.green);
+          _showSnackbar(
+              "${tournament.name} nusxasi yuklab olindi", Colors.green);
           return;
         }
       }
@@ -172,12 +164,12 @@ class _TournamentListPageState extends State<TournamentListPage> {
       final xFile = XFile.fromData(
         bytes,
         mimeType: 'application/json',
-        name: 'efinfo_tournaments_backup.json',
+        name: 'efinfo_${tournament.name.replaceAll(' ', '_')}.json',
       );
 
       await Share.shareXFiles(
         [xFile],
-        text: "eFootball Info Hub - Turnir ma'lumotlari nusxasi",
+        text: "${tournament.name} - Turnir ma'lumotlari nusxasi",
       );
     } catch (e) {
       _showSnackbar("Eksport qilishda xatolik: $e", Colors.red);
@@ -219,12 +211,17 @@ class _TournamentListPageState extends State<TournamentListPage> {
         }
 
         final String content = utf8.decode(platformFile.bytes!);
-        final List<dynamic> jsonList = jsonDecode(content);
+        final dynamic decodedData = jsonDecode(content);
 
-        final List<TournamentModel> importedTournaments = jsonList
-            .map((json) =>
-                TournamentModel.fromJson(json as Map<String, dynamic>))
-            .toList();
+        final List<TournamentModel> importedTournaments = [];
+        if (decodedData is List) {
+          importedTournaments.addAll(
+            decodedData.map((json) =>
+                TournamentModel.fromJson(json as Map<String, dynamic>)),
+          );
+        } else if (decodedData is Map<String, dynamic>) {
+          importedTournaments.add(TournamentModel.fromJson(decodedData));
+        }
 
         if (importedTournaments.isEmpty) {
           _showSnackbar("Faylda turnirlar topilmadi", Colors.orange);
@@ -321,138 +318,93 @@ class _TournamentListPageState extends State<TournamentListPage> {
           : ListView.builder(
               padding: const EdgeInsets.only(
                   left: 12.0, right: 12.0, top: 12.0, bottom: 180.0),
-              itemCount: _tournaments.length + 2,
+              itemCount: _tournaments.length + 1,
               itemBuilder: (context, index) {
-                if (index == 0) return _buildImportExportButtons(isDark);
-                if (index == 1) return _buildAddTournamentCard(isDark);
-                final tournament = _tournaments[index - 2];
+                if (index == 0) return _buildAddTournamentCard(isDark);
+                final tournament = _tournaments[index - 1];
                 return _buildTournamentTile(tournament, isDark);
               },
             ),
     );
   }
 
-  Widget _buildImportExportButtons(bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: _exportTournaments,
-                borderRadius: BorderRadius.circular(16),
-                child: GlassContainer(
-                  borderRadius: 16,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(BoxIcons.bx_export,
-                          color: Colors.blueAccent, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        "Eksport",
-                        style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: _importTournaments,
-                borderRadius: BorderRadius.circular(16),
-                child: GlassContainer(
-                  borderRadius: 16,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(BoxIcons.bx_import,
-                          color: Color(0xFF06DF5D), size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        "Import",
-                        style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildAddTournamentCard(bool isDark) {
-    return GestureDetector(
-      onTap: () async {
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const TournamentEditorPage(),
-          ),
-        );
-        if (result != null && result is TournamentModel) {
-          _addOrUpdateTournament(result);
-        }
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8.0),
-        child: GlassContainer(
-          borderRadius: 20,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF06DF5D).withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  BoxIcons.bx_plus,
-                  color: Color(0xFF06DF5D),
-                  size: 32,
-                ),
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const TournamentEditorPage(),
               ),
-              const SizedBox(height: 12),
-              Text(
-                "Yangi Turnir Yaratish",
-                style: GoogleFonts.outfit(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
-                ),
+            );
+            if (result != null && result is TournamentModel) {
+              _addOrUpdateTournament(result);
+            }
+          },
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 8.0),
+            child: GlassContainer(
+              borderRadius: 20,
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF06DF5D).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      BoxIcons.bx_plus,
+                      color: Color(0xFF06DF5D),
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "Yangi Turnir Yaratish",
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "O'z turniringizni boshlang va natijalarni kuzatib boring",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      color: isDark ? Colors.white54 : Colors.black54,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                "O'z turniringizni boshlang va natijalarni kuzatib boring",
-                textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(
-                  fontSize: 12,
-                  color: isDark ? Colors.white54 : Colors.black54,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text(
+              "Ma'lumotlarni import qilish",
+              style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  color: isDark ? Colors.white54 : Colors.black54),
+            ),
+            const SizedBox(width: 8),
+            _buildActionButton(
+              icon: BoxIcons.bx_import,
+              label: "Import",
+              color: const Color(0xFF06DF5D),
+              onPressed: _importTournaments,
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+      ],
     );
   }
 
@@ -574,6 +526,13 @@ class _TournamentListPageState extends State<TournamentListPage> {
                       _addOrUpdateTournament(result);
                     }
                   },
+                ),
+                const SizedBox(width: 8),
+                _buildActionButton(
+                  icon: BoxIcons.bx_export,
+                  label: "",
+                  color: Colors.blueAccent,
+                  onPressed: () => _exportTournament(tournament),
                 ),
                 const SizedBox(width: 8),
                 _buildActionButton(

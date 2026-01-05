@@ -28,6 +28,7 @@ class _PackSimulatorPageState extends State<PackSimulatorPage>
     "150": [],
     "250": [],
   };
+  bool _isPulling = false;
 
   late ConfettiController _confettiController;
   final Random _random = Random();
@@ -187,7 +188,7 @@ class _PackSimulatorPageState extends State<PackSimulatorPage>
     return pool;
   }
 
-  void _pull(String type, int count) {
+  void _pull(String type, int count) async {
     int cost = count == 1 ? 100 : 900;
     if (coins < cost) {
       _showAlert("Tangalar yetarli emas!",
@@ -201,14 +202,24 @@ class _PackSimulatorPageState extends State<PackSimulatorPage>
       return;
     }
 
+    setState(() {
+      _isPulling = true;
+    });
+
+    // "Qiziqtirib" loading delay
+    await Future.delayed(const Duration(milliseconds: 2000));
+
     List<PackPlayer> pulled = [];
     for (int i = 0; i < count; i++) {
       pulled.add(pools[type]!.removeAt(0));
     }
 
+    if (!mounted) return;
+
     setState(() {
       coins -= cost;
       history[type]?.addAll(pulled);
+      _isPulling = false;
     });
 
     int epicsCount = pulled.where((p) => p.stars == 5).length;
@@ -472,6 +483,27 @@ class _PackSimulatorPageState extends State<PackSimulatorPage>
               colors: const [Colors.amber, Colors.yellow, Colors.white],
             ),
           ),
+          if (_isPulling)
+            Container(
+              color: Colors.black.withOpacity(0.8),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(color: Colors.amber),
+                    const SizedBox(height: 20),
+                    Text(
+                      "Omad eshigini qoqmoqda...",
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );

@@ -46,6 +46,13 @@ class PesService {
   };
 
   static Map<String, String> get headers {
+    if (kIsWeb) {
+      // Browsers don't allow setting forbidden headers like User-Agent, Referer, etc.
+      // We only return acceptable headers for Web.
+      return {
+        'Accept': 'application/json, text/html, */*',
+      };
+    }
     final h = Map<String, String>.from(_baseHeaders);
     if (_cookies != null) h['Cookie'] = _cookies!;
     return h;
@@ -72,9 +79,10 @@ class PesService {
     }
   }
 
-  Future<http.Response> _safeRequest(Uri uri,
+  Future<http.Response> _safeRequest(String url,
       {int retryCount = 0, bool forceRefresh = false}) async {
-    final String cacheKey = uri.toString();
+    final String cacheKey = url;
+    final Uri uri = _buildUri(url);
 
     if (!forceRefresh && _cache.containsKey(cacheKey)) {
       final cached = _cache[cacheKey]!;
@@ -107,17 +115,19 @@ class PesService {
         return response;
       }
 
-      if (response.statusCode == 429 && retryCount < 2) {
-        await Future.delayed(Duration(seconds: 3 + retryCount));
+      // Handle rate limiting
+      if (response.statusCode == 429 && retryCount < 3) {
+        await Future.delayed(Duration(seconds: 2 + retryCount * 2));
         _isRequesting = false;
-        return _safeRequest(uri,
+        return _safeRequest(url,
             retryCount: retryCount + 1, forceRefresh: true);
       }
 
+      // If we are on Web and it failed, try another proxy
       if (kIsWeb && retryCount < _proxies.length) {
         _proxyIndex++;
         _isRequesting = false;
-        return _safeRequest(uri,
+        return _safeRequest(url,
             retryCount: retryCount + 1, forceRefresh: true);
       }
 
@@ -131,15 +141,34 @@ class PesService {
           _cache[cacheKey]!.data is http.Response) {
         return _cache[cacheKey]!.data as http.Response;
       }
-      if (retryCount < 1) {
+      if (retryCount < _proxies.length) {
+        if (kIsWeb) _proxyIndex++;
         _isRequesting = false;
-        return _safeRequest(uri,
+        return _safeRequest(url,
             retryCount: retryCount + 1, forceRefresh: true);
       }
       rethrow;
     } finally {
       _isRequesting = false;
     }
+  }
+
+  /// Specialized helper for Vercel API calls that handles Web CORS
+  Future<http.Response> _fetchApi(String endpoint) async {
+    final url = '$_apiBaseUrl$endpoint';
+    if (kIsWeb) {
+      try {
+        // Try direct first
+        final resp =
+            await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+        if (resp.statusCode == 200) return resp;
+        throw Exception("API Failed Status: ${resp.statusCode}");
+      } catch (_) {
+        // Fallback to proxy
+        return await _safeRequest(url);
+      }
+    }
+    return await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
   }
 
   Uri _buildUri(String url) {
@@ -168,9 +197,7 @@ class PesService {
   /// Fetch Categories - API First
   Future<List<PesCategory>> fetchCategories() async {
     try {
-      final resp = await http
-          .get(Uri.parse('$_apiBaseUrl/categories'))
-          .timeout(const Duration(seconds: 8));
+      final resp = await _fetchApi('/categories');
       if (resp.statusCode == 200) {
         List data = jsonDecode(resp.body);
         return data.map((e) => PesCategory.fromJson(e)).toList();
@@ -178,7 +205,7 @@ class PesService {
     } catch (_) {}
 
     // Scraper Fallback
-    final response = await _safeRequest(_buildUri(detailBaseUrl));
+    final response = await _safeRequest(detailBaseUrl);
     var document = parser.parse(response.body);
     List<PesCategory> categories = [];
     var shortcuts = document.querySelector('div.shortcuts');
@@ -199,9 +226,7 @@ class PesService {
   /// Fetch Featured Options - API First
   Future<List<PesFeaturedOption>> fetchFeaturedOptions() async {
     try {
-      final resp = await http
-          .get(Uri.parse('$_apiBaseUrl/featured-options'))
-          .timeout(const Duration(seconds: 8));
+      final resp = await _fetchApi('/featured-options');
       if (resp.statusCode == 200) {
         List data = jsonDecode(resp.body);
         return data.map((e) => PesFeaturedOption.fromJson(e)).toList();
@@ -209,7 +234,7 @@ class PesService {
     } catch (_) {}
 
     // Scraper Fallback
-    final response = await _safeRequest(_buildUri(listingUrl));
+    final response = await _safeRequest(listingUrl);
     List<PesFeaturedOption> options = [];
     if (response.statusCode == 200) {
       var document = parser.parse(response.body);
@@ -232,12 +257,12 @@ class PesService {
   Future<List<PesPlayer>> fetchPlayers(
       {String? customUrl, int page = 1, Map<String, String>? filters}) async {
     try {
-      String url = '$_apiBaseUrl/players?page=$page';
-      if (customUrl != null) url += '&url=${Uri.encodeComponent(customUrl)}';
-      filters?.forEach((k, v) => url += '&$k=$v');
+      String endpoint = '/players?page=$page';
+      if (customUrl != null)
+        endpoint += '&url=${Uri.encodeComponent(customUrl)}';
+      filters?.forEach((k, v) => endpoint += '&$k=$v');
 
-      final resp =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
+      final resp = await _fetchApi(endpoint);
       if (resp.statusCode == 200) {
         List data = jsonDecode(resp.body);
         return data.map((e) => PesPlayer.fromJson(e)).toList();
@@ -252,7 +277,7 @@ class PesService {
     if (page > 1) query['page'] = page.toString();
 
     String finalUrl = uriBase.replace(queryParameters: query).toString();
-    final response = await _safeRequest(_buildUri(finalUrl));
+    final response = await _safeRequest(finalUrl);
     var document = parser.parse(response.body);
     List<PesPlayer> players = [];
     for (var row in document.querySelectorAll('tr')) {
@@ -297,17 +322,13 @@ class PesService {
   Future<PesPlayerDetail> fetchPlayerDetail(PesPlayer player,
       {String mode = 'level1', bool forceRefresh = false}) async {
     try {
-      final apiUrl = '$_apiBaseUrl/player/${player.id}?mode=$mode';
-      final resp = await http
-          .get(Uri.parse(apiUrl))
-          .timeout(const Duration(seconds: 10));
+      final endpoint = '/player/${player.id}?mode=$mode';
+      final resp = await _fetchApi(endpoint);
 
       if (resp.statusCode == 200) {
         var data = jsonDecode(resp.body);
         if (data != null && (data['stats'] != null || data['skills'] != null)) {
           final detail = PesPlayerDetail.fromJson(data, player);
-          // If skills are missing from API, we might continue to scraper for just skills
-          // but for speed, if we have stats, we return.
           if (detail.skills.isNotEmpty || detail.stats.isNotEmpty) {
             return detail;
           }
@@ -319,8 +340,7 @@ class PesService {
     String url = '$detailBaseUrl?id=${player.id}';
     if (mode == 'max_level') url += '&mode=max_level';
 
-    final response =
-        await _safeRequest(_buildUri(url), forceRefresh: forceRefresh);
+    final response = await _safeRequest(url, forceRefresh: forceRefresh);
     var document = parser.parse(response.body);
 
     String position = 'Unknown',

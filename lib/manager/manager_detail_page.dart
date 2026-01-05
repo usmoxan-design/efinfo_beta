@@ -42,7 +42,7 @@ class ManagerDetailPage extends StatelessWidget {
                 width: 150,
                 height: 150,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.accent, width: 2),
                   boxShadow: [
                     BoxShadow(

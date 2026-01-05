@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:efinfo_beta/chat/chat_page.dart';
+import 'package:efinfo_beta/chat/chat_service.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -70,6 +71,12 @@ class _MainPageState extends State<MainPage> {
           ],
         ),
         actions: [
+          if (_currentIndex == 1)
+            IconButton(
+              onPressed: () => _showNameDialog(context),
+              icon: const Icon(Icons.person_outline),
+              tooltip: "Ismni o'zgartirish",
+            ),
           IconButton(
             onPressed: () {
               Navigator.push(
@@ -220,6 +227,117 @@ class _MainPageState extends State<MainPage> {
       icon: Icon(icon, color: isDark ? Colors.white54 : Colors.black54),
       selectedIcon: Icon(icon, color: const Color(0xFF06DF5D)),
       label: label,
+    );
+  }
+
+  void _showNameDialog(BuildContext context) async {
+    final chatService = ChatService();
+    final info = await chatService.getUserInfo();
+    final String currentName = info['name'] ?? '';
+    final TextEditingController nameController =
+        TextEditingController(text: currentName);
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+        return AlertDialog(
+          backgroundColor: isDark ? AppColors.surface : Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF06DF5D).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  color: Color(0xFF06DF5D),
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                "Chatda ishtirok eting!",
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Xabarlaringiz boshqalarga qaysi ism bilan ko'rinishini istaysiz? Ismingizni kiriting.",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  fontSize: 13,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: nameController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: "Ismingiz yoki Taxallusingiz...",
+                  hintStyle:
+                      GoogleFonts.outfit(color: Colors.grey, fontSize: 14),
+                  filled: true,
+                  fillColor:
+                      isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+                  prefixIcon: const Icon(Icons.person_outline, size: 20),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                style: GoogleFonts.outfit(),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                "Bekor qilish",
+                style: GoogleFonts.outfit(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (nameController.text.trim().isNotEmpty) {
+                  await chatService.saveUserName(nameController.text.trim());
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF06DF5D),
+                foregroundColor: Colors.black,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: Text(
+                "Saqlash",
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

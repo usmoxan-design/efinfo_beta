@@ -8,6 +8,10 @@ class ChatMessage {
   final DateTime timestamp;
   final List<String> views;
   final bool isAdmin;
+  final String? replyToId;
+  final String? replyToName;
+  final String? replyToText;
+  final String? replyToSenderId;
 
   ChatMessage({
     required this.id,
@@ -17,6 +21,10 @@ class ChatMessage {
     required this.timestamp,
     this.views = const [],
     this.isAdmin = false,
+    this.replyToId,
+    this.replyToName,
+    this.replyToText,
+    this.replyToSenderId,
   });
 
   factory ChatMessage.fromFirestore(DocumentSnapshot doc) {
@@ -29,6 +37,10 @@ class ChatMessage {
       timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
       views: List<String>.from(data['views'] ?? []),
       isAdmin: data['isAdmin'] ?? false,
+      replyToId: data['replyToId'],
+      replyToName: data['replyToName'],
+      replyToText: data['replyToText'],
+      replyToSenderId: data['replyToSenderId'],
     );
   }
 }

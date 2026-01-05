@@ -109,6 +109,16 @@ class _HomePageState extends State<HomePage>
             MaterialPageRoute(builder: (_) => const PlayerSkillsPage())),
       },
       {
+        'title': "AI Playing Styles",
+        'subtitle': "AI o'yin uslublari",
+        'icon': "assets/images/playing_styles.png",
+        'accent': AppColors.accentBlue,
+        'badge': true,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const AiPlayingStylesPage())),
+      },
+      {
         'title': 'Positions',
         'subtitle': 'Pozitsiyalar',
         'icon': "assets/images/positions.png",
@@ -149,16 +159,6 @@ class _HomePageState extends State<HomePage>
         'isColoredIcon': true,
         'onTap': () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const SkillRecommendationPage())),
-      },
-      {
-        'title': "AI Playing Styles",
-        'subtitle': "AI o'yin uslublari",
-        'icon': "assets/images/playing_styles.png",
-        'accent': AppColors.accentBlue,
-        'badge': true,
-        'isColoredIcon': false,
-        'onTap': () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const AiPlayingStylesPage())),
       },
     ];
 
