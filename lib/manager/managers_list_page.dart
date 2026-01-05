@@ -44,7 +44,7 @@ class _ManagersListPageState extends State<ManagersListPage> {
       /*
       // Online mode: Load from GitHub (Commented as requested)
       if (await hasInternet()) {
-        final response = await http.get(Uri.parse('https://raw.githubusercontent.com/username/repo/main/managers.json'));
+        final response = await http.get(Uri.parse('https://raw.githubusercontent.com/usmoxan-design/efinfo_data/refs/heads/main/managers.json'));
         if (response.statusCode == 200) {
           final List<dynamic> remoteData = json.decode(response.body);
           setState(() {
