@@ -69,8 +69,6 @@ class ManagerDetailPage extends StatelessWidget {
                 children: [
                   _buildTableTile("Name", manager.name, isDark),
                   _buildDivider(isDark),
-                  _buildTableTile("Full Name", manager.fullName, isDark),
-                  _buildDivider(isDark),
                   _buildTableTile("Team", manager.team, isDark),
                   _buildDivider(isDark),
                   _buildTableTile("Nationality", manager.nationality, isDark),
