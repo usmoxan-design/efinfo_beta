@@ -147,23 +147,26 @@ class _ManagersListPageState extends State<ManagersListPage> {
                   // Manager Image with 16px border radius
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: CachedNetworkImage(
-                      imageUrl: manager.imageUrl,
-                      width: 80,
-                      height: 80,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        color: isDark ? Colors.grey[900] : Colors.grey[200],
-                        child: const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xFF06DF5D),
+                    child: Container(
+                      color: Colors.grey,
+                      child: CachedNetworkImage(
+                        imageUrl: manager.imageUrl,
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          color: isDark ? Colors.grey[900] : Colors.grey[200],
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Color(0xFF06DF5D),
+                            ),
                           ),
                         ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        color: isDark ? Colors.grey[900] : Colors.grey[200],
-                        child: const Icon(Icons.person, size: 40),
+                        errorWidget: (context, url, error) => Container(
+                          color: isDark ? Colors.grey[900] : Colors.grey[200],
+                          child: const Icon(Icons.person, size: 40),
+                        ),
                       ),
                     ),
                   ),

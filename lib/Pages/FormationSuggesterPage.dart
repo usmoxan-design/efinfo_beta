@@ -11,14 +11,6 @@ import 'package:efinfo_beta/Player/formations_details.dart'; // For RealisticFie
 
 // --- TOP-LEVEL TACTICAL HELPERS & DATA ---
 
-const Map<String, String> _styleNamesUz = {
-  'Possession Game': 'To\'p nazorati',
-  'Quick Counter': 'Tezkor qarshi hujum',
-  'Long Ball Counter': 'Uzun pasli qarshi hujum',
-  'Out Wide': 'Qanot orqali hujum',
-  'Long Ball': 'Uzun paslar',
-};
-
 const Map<String, String> _styleDescriptions = {
   'Possession Game':
       'Qisqa paslar va to\'p nazoratiga asoslangan uslub. Bo\'shliqlar yaratish uchun sabr bilan o\'yin quriladi va raqib himoyasi paslar orqali yorib o’tiladi.',
@@ -338,10 +330,9 @@ class _FormationSuggesterPageState extends State<FormationSuggesterPage> {
 
     return Scaffold(
       backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          "Taktik Sxema tavsiyalar",
+          "Tavsiya Etilgan Taktikalar",
           style: GoogleFonts.outfit(
             color: isDark ? Colors.white : Colors.black,
             fontWeight: FontWeight.bold,
@@ -353,34 +344,82 @@ class _FormationSuggesterPageState extends State<FormationSuggesterPage> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: isDark
-                      ? [Colors.black, Colors.grey[900]!]
-                      : [Colors.grey[50]!, Colors.white],
+          : CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeaderDescription(isDark),
+                        const SizedBox(height: 32),
+                        Text(
+                          "O'yin Uslubini Tanlang",
+                          style: GoogleFonts.outfit(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildStyleChips(isDark),
+                        const SizedBox(height: 40),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Tavsiya Etilgan Sxemalar",
+                              style: GoogleFonts.outfit(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.accentBlue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                "${_suggestedFormations.length} ta sxema",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.accentBlue,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 100, 16, 50),
-                children: [
-                  _buildHeaderDescription(isDark),
-                  const SizedBox(height: 24),
-                  _buildStyleChips(isDark),
-                  const SizedBox(height: 32),
-                  _buildSectionTitle("Optimal Sxemalar", isDark),
-                  const SizedBox(height: 16),
-                  if (_suggestedFormations.isEmpty)
-                    _buildEmptyState(isDark)
-                  else
-                    ..._suggestedFormations
-                        .map((f) => _buildFormationCard(f, isDark))
-                        .toList(),
-                  _buildResetButton(isDark),
-                ],
-              ),
+                if (_suggestedFormations.isEmpty)
+                  SliverToBoxAdapter(child: _buildEmptyState(isDark))
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => _buildFormationCard(
+                            _suggestedFormations[index], isDark),
+                        childCount: _suggestedFormations.length,
+                      ),
+                    ),
+                  ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 60),
+                    child: _buildResetButton(isDark),
+                  ),
+                ),
+              ],
             ),
     );
   }
@@ -394,26 +433,48 @@ class _FormationSuggesterPageState extends State<FormationSuggesterPage> {
         children: [
           Row(
             children: [
-              Icon(Icons.auto_awesome_rounded,
-                  color: AppColors.accentBlue, size: 24),
-              const SizedBox(width: 10),
-              Text(
-                "$_selectedStyle (${_styleNamesUz[_selectedStyle]})",
-                style: GoogleFonts.outfit(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF06DF5D).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.auto_awesome_rounded,
+                    color: Color(0xFF06DF5D), size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _selectedStyle, // Return English name directly
+                      style: GoogleFonts.outfit(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    Text(
+                      "Tanlangan o'yin uslubi",
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        color: const Color(0xFF06DF5D),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           Text(
             _styleDescriptions[_selectedStyle]!,
             style: GoogleFonts.outfit(
               fontSize: 14,
               color: isDark ? Colors.white70 : Colors.black87,
-              height: 1.5,
+              height: 1.6,
             ),
           ),
         ],
@@ -422,79 +483,91 @@ class _FormationSuggesterPageState extends State<FormationSuggesterPage> {
   }
 
   Widget _buildStyleChips(bool isDark) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: _managerStyles.map((style) {
+    return Container(
+      height: 48,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: _managerStyles.length,
+        itemBuilder: (context, index) {
+          final style = _managerStyles[index];
           bool isSelected = _selectedStyle == style;
           return Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: ChoiceChip(
-              label: Text(style),
-              selected: isSelected,
-              onSelected: (val) {
-                if (val) {
-                  setState(() {
-                    _selectedStyle = style;
-                    _generateSuggestions();
-                  });
-                }
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedStyle = style;
+                  _generateSuggestions();
+                });
               },
-              selectedColor: AppColors.accentBlue,
-              backgroundColor: isDark
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.black.withOpacity(0.05),
-              labelStyle: GoogleFonts.outfit(
-                color: isSelected
-                    ? Colors.white
-                    : (isDark ? Colors.white70 : Colors.black87),
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? const Color(0xFF06DF5D)
+                      : (isDark
+                          ? Colors.white.withOpacity(0.05)
+                          : Colors.black.withOpacity(0.05)),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected
+                        ? const Color(0xFF06DF5D)
+                        : Colors.transparent,
+                    width: 1,
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF06DF5D).withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          )
+                        ]
+                      : null,
+                ),
+                child: Center(
+                  child: Text(
+                    style, // Use English name
+                    style: GoogleFonts.outfit(
+                      color: isSelected
+                          ? Colors.black
+                          : (isDark ? Colors.white70 : Colors.black87),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
-              elevation: 0,
-              pressElevation: 0,
-              side: BorderSide.none,
             ),
           );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Text(
-        title,
-        style: GoogleFonts.outfit(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: isDark ? Colors.white : Colors.black,
-        ),
+        },
       ),
     );
   }
 
   Widget _buildFormationCard(Formation formation, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
       child: GlassContainer(
-        padding: const EdgeInsets.all(20),
-        borderRadius: 28,
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Row(
               children: [
+                // Mini Pitch
                 Container(
-                  width: 90,
-                  height: 110,
+                  width: 110,
+                  height: 130,
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: (isDark ? Colors.green[900] : Colors.green[700])
-                        ?.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(16),
+                    color: const Color(0xFF06DF5D).withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFF06DF5D).withOpacity(0.1),
+                    ),
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
@@ -507,76 +580,71 @@ class _FormationSuggesterPageState extends State<FormationSuggesterPage> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 16),
+                // Info
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        formation.name,
-                        style: GoogleFonts.outfit(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            formation.name,
+                            style: GoogleFonts.outfit(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
+                          ),
+                          _buildFullGuideButton(formation),
+                        ],
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       Text(
                         _getFormationHint(formation.name),
                         style: GoogleFonts.outfit(
                           fontSize: 13,
-                          color: isDark ? Colors.white54 : Colors.black54,
+                          color: isDark ? Colors.white70 : Colors.black54,
                           height: 1.4,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 32, thickness: 0.5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Tavsiya etilgan rollar",
-                  style: GoogleFonts.outfit(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.accentBlue,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FormationDetailedGuidePage(
-                          formation: formation,
-                          managerStyle: _selectedStyle,
-                        ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Icon(Icons.info_outline,
+                              size: 14,
+                              color: isDark ? Colors.white38 : Colors.black38),
+                          const SizedBox(width: 4),
+                          Text(
+                            "Taktik rollarni ko'rish",
+                            style: GoogleFonts.outfit(
+                                fontSize: 11,
+                                color: isDark ? Colors.white38 : Colors.black38,
+                                fontWeight: FontWeight.w500),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                  child: Row(
-                    children: [
-                      Text("To'liq ma'lumot",
-                          style: GoogleFonts.outfit(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.accentGreen)),
-                      const Icon(Icons.arrow_forward_ios_rounded,
-                          size: 12, color: AppColors.accentGreen),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 10,
-              children: _buildPositionStyles(formation, isDark),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Divider(height: 1, thickness: 0.5),
+            ),
+            // Roles - Sequential Card Layout
+            Container(
+              height: 75,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: formation.positions.length,
+                itemBuilder: (context, index) {
+                  return _buildPositionRoleCard(formation, index, isDark);
+                },
+              ),
             ),
           ],
         ),
@@ -584,63 +652,139 @@ class _FormationSuggesterPageState extends State<FormationSuggesterPage> {
     );
   }
 
-  List<Widget> _buildPositionStyles(Formation formation, bool isDark) {
+  Widget _buildFullGuideButton(Formation formation) {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => FormationDetailedGuidePage(
+              formation: formation,
+              managerStyle: _selectedStyle,
+            ),
+          ),
+        );
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF06DF5D).withOpacity(0.1),
+        foregroundColor: const Color(0xFF06DF5D),
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: const Color(0xFF06DF5D).withOpacity(0.2)),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "Qo'llanma",
+            style: GoogleFonts.outfit(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(width: 4),
+          const Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 10,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPositionRoleCard(Formation formation, int index, bool isDark) {
     final labels = formation.labels ?? [];
     final List<String> uniLabels =
         labels.map((l) => _getUniversalPosition(l)).toList();
     Map<String, int> counts = {};
-    return List.generate(formation.positions.length, (index) {
-      String label = index < labels.length ? labels[index] : 'POS';
+
+    // We need to pre-calculate counts up to the current index
+    for (int i = 0; i <= index; i++) {
+      String label = i < labels.length ? labels[i] : 'POS';
       String uniLabel = _getUniversalPosition(label);
       int occurrence = counts[uniLabel] ?? 0;
       counts[uniLabel] = occurrence + 1;
-      String style =
-          _getRecommendedStyle(uniLabel, _selectedStyle, occurrence, uniLabels);
-      String? instruction = _getInstruction(uniLabel, _selectedStyle);
+    }
 
-      return GestureDetector(
-        onTap: () => _showStyleInfo(uniLabel, style, instruction, isDark),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withOpacity(0.04)
-                : Colors.black.withOpacity(0.04),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(uniLabel,
-                      style: GoogleFonts.outfit(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.accentGreen)),
-                  const SizedBox(width: 6),
-                  Text(style,
-                      style: GoogleFonts.outfit(
-                          fontSize: 11,
-                          color: isDark ? Colors.white : Colors.black,
-                          fontWeight: FontWeight.w500)),
-                ],
-              ),
-              if (instruction != null) ...[
-                const SizedBox(height: 2),
-                Text("Instr: $instruction",
-                    style: GoogleFonts.outfit(
-                        fontSize: 9,
-                        color: Colors.orangeAccent,
-                        fontStyle: FontStyle.italic)),
-              ],
-            ],
+    String label = index < labels.length ? labels[index] : 'POS';
+    String uniLabel = _getUniversalPosition(label);
+    int currentOccurrence = (counts[uniLabel] ?? 1) - 1;
+
+    String style = _getRecommendedStyle(
+        uniLabel, _selectedStyle, currentOccurrence, uniLabels);
+    String? instruction = _getInstruction(uniLabel, _selectedStyle);
+
+    return GestureDetector(
+      onTap: () => _showStyleInfo(uniLabel, style, instruction, isDark),
+      child: Container(
+        width: 120,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withOpacity(0.05)
+              : Colors.black.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? Colors.white12 : Colors.black.withOpacity(0.05),
           ),
         ),
-      );
-    });
+        child: Stack(
+          children: [
+            // Style accent background
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 4,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF06DF5D).withOpacity(0.3),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    uniLabel,
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF06DF5D),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    style,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  if (instruction != null)
+                    Icon(Icons.bolt,
+                        size: 10, color: Colors.orangeAccent.withOpacity(0.8)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showStyleInfo(
@@ -825,7 +969,7 @@ class FormationDetailedGuidePage extends StatelessWidget {
                   color: AppColors.accentBlue, size: 24),
               const SizedBox(width: 10),
               Text(
-                "$managerStyle (${_styleNamesUz[managerStyle]})",
+                managerStyle,
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

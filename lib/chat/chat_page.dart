@@ -297,94 +297,118 @@ class _ChatPageState extends State<ChatPage> {
         _isAdmin = adminSnap.data ?? _isAdmin; // Update local state from stream
 
         return Scaffold(
-          backgroundColor: Colors.transparent,
+          // backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onLongPress: _showAdminLoginDialog,
+                  child: Text(
+                    "Ommaviy Chat",
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ),
+                StreamBuilder<int>(
+                  stream: _chatService.getTotalUsersCount(),
+                  builder: (context, snapshot) {
+                    return Text(
+                      "${snapshot.data ?? 0} a'zo",
+                      style: GoogleFonts.outfit(
+                        fontSize: 11,
+                        color: const Color(0xFF06DF5D),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton.icon(
+                onPressed: _showNameDialog,
+                icon: const Icon(Icons.edit_note,
+                    size: 20, color: Color(0xFF06DF5D)),
+                label: Text(
+                  "Ismni o'zgartirish",
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF06DF5D),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+          ),
           body: Column(
             children: [
               // Header
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
-                child: Row(children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              if (_isAdmin)
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      GestureDetector(
-                        onLongPress: _showAdminLoginDialog,
-                        child: Text(
-                          "Ommaviy Chat",
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black,
-                          ),
-                        ),
-                      ),
-                      StreamBuilder<int>(
-                        stream: _chatService.getTotalUsersCount(),
+                      StreamBuilder<bool>(
+                        stream: _chatService.getChatStatus(),
                         builder: (context, snapshot) {
-                          return Text(
-                            "${snapshot.data ?? 0} a'zo",
-                            style: GoogleFonts.outfit(
-                              fontSize: 11,
-                              color: const Color(0xFF06DF5D),
-                              fontWeight: FontWeight.w500,
+                          final isPaused = snapshot.data ?? false;
+                          return IconButton(
+                            onPressed: () =>
+                                _chatService.toggleChatPause(!isPaused),
+                            icon: Icon(
+                              isPaused
+                                  ? Icons.play_circle_fill
+                                  : Icons.pause_circle_filled,
+                              color: isPaused
+                                  ? const Color(0xFF06DF5D)
+                                  : Colors.red,
                             ),
+                            tooltip: isPaused
+                                ? "Chatni davom ettirish"
+                                : "Chatni to'xtatish",
                           );
                         },
                       ),
+                      IconButton(
+                        onPressed: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text("Chatni tozalash?"),
+                              content: const Text(
+                                  "Barcha xabarlar o'chirib tashlanadi!"),
+                              actions: [
+                                TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: const Text("Yo'q")),
+                                TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child:
+                                        const Text("Ha, barchasini o'chirish")),
+                              ],
+                            ),
+                          );
+                          if (confirm == true)
+                            await _chatService.clearAllMessages();
+                        },
+                        icon: const Icon(Icons.delete_sweep,
+                            color: Colors.orange),
+                        tooltip: "Chatni tozalash",
+                      ),
                     ],
                   ),
-                  const Spacer(),
-                  if (_isAdmin) ...[
-                    StreamBuilder<bool>(
-                      stream: _chatService.getChatStatus(),
-                      builder: (context, snapshot) {
-                        final isPaused = snapshot.data ?? false;
-                        return IconButton(
-                          onPressed: () =>
-                              _chatService.toggleChatPause(!isPaused),
-                          icon: Icon(
-                            isPaused
-                                ? Icons.play_circle_fill
-                                : Icons.pause_circle_filled,
-                            color:
-                                isPaused ? const Color(0xFF06DF5D) : Colors.red,
-                          ),
-                          tooltip: isPaused
-                              ? "Chatni davom ettirish"
-                              : "Chatni to'xtatish",
-                        );
-                      },
-                    ),
-                    IconButton(
-                      onPressed: () async {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text("Chatni tozalash?"),
-                            content: const Text(
-                                "Barcha xabarlar o'chirib tashlanadi!"),
-                            actions: [
-                              TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: const Text("Yo'q")),
-                              TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child:
-                                      const Text("Ha, barchasini o'chirish")),
-                            ],
-                          ),
-                        );
-                        if (confirm == true)
-                          await _chatService.clearAllMessages();
-                      },
-                      icon:
-                          const Icon(Icons.delete_sweep, color: Colors.orange),
-                      tooltip: "Chatni tozalash",
-                    ),
-                  ],
-                ]),
-              ),
+                ),
 
               // Messages List
               Expanded(
@@ -734,6 +758,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildMessageBubble(ChatMessage message, bool isMe, bool isDark,
       List<ChatMessage> allMessages) {
     final isHighlighted = _highlightedMessageId == message.id;
+    final userColor = _getUserColor(message.senderId);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 500),
@@ -741,148 +766,158 @@ class _ChatPageState extends State<ChatPage> {
       decoration: BoxDecoration(
         color: isHighlighted
             ? (isDark
-                ? Colors.white.withOpacity(0.15)
-                : Colors.black.withOpacity(0.1))
+                ? Colors.white.withOpacity(0.1)
+                : Colors.black.withOpacity(0.05))
             : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        crossAxisAlignment:
-            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment:
+            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Row(
-            mainAxisAlignment:
-                isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (_isAdmin && message.senderId != _myId) ...[
-                StreamBuilder<bool>(
-                  stream: _chatService.getUserStatus(message.senderId),
-                  builder: (context, snapshot) {
-                    final isBlocked = snapshot.data ?? false;
-                    return IconButton(
-                      onPressed: () => _chatService.toggleUserBlock(
-                          message.senderId, !isBlocked),
-                      icon: Icon(
-                        isBlocked ? Icons.check_circle_outline : Icons.block,
-                        size: 16,
-                        color: isBlocked ? Colors.green : Colors.orange,
-                      ),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      tooltip: isBlocked ? "Blokdan chiqarish" : "Bloklash",
-                    );
-                  },
+          if (!isMe) ...[
+            CircleAvatar(
+              radius: 14,
+              backgroundColor: userColor.withOpacity(0.2),
+              child: Text(
+                message.senderName.isNotEmpty
+                    ? message.senderName[0].toUpperCase()
+                    : "?",
+                style: GoogleFonts.outfit(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: userColor,
                 ),
-                const SizedBox(width: 4),
-              ],
-              if (isMe || _isAdmin || true)
-                IconButton(
-                  onPressed: () => _showMessageActions(message),
-                  icon: Icon(Icons.more_vert,
-                      size: 18,
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Column(
+              crossAxisAlignment:
+                  isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onLongPress: () => _showMessageActions(message),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
                       color: isMe
-                          ? const Color(0xFF000000).withOpacity(0.5)
-                          : (isDark ? Colors.white54 : Colors.black54)),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  margin: EdgeInsets.only(
-                    left: isMe ? 20 : 0,
-                    right: isMe
-                        ? 0
-                        : 20, // Reduced from 50 to make room for reply icon
-                  ),
-                  decoration: BoxDecoration(
-                    color: isMe
-                        ? const Color(0xFF06DF5D)
-                        : (isDark
-                            ? Colors.white.withOpacity(0.1)
-                            : Colors.black.withOpacity(0.05)),
-                    borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(16),
-                      topRight: const Radius.circular(16),
-                      bottomLeft: Radius.circular(isMe ? 16 : 4),
-                      bottomRight: Radius.circular(isMe ? 4 : 16),
+                          ? const Color(0xFF6B4EE6)
+                          : (isDark
+                              ? const Color(0xFF2B333E)
+                              : const Color(0xFFE9E9EB)),
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(18),
+                        topRight: const Radius.circular(18),
+                        bottomLeft: Radius.circular(isMe ? 18 : 4),
+                        bottomRight: Radius.circular(isMe ? 4 : 18),
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (message.replyToName != null)
-                        _buildReplyInBubble(message, isDark, allMessages),
-                      if (!isMe || message.isAdmin) ...[
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (!isMe || message.isAdmin) ...[
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                message.senderName,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: isMe ? Colors.white70 : userColor,
+                                ),
+                              ),
+                              if (message.isAdmin) ...[
+                                const SizedBox(width: 4),
+                                const Icon(Icons.verified,
+                                    size: 12, color: Colors.blue),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                        ],
+                        if (message.replyToName != null)
+                          _buildReplyInBubble(message, isDark, allMessages),
+                        _buildMessageText(message.text, isMe, isDark),
+                        const SizedBox(height: 4),
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              message.senderName,
-                              style: GoogleFonts.outfit(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: isMe
-                                    ? Colors.black.withOpacity(0.7)
-                                    : _getUserColor(message.senderId),
-                              ),
-                            ),
-                            if (message.isAdmin) ...[
-                              const SizedBox(width: 4),
-                              const Icon(Icons.verified,
-                                  size: 12, color: Colors.blue),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                      ],
-                      _buildMessageText(message.text, isMe, isDark),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (message.views.isNotEmpty) ...[
-                            Icon(
-                              Icons.remove_red_eye_outlined,
-                              size: 10,
-                              color: isMe
-                                  ? Colors.black54
-                                  : (isDark ? Colors.white38 : Colors.black38),
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              "${message.views.length}",
+                              DateFormat('dd/MM/yyyy HH:mm')
+                                  .format(message.timestamp),
                               style: GoogleFonts.outfit(
                                 fontSize: 9,
                                 color: isMe
-                                    ? Colors.black54
+                                    ? Colors.white60
                                     : (isDark
                                         ? Colors.white38
                                         : Colors.black38),
                               ),
                             ),
-                            const SizedBox(width: 6),
-                          ],
-                          Text(
-                            DateFormat('dd/MM/yyyy HH:mm')
-                                .format(message.timestamp),
-                            style: GoogleFonts.outfit(
-                              fontSize: 9,
-                              color: isMe
-                                  ? Colors.black54
-                                  : (isDark ? Colors.white38 : Colors.black38),
+                            const SizedBox(width: 4),
+                            // Views count
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.visibility_outlined,
+                                  size: 10,
+                                  color: isMe
+                                      ? Colors.white60
+                                      : (isDark
+                                          ? Colors.white38
+                                          : Colors.black38),
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  "${message.views.length}",
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 9,
+                                    color: isMe
+                                        ? Colors.white60
+                                        : (isDark
+                                            ? Colors.white38
+                                            : Colors.black38),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                            if (isMe) ...[
+                              const SizedBox(width: 4),
+                              Icon(
+                                message.views.isNotEmpty
+                                    ? Icons.done_all
+                                    : Icons.done,
+                                size: 12,
+                                color: Colors.white70,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+              ],
+            ),
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                onPressed: () => _showMessageActions(message),
+                icon: Icon(Icons.more_vert,
+                    size: 18, color: isDark ? Colors.white54 : Colors.black54),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                tooltip: "Ko'proq",
               ),
-              // const SizedBox(width: 4),
+              const SizedBox(height: 4),
               IconButton(
                 onPressed: () => setState(() => _replyMessage = message),
                 icon: Icon(Icons.reply,
@@ -1143,34 +1178,45 @@ class _ChatPageState extends State<ChatPage> {
     return GestureDetector(
       onTap: () => _scrollToMessage(message.replyToId, allMessages),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(8),
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.2),
+          color: Colors.black.withOpacity(0.05),
           borderRadius: BorderRadius.circular(8),
-          border: const Border(
-            left: BorderSide(color: Color(0xFF06DF5D), width: 3),
+          border: Border(
+            left: BorderSide(
+              color: message.replyToSenderId != null
+                  ? _getUserColor(message.replyToSenderId!)
+                  : Colors.grey,
+              width: 3,
+            ),
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               message.replyToName ?? "",
               style: GoogleFonts.outfit(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
-                color: Colors.white.withOpacity(0.7),
+                color: message.senderId == _myId
+                    ? Colors.white70
+                    : (message.replyToSenderId != null
+                        ? _getUserColor(message.replyToSenderId!)
+                        : (isDark ? Colors.white70 : Colors.black54)),
               ),
             ),
             Text(
               message.replyToText ?? "",
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: GoogleFonts.outfit(
                 fontSize: 11,
-                color: isDark ? Colors.white : Colors.black,
-                height: 1.2,
+                color: message.senderId == _myId
+                    ? Colors.white
+                    : (isDark ? Colors.white70 : Colors.black87),
               ),
             ),
           ],

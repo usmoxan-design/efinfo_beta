@@ -42,15 +42,9 @@ class ManagerDetailPage extends StatelessWidget {
                 width: 150,
                 height: 150,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.accent, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.accent.withOpacity(0.2),
-                      blurRadius: 20,
-                      spreadRadius: 5,
-                    )
-                  ],
+                  color: Colors.grey,
+                  borderRadius: BorderRadius.circular(24),
+                  // border: Border.all(color: AppColors.accent, width: 2),
                 ),
                 child: ClipOval(
                   child: CachedNetworkImage(
@@ -125,9 +119,110 @@ class ManagerDetailPage extends StatelessWidget {
               return _buildPlaystyleRow(entry.key, entry.value, isDark);
             }),
 
+            const SizedBox(height: 32),
+
+            // Booster Section
+            if (manager.boosters != null && manager.boosters!.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  "Manager Boosters",
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: List.generate(manager.boosters!.length, (index) {
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: index < manager.boosters!.length - 1 ? 8 : 0,
+                        left: index > 0 ? 8 : 0,
+                      ),
+                      child: _buildBoosterCard(
+                          manager.boosters![index], index + 1, isDark),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: Text(
+                  "The above Player Stats will be boosted.",
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    color: isDark ? Colors.white38 : Colors.black38,
+                  ),
+                ),
+              ),
+            ],
+
             const SizedBox(height: 40),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildBoosterCard(ManagerBooster booster, int index, bool isDark) {
+    return Container(
+      height: 110,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E26) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+        ),
+        boxShadow: !isDark
+            ? [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ]
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Booster $index",
+            style: GoogleFonts.outfit(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFFFF006E), // UI Pink/Red from image
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            booster.name,
+            style: GoogleFonts.outfit(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          const Spacer(),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Text(
+              booster.value.contains('+')
+                  ? booster.value
+                  : "+ ${booster.value}",
+              style: GoogleFonts.outfit(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

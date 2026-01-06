@@ -47,10 +47,81 @@ class _TabOneState extends State<TabOne> {
     });
   }
 
+  Map<String, List<PlayerSkills>> _groupSkills(List<PlayerSkills> skills) {
+    final shooting = [
+      'Heading',
+      'Long-range Curler',
+      'Chip Shot Control',
+      'Knuckle Shot',
+      'Dipping Shot',
+      'Rising Shot',
+      'Long-range Shooting',
+      'Acrobatic Finishing',
+      'First-time Shot',
+      'Penalty Specialist'
+    ];
+    final passing = [
+      'One-touch Pass',
+      'Through Passing',
+      'Weighted Pass',
+      'Pinpoint Crossing',
+      'Outside Curler',
+      'No Look Pass',
+      'Low Lofted Pass',
+      'Heel Trick'
+    ];
+    final dribbling = [
+      'Scissors Feint',
+      'Double Touch',
+      'Flip Flap',
+      'Marseille Turn',
+      'Sombrero',
+      'Chop Turn',
+      'Cut Behind & Turn',
+      'Scotch Move',
+      'Sole Control',
+      'Rabona'
+    ];
+    final defending = [
+      'Man Marking',
+      'Track Back',
+      'Interception',
+      'Blocker',
+      'Aerial Superiority',
+      'Sliding Tackle',
+      'Acrobatic Clearance'
+    ];
+
+    Map<String, List<PlayerSkills>> groups = {
+      'Shooting': [],
+      'Passing': [],
+      'Dribbling': [],
+      'Defending': [],
+      'Other': [],
+    };
+
+    for (var skill in skills) {
+      if (shooting.contains(skill.title)) {
+        groups['Shooting']!.add(skill);
+      } else if (passing.contains(skill.title)) {
+        groups['Passing']!.add(skill);
+      } else if (dribbling.contains(skill.title)) {
+        groups['Dribbling']!.add(skill);
+      } else if (defending.contains(skill.title)) {
+        groups['Defending']!.add(skill);
+      } else {
+        groups['Other']!.add(skill);
+      }
+    }
+    return groups;
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
+
+    final groupedSkills = _groupSkills(filteredSkills);
 
     return playerSkills.isEmpty
         ? const Center(child: CircularProgressIndicator())
@@ -95,84 +166,107 @@ class _TabOneState extends State<TabOne> {
                   ),
                 ),
               ),
-              ListView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: filteredSkills.length,
-                shrinkWrap: true,
-                itemBuilder: (context, index) {
-                  final style = filteredSkills[index];
+              ...groupedSkills.entries
+                  .where((e) => e.value.isNotEmpty)
+                  .map((entry) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 16, 8),
+                      child: Text(
+                        entry.key,
+                        style: GoogleFonts.outfit(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF06DF5D),
+                        ),
+                      ),
+                    ),
+                    ListView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: entry.value.length,
+                      shrinkWrap: true,
+                      itemBuilder: (context, index) {
+                        final style = entry.value[index];
 
-                  return Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: GlassContainer(
-                      padding: const EdgeInsets.all(12),
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PlayerSkillsShow(
-                                text: style.full_description,
-                                image: style.image,
-                                title: style.title,
-                              ),
-                            ),
-                          );
-                        },
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                color: (isDark ? Colors.white : Colors.black)
-                                    .withOpacity(0.05),
-                              ),
-                              padding: const EdgeInsets.all(8),
-                              child: Image.asset(
-                                style.image,
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    style.title,
-                                    style: GoogleFonts.outfit(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                      color:
-                                          isDark ? Colors.white : Colors.black,
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          child: GlassContainer(
+                            padding: const EdgeInsets.all(12),
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PlayerSkillsShow(
+                                      text: style.full_description,
+                                      image: style.image,
+                                      title: style.title,
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    style.description,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 14,
-                                      color: isDark
-                                          ? Colors.white70
-                                          : Colors.black87,
+                                );
+                              },
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      color:
+                                          (isDark ? Colors.white : Colors.black)
+                                              .withOpacity(0.05),
+                                    ),
+                                    padding: const EdgeInsets.all(8),
+                                    child: Image.asset(
+                                      style.image,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          style.title,
+                                          style: GoogleFonts.outfit(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: isDark
+                                                ? Colors.white
+                                                : Colors.black,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          style.description,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 13,
+                                            color: isDark
+                                                ? Colors.white70
+                                                : Colors.black87,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
+                  ],
+                );
+              }).toList(),
               const SizedBox(height: 100),
             ],
           );
@@ -266,6 +360,16 @@ class _TabTwoState extends State<TabTwo> {
                   ),
                 ),
               ),
+              if (filteredSkills.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: Text(
+                      "Ko'nikmalar topilmadi",
+                      style: GoogleFonts.outfit(color: Colors.grey),
+                    ),
+                  ),
+                ),
               ListView.builder(
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: filteredSkills.length,
@@ -295,8 +399,8 @@ class _TabTwoState extends State<TabTwo> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Container(
-                              width: 100,
-                              height: 100,
+                              width: 80,
+                              height: 80,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
                                 color: (isDark ? Colors.white : Colors.black)
@@ -317,7 +421,7 @@ class _TabTwoState extends State<TabTwo> {
                                     style.title,
                                     style: GoogleFonts.outfit(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 18,
+                                      fontSize: 16,
                                       color:
                                           isDark ? Colors.white : Colors.black,
                                     ),
@@ -328,7 +432,7 @@ class _TabTwoState extends State<TabTwo> {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: GoogleFonts.outfit(
-                                      fontSize: 14,
+                                      fontSize: 13,
                                       color: isDark
                                           ? Colors.white70
                                           : Colors.black87,

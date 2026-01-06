@@ -2,7 +2,7 @@
     {
         "name": "Johan Cruyff",
         "fullName": "",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -14,12 +14,22 @@
             "Out Wide": 81,
             "Long Ball": 43
         },
-        "imageUrl": "https://raw.githubusercontent.com/usmoxan-design/efinfo_data/refs/heads/main/manager_images/cruyff.png"
+        "imageUrl": "https://raw.githubusercontent.com/usmoxan-design/efinfo_data/refs/heads/main/manager_images/cruyff.png",
+        "boosters": [
+            {
+                "name": "Heading",
+                "value": "+1"
+            },
+            {
+                "name": "Physical Contact",
+                "value": "+1"
+            }
+        ]
     },
     {
         "name": "Ståle Solbakken",
         "fullName": "",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -36,7 +46,7 @@
     {
         "name": "Rudi Garcia",
         "fullName": "",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -53,7 +63,7 @@
     {
         "name": "L. Spalletti",
         "fullName": "L. Spalletti",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -70,7 +80,7 @@
     {
         "name": "F. Beckenbauer",
         "fullName": "F. Beckenbauer",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -87,7 +97,7 @@
     {
         "name": "Okan Buruk",
         "fullName": "",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -104,7 +114,7 @@
     {
         "name": "R. Martínez",
         "fullName": "R. Martínez",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -121,7 +131,7 @@
     {
         "name": "P. Kluivert",
         "fullName": "P. Kluivert",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -138,7 +148,7 @@
     {
         "name": "José Mourinho",
         "fullName": "José Mourinho",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -155,7 +165,7 @@
     {
         "name": "Fabio Capello",
         "fullName": "Fabio Capello",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -172,7 +182,7 @@
     {
         "name": "Frank Rijkaard",
         "fullName": "Frank Rijkaard",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -189,7 +199,7 @@
     {
         "name": "Pep Guardiola",
         "fullName": "Pep Guardiola",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -201,12 +211,18 @@
             "Out Wide": 89,
             "Long Ball": 51
         },
-        "imageUrl": "https://raw.githubusercontent.com/usmoxan-design/efinfo_data/refs/heads/main/manager_images/guardiola3.png"
+        "imageUrl": "https://raw.githubusercontent.com/usmoxan-design/efinfo_data/refs/heads/main/manager_images/guardiola3.png",
+        "boosters": [
+            {
+                "name": "Low Pass",
+                "value": "+1"
+            }
+        ]
     },
     {
         "name": "Ruben Amorim",
         "fullName": "Ruben Amorim",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -223,7 +239,7 @@
     {
         "name": "Hansi Flick",
         "fullName": "Hansi Flick",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -240,7 +256,7 @@
     {
         "name": "Mikel Arteta",
         "fullName": "Mikel Arteta",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -257,7 +273,7 @@
     {
         "name": "Cesc Fàbregas",
         "fullName": "Cesc Fàbregas",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -274,7 +290,7 @@
     {
         "name": "Ronald Koeman",
         "fullName": "Ronald Koeman",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -291,7 +307,7 @@
     {
         "name": "Gennaro Gattuso",
         "fullName": "Gennaro Gattuso",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -308,7 +324,7 @@
     {
         "name": "Pep Guardiola",
         "fullName": "Pep Guardiola",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "Spain",
         "type": "Default",
         "age": 59,
@@ -320,12 +336,22 @@
             "Out Wide": 68,
             "Long Ball": 32
         },
-        "imageUrl": "https://raw.githubusercontent.com/usmoxan-design/efinfo_data/refs/heads/main/manager_images/guardiola2.png"
+        "imageUrl": "https://raw.githubusercontent.com/usmoxan-design/efinfo_data/refs/heads/main/manager_images/guardiola2.png",
+        "boosters": [
+            {
+                "name": "Low Pass",
+                "value": "+1"
+            },
+            {
+                "name": "Tight Possession",
+                "value": "+1"
+            }
+        ]
     },
     {
         "name": "Xabi Alonso",
         "fullName": "Xabi Alonso",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -337,12 +363,18 @@
             "Out Wide": 51,
             "Long Ball": 28
         },
-        "imageUrl": "https://raw.githubusercontent.com/usmoxan-design/efinfo_data/refs/heads/main/manager_images/alonso2.png"
+        "imageUrl": "https://raw.githubusercontent.com/usmoxan-design/efinfo_data/refs/heads/main/manager_images/alonso2.png",
+        "boosters": [
+            {
+                "name": "Flat Lofted Pass",
+                "value": "+1"
+            }
+        ]
     },
     {
         "name": "R. Martínez",
         "fullName": "R. Martínez",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -359,7 +391,7 @@
     {
         "name": "V. Montella",
         "fullName": "V. Montella",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -376,7 +408,7 @@
     {
         "name": "D. Deschamps",
         "fullName": "D. Deschamps",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -393,7 +425,7 @@
     {
         "name": "D. Stojković",
         "fullName": "D. Stojković",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -410,7 +442,7 @@
     {
         "name": "L. de la Fuente",
         "fullName": "L. de la Fuente",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -427,7 +459,7 @@
     {
         "name": "Mikel Arteta",
         "fullName": "Mikel Arteta",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -444,7 +476,7 @@
     {
         "name": "Steven Gerrard",
         "fullName": "Steven Gerrard",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -461,7 +493,7 @@
     {
         "name": "Patrick Vieira",
         "fullName": "Patrick Vieira",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -478,7 +510,7 @@
     {
         "name": "Paulo Fonseca",
         "fullName": "Paulo Fonseca",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -495,7 +527,7 @@
     {
         "name": "Frank Lampard",
         "fullName": "Frank Lampard",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -512,7 +544,7 @@
     {
         "name": "Frank Rijkaard",
         "fullName": "Frank Rijkaard",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -529,7 +561,7 @@
     {
         "name": "Ronald Koeman",
         "fullName": "Ronald Koeman",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -546,7 +578,7 @@
     {
         "name": "Ruben Amorim",
         "fullName": "Ruben Amorim",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -563,7 +595,7 @@
     {
         "name": "José Mourinho",
         "fullName": "José Mourinho",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -580,7 +612,7 @@
     {
         "name": "Vincent Kompany",
         "fullName": "Vincent Kompany",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -597,7 +629,7 @@
     {
         "name": "Hansi Flick",
         "fullName": "Hansi Flick",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -614,7 +646,7 @@
     {
         "name": "G. P. Gasperini",
         "fullName": "G. P. Gasperini",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -631,7 +663,7 @@
     {
         "name": "Simone Inzaghi",
         "fullName": "Simone Inzaghi",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -648,7 +680,7 @@
     {
         "name": "Xabi Alonso",
         "fullName": "Xabi Alonso",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -665,7 +697,7 @@
     {
         "name": "Daniel Piscopo",
         "fullName": "Daniel Piscopo",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -682,7 +714,7 @@
     {
         "name": "Fred Arterton",
         "fullName": "Fred Arterton",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -699,7 +731,7 @@
     {
         "name": "Max Hanell",
         "fullName": "Max Hanell",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -716,7 +748,7 @@
     {
         "name": "Emmerich Vander",
         "fullName": "Emmerich Vander",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -733,7 +765,7 @@
     {
         "name": "Wernher Fesca",
         "fullName": "Wernher Fesca",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -750,7 +782,7 @@
     {
         "name": "Harry Rellstab",
         "fullName": "Harry Rellstab",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -767,7 +799,7 @@
     {
         "name": "Pep Guardiola",
         "fullName": "Pep Guardiola",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -784,7 +816,7 @@
     {
         "name": "G. Southgate",
         "fullName": "G. Southgate",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -801,7 +833,7 @@
     {
         "name": "Lionel Scaloni",
         "fullName": "Lionel Scaloni",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",
@@ -818,7 +850,7 @@
     {
         "name": "Olympio H.",
         "fullName": "Olympio H.",
-        "team": "Free",
+        "team": "Free Agent",
         "nationality": "",
         "type": "Default",
         "age": "",

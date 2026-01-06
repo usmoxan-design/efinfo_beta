@@ -8,6 +8,7 @@ class Manager {
   final String coachingAffinity;
   final Map<String, int> teamPlaystyle;
   final String imageUrl;
+  final List<ManagerBooster>? boosters;
 
   Manager({
     required this.name,
@@ -19,6 +20,7 @@ class Manager {
     required this.coachingAffinity,
     required this.teamPlaystyle,
     required this.imageUrl,
+    this.boosters,
   });
 
   factory Manager.fromJson(Map<String, dynamic> json) {
@@ -34,6 +36,11 @@ class Manager {
       coachingAffinity: json['coachingAffinity'] ?? '',
       teamPlaystyle: Map<String, int>.from(json['teamPlaystyle'] ?? {}),
       imageUrl: json['imageUrl'] ?? '',
+      boosters: json['boosters'] != null
+          ? (json['boosters'] as List)
+              .map((i) => ManagerBooster.fromJson(i))
+              .toList()
+          : null,
     );
   }
 
@@ -48,6 +55,28 @@ class Manager {
       'coachingAffinity': coachingAffinity,
       'teamPlaystyle': teamPlaystyle,
       'imageUrl': imageUrl,
+      'boosters': boosters?.map((x) => x.toJson()).toList(),
+    };
+  }
+}
+
+class ManagerBooster {
+  final String name;
+  final String value;
+
+  ManagerBooster({required this.name, required this.value});
+
+  factory ManagerBooster.fromJson(Map<String, dynamic> json) {
+    return ManagerBooster(
+      name: json['name'] ?? '',
+      value: json['value'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'value': value,
     };
   }
 }

@@ -24,7 +24,7 @@ class FormationsListScreen extends StatelessWidget {
       backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          "Formations",
+          "Tactical Formations",
           style: GoogleFonts.outfit(
             color: isDark ? Colors.white : Colors.black,
             fontWeight: FontWeight.bold,
@@ -34,13 +34,15 @@ class FormationsListScreen extends StatelessWidget {
         elevation: 0,
         iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(16),
+      body: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         itemCount: allFormations.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 16),
         itemBuilder: (context, index) {
           final item = allFormations[index];
-          return _buildFormationCard(context, item, isDark);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: _buildFormationCard(context, item, isDark),
+          );
         },
       ),
     );
@@ -59,33 +61,34 @@ class FormationsListScreen extends StatelessWidget {
         child: IntrinsicHeight(
           child: Row(
             children: [
-              // Chap taraf: Mini Maydon preview
+              // Left side: Mini Field Preview
               Container(
-                width: 100,
+                width: 110,
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: (isDark ? Colors.green[900] : Colors.green[700])
-                      ?.withOpacity(0.3),
+                  color: const Color(0xFF06DF5D).withOpacity(0.05),
                   borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      bottomLeft: Radius.circular(20)),
+                      topLeft: Radius.circular(24),
+                      bottomLeft: Radius.circular(24)),
                 ),
-                child: CustomPaint(
-                  painter: RealisticFieldPainter(
-                      positions: formation.positions, playerRadius: 3.5),
-                  child: Container(),
+                child: AspectRatio(
+                  aspectRatio: 0.8,
+                  child: CustomPaint(
+                    painter: RealisticFieldPainter(
+                        positions: formation.positions, playerRadius: 4.0),
+                    child: Container(),
+                  ),
                 ),
               ),
-              // O'ng taraf: Ma'lumot
+              // Right side: Details
               Expanded(
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(
                             child: Text(
@@ -105,18 +108,32 @@ class FormationsListScreen extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.outfit(
-                            color: isDark ? Colors.white54 : Colors.black54,
-                            fontSize: 13),
+                            color: isDark ? Colors.white70 : Colors.black54,
+                            fontSize: 13,
+                            height: 1.3),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.auto_awesome,
+                              size: 14,
+                              color: const Color(0xFF06DF5D).withOpacity(0.7)),
+                          const SizedBox(width: 4),
+                          Text(
+                            "Batafsil ma'lumot",
+                            style: GoogleFonts.outfit(
+                                fontSize: 11,
+                                color: const Color(0xFF06DF5D),
+                                fontWeight: FontWeight.w500),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: Icon(Icons.chevron_right,
-                    color: isDark ? Colors.white24 : Colors.black26),
-              )
+              const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+              const SizedBox(width: 8),
             ],
           ),
         ),
@@ -129,29 +146,32 @@ class FormationsListScreen extends StatelessWidget {
     String text;
     switch (diff) {
       case Difficulty.easy:
-        color = Colors.greenAccent;
-        text = "Easy";
+        color = const Color(0xFF06DF5D);
+        text = "Oson";
         break;
       case Difficulty.medium:
         color = Colors.orangeAccent;
-        text = "Mid";
+        text = "O'rta";
         break;
       case Difficulty.hard:
         color = Colors.redAccent;
-        text = "Hard";
+        text = "Qiyin";
         break;
     }
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withOpacity(0.5), width: 0.5),
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
       ),
       child: Text(
         text,
-        style:
-            TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+        style: TextStyle(
+            color: color,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5),
       ),
     );
   }

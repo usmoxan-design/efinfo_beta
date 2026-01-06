@@ -139,8 +139,8 @@ class _HomePageState extends State<HomePage>
             context, MaterialPageRoute(builder: (_) => const PlayerStatPage())),
       },
       {
-        'title': "Booster Recommendations",
-        'subtitle': "Booster tavsiyalar",
+        'title': "Boosters (Boosterlar)",
+        'subtitle': "Boosterlar va tavsiyalar",
         'icon': "assets/images/booster.png",
         'accent': AppColors.accentGreen,
         'badge': false,
