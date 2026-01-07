@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 // import 'package:http/http.dart' as http; // Use for remote fetching
 
@@ -32,39 +33,52 @@ class _ManagersListPageState extends State<ManagersListPage> {
   Future<void> loadManagers() async {
     setState(() => isLoading = true);
     try {
-      // Offline mode: Load from assets
-      final String response =
-          await rootBundle.loadString('assets/data/managers.json');
-      final List<dynamic> data = json.decode(response);
-      setState(() {
-        managers = data.map((json) => Manager.fromJson(json)).toList();
-        isLoading = false;
-      });
+      // 1. Load from assets first as a fallback/initial data
+      // try {
+      //   final String localResponse =
+      //       await rootBundle.loadString('assets/data/managers.json');
+      //   final List<dynamic> localData = json.decode(localResponse);
+      //   if (mounted) {
+      //     setState(() {
+      //       managers = localData.map((json) => Manager.fromJson(json)).toList();
+      //     });
+      //   }
+      // } catch (e) {
+      //   debugPrint("Error loading local managers: $e");
+      // }
 
-      /*
-      // Online mode: Load from GitHub (Commented as requested)
+      // 2. Try to update from GitHub if online
       if (await hasInternet()) {
-        final response = await http.get(Uri.parse('https://raw.githubusercontent.com/usmoxan-design/efinfo_data/refs/heads/main/managers.json'));
+        final response = await http.get(Uri.parse(
+            'https://raw.githubusercontent.com/usmoxan-design/efinfo_data/refs/heads/main/managers.json'));
         if (response.statusCode == 200) {
           final List<dynamic> remoteData = json.decode(response.body);
-          setState(() {
-            managers = remoteData.map((json) => Manager.fromJson(json)).toList();
-          });
+          if (mounted) {
+            setState(() {
+              managers =
+                  remoteData.map((json) => Manager.fromJson(json)).toList();
+            });
+          }
         }
       }
-      */
     } catch (e) {
-      debugPrint("Error loading managers: $e");
-      setState(() => isLoading = false);
+      debugPrint("Error loading remote managers: $e");
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
   // Internet connectivity check function
   Future<bool> hasInternet() async {
+    if (kIsWeb) return true;
     try {
       final result = await InternetAddress.lookup('google.com');
       return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
     } on SocketException catch (_) {
+      return false;
+    } catch (_) {
       return false;
     }
   }

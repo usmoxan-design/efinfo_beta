@@ -137,12 +137,12 @@ class _PlayerStatPageState extends State<PlayerStatPage> {
 
   // --- Yangi, sodda umumiy tutorial dialogi ---
   void _showGeneralTutorialDialog(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
-    //isDark ? Colors.white : Colors.black
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final themeProvider = Provider.of<ThemeProvider>(context);
+        final isDark = themeProvider.isDarkMode;
+
         return AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
