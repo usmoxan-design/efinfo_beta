@@ -251,7 +251,7 @@ class AiPlayingStylesPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      "Siz bir o‘yinchini boshqarayotgan paytda, qolgan o‘yinchilar kompyuter (AI) tomonidan avtomatik harakat qiladi. AI Playing Style ularning qayerga yugurishi, qanday ochilishi, hujum yoki himoyada o‘zini qanday tutishini belgilaydi va shu orqali maydondagi harakatlariga o‘ziga xoslik beradi.",
+                      "Bu uslublar AI'ning dribling, harakat va pas berish tendensiyasini o'zgartiradi, shuning uchun AI Division yoki VS AI o'yinlarida foydali. PvP'da (o'yinchi vs o'yinchi) siz qo'lda boshqarganingizda ular ishlamaydi.",
                       style: GoogleFonts.outfit(
                         fontSize: 14,
                         color: isDark ? Colors.white70 : Colors.black87,
