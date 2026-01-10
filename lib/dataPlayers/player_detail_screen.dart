@@ -358,17 +358,17 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     String cat = category.toLowerCase();
 
     if (cat.contains('shooting')) {
-      affected = ['Finishing', 'Place Kicking', 'Curl'];
+      affected = ['Finishing', 'Set Piece Taking', 'Curl'];
     } else if (cat.contains('passing'))
       affected = ['Low Pass', 'Lofted Pass'];
     else if (cat.contains('dribbling'))
       affected = ['Dribbling', 'Ball Control', 'Tight Possession'];
     else if (cat.contains('dexterity'))
-      affected = ['Offensive Awareness', 'Acceleration', 'Balance'];
+      affected = ['Attacking Awareness', 'Acceleration', 'Balance'];
     else if (cat.contains('lower body'))
       affected = ['Speed', 'Kicking Power', 'Stamina'];
     else if (cat.contains('aerial') || cat.contains('physical'))
-      affected = ['Heading', 'Jump', 'Physical Contact'];
+      affected = ['Heading', 'Jumping', 'Physical Contact'];
     else if (cat.contains('defending'))
       affected = [
         'Defensive Awareness',
@@ -377,15 +377,24 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
         'Defensive Engagement'
       ];
     else if (cat.contains('gk 1'))
-      affected = ['GK Awareness', 'Jump'];
+      affected = ['GK Awareness', 'Jumping'];
     else if (cat.contains('gk 2'))
       affected = ['GK Parrying', 'GK Reach'];
-    else if (cat.contains('gk 3')) affected = ['GK Catching', 'GK Reflexes'];
+    else if (cat.contains('gk 3')) affected = ['GK Catching', 'GK Reflex'];
 
     for (var stat in affected) {
-      if (_currentStats.containsKey(stat)) {
-        int val = _currentStats[stat]!;
-        _currentStats[stat] = (val + delta).clamp(1, 99);
+      // Find key case-insensitively to ensure we hit the stat
+      String? actualKey;
+      for (var k in _currentStats.keys) {
+        if (k.toLowerCase() == stat.toLowerCase()) {
+          actualKey = k;
+          break;
+        }
+      }
+
+      if (actualKey != null) {
+        int val = _currentStats[actualKey]!;
+        _currentStats[actualKey] = (val + delta).clamp(1, 99);
       }
     }
   }
@@ -451,13 +460,30 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
     int matchedStats = 0;
     // For each weight requirement, find the matching stat
     weights.forEach((testpageStatName, weight) {
-      // Find which PesDB stat name maps to this testpage stat name
       String? pesDbStatName;
-      pesDbToTestpage.forEach((pesDb, testpage) {
-        if (testpage == testpageStatName && _currentStats.containsKey(pesDb)) {
-          pesDbStatName = pesDb;
+
+      // 1. Try direct match (First priority as PesService formats names to match testpage)
+      // Case-insensitive check in _currentStats
+      for (var k in _currentStats.keys) {
+        if (k.toLowerCase() == testpageStatName.toLowerCase()) {
+          pesDbStatName = k;
+          break;
         }
-      });
+      }
+
+      // 2. If not found, try mapping (Fallback)
+      if (pesDbStatName == null) {
+        pesDbToTestpage.forEach((pesDb, testpage) {
+          if (testpage == testpageStatName) {
+            for (var k in _currentStats.keys) {
+              if (k.toLowerCase() == pesDb.toLowerCase()) {
+                pesDbStatName = k;
+                break;
+              }
+            }
+          }
+        });
+      }
 
       if (pesDbStatName != null) {
         int val = _currentStats[pesDbStatName!] ?? 40;
@@ -848,7 +874,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
         _buildStatCategory(
           'Hujumkorlik',
           [
-            'Offensive Awareness',
+            'Attacking Awareness',
             'Ball Control',
             'Dribbling',
             'Tight Possession',
@@ -917,7 +943,7 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
             'GK Awareness',
             'GK Catching',
             'GK Parrying',
-            'GK Reflexes',
+            'GK Reflex',
             'GK Reach'
           ],
           detail,
@@ -977,6 +1003,41 @@ class _PesPlayerDetailScreenState extends State<PesPlayerDetailScreen> {
 
     for (var originalKey in groupKeys) {
       final lookupKey = originalKey.toLowerCase().trim();
+
+      // Use simulated stats if available and in Max Level mode
+      if (_isMaxLevel && _currentStats.isNotEmpty) {
+        String? simKey;
+        for (var k in _currentStats.keys) {
+          if (k.toLowerCase().trim() == lookupKey) {
+            simKey = k;
+            break;
+          }
+        }
+
+        if (simKey != null) {
+          int currentVal = _currentStats[simKey]!;
+          int baseVal = 0;
+
+          // Find base value from Level 1 data
+          if (_level1Data != null) {
+            for (var k in _level1Data!.stats.keys) {
+              if (k.toLowerCase().trim() == lookupKey) {
+                baseVal = _parseStatValue(_level1Data!.stats[k]!);
+                break;
+              }
+            }
+          }
+
+          int diff = currentVal - baseVal;
+          if (diff > 0) {
+            categoryData[originalKey] = '(+$diff) $currentVal';
+          } else {
+            categoryData[originalKey] = currentVal.toString();
+          }
+          continue;
+        }
+      }
+
       if (normalizedStats.containsKey(lookupKey)) {
         categoryData[originalKey] = normalizedStats[lookupKey]!;
       } else if (normalizedInfo.containsKey(lookupKey)) {

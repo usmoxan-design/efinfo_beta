@@ -461,9 +461,50 @@ class _ManagersListPageState extends State<ManagersListPage> {
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
-                        itemCount: filteredList.length,
+                        itemCount: filteredList.length + 1,
                         itemBuilder: (context, index) {
-                          final manager = filteredList[index];
+                          if (index == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? Colors.white.withOpacity(0.05)
+                                      : Colors.black.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                      color: isDark
+                                          ? Colors.white10
+                                          : Colors.black12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.info_outline_rounded,
+                                        color: isDark
+                                            ? Colors.white54
+                                            : Colors.black54,
+                                        size: 18),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        "Menejerlar bazasida ma'lumotlarda xatoliklar yoki kamchiliklar bo'lishi mumkin. Agar xatolik topsangiz, iltimos Telegram orqali @efootball_info_ceo ga xabar bering.",
+                                        style: GoogleFonts.outfit(
+                                          color: isDark
+                                              ? Colors.white54
+                                              : Colors.black54,
+                                          fontSize: 11,
+                                          height: 1.3,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+                          final manager = filteredList[index - 1];
                           return _buildManagerCard(context, manager, isDark);
                         },
                       ),
@@ -516,30 +557,72 @@ class _ManagersListPageState extends State<ManagersListPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Manager Image with 16px border radius
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      color: Colors.grey,
-                      child: CachedNetworkImage(
-                        imageUrl: manager.imageUrl,
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: isDark ? Colors.grey[900] : Colors.grey[200],
-                          child: const Center(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Color(0xFF06DF5D),
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          color: Colors.grey,
+                          child: CachedNetworkImage(
+                            imageUrl: manager.imageUrl,
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              color:
+                                  isDark ? Colors.grey[900] : Colors.grey[200],
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Color(0xFF06DF5D),
+                                ),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              color:
+                                  isDark ? Colors.grey[900] : Colors.grey[200],
+                              child: const Icon(Icons.person, size: 40),
                             ),
                           ),
                         ),
-                        errorWidget: (context, url, error) => Container(
-                          color: isDark ? Colors.grey[900] : Colors.grey[200],
-                          child: const Icon(Icons.person, size: 40),
-                        ),
                       ),
-                    ),
+                      if (manager.boosters != null &&
+                          manager.boosters!.isNotEmpty)
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            height: 24, // Height for the fade/overlay area
+                            decoration: BoxDecoration(
+                              borderRadius: const BorderRadius.vertical(
+                                  bottom: Radius.circular(16)),
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withOpacity(0.7),
+                                ],
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: manager.boosters!.take(2).map((_) {
+                                return Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 1),
+                                  child: Image.asset(
+                                    'assets/images/elements/booster_slot.png',
+                                    width: 18,
+                                    height: 18,
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(width: 16),
                   Expanded(

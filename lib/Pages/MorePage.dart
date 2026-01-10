@@ -13,6 +13,7 @@ import 'package:efinfo_beta/theme/theme_provider.dart';
 import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:efinfo_beta/quiz/quiz_page.dart';
 import 'package:provider/provider.dart';
 
 class MorePage extends StatefulWidget {
@@ -26,6 +27,16 @@ class _MorePageState extends State<MorePage> {
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> moreData = [
+      {
+        'title': 'Football Logo Quiz',
+        'subtitle': 'Bilmimni sinash',
+        'icon': "assets/images/efootball-logo.png",
+        'accent': AppColors.accent,
+        'badge': true,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const QuizPage())),
+      },
       {
         'title': 'Taktik Sxema tavsiyalar',
         'subtitle': 'Optimal jamoangizni quring',

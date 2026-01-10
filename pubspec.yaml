@@ -92,6 +92,32 @@ flutter:
     - assets/images/instruction/
     - assets/images/player_skills/
     - assets/images/positions/
+    - assets/images/quiz/
+    - assets/images/quiz/Austria - Bundesliga/
+    - assets/images/quiz/Belgium - Jupiler Pro League/
+    - assets/images/quiz/Bulgaria - efbet Liga/
+    - assets/images/quiz/Croatia - SuperSport HNL/
+    - assets/images/quiz/Czech Republic - Chance Liga/
+    - assets/images/quiz/Denmark - Superliga/
+    - assets/images/quiz/England - Premier League/
+    - assets/images/quiz/France - Ligue 1/
+    - assets/images/quiz/Germany - Bundesliga/
+    - assets/images/quiz/Greece - Super League 1/
+    - assets/images/quiz/Hungary - Nemzeti Bajnokság/
+    - assets/images/quiz/Italy - Serie A/
+    - assets/images/quiz/Netherlands - Eredivisie/
+    - assets/images/quiz/Norway - Eliteserien/
+    - assets/images/quiz/Poland - PKO BP Ekstraklasa/
+    - assets/images/quiz/Portugal - Liga Portugal/
+    - assets/images/quiz/Romania - SuperLiga/
+    - assets/images/quiz/Russia - Premier Liga/
+    - assets/images/quiz/Scotland - Scottish Premiership/
+    - assets/images/quiz/Serbia - Super liga Srbije/
+    - assets/images/quiz/Spain - LaLiga/
+    - assets/images/quiz/Sweden - Allsvenskan/
+    - assets/images/quiz/Switzerland - Super League/
+    - assets/images/quiz/Türkiye - Süper Lig/
+    - assets/images/quiz/Ukraine - Premier Liga/
   #   - images/a_dot_ham.jpeg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

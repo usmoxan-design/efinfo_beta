@@ -38,25 +38,64 @@ class ManagerDetailPage extends StatelessWidget {
           children: [
             // Manager Image Header
             Center(
-              child: Container(
-                width: 150,
-                height: 150,
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.circular(24),
-                  // border: Border.all(color: AppColors.accent, width: 2),
-                ),
-                child: ClipOval(
-                  child: CachedNetworkImage(
-                    imageUrl: manager.imageUrl,
-                    placeholder: (context, url) => const Center(
-                        child:
-                            CircularProgressIndicator(color: AppColors.accent)),
-                    errorWidget: (context, url, error) =>
-                        const Icon(Icons.person, size: 80),
-                    fit: BoxFit.cover,
+              child: Stack(
+                children: [
+                  Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: CachedNetworkImage(
+                        imageUrl: manager.imageUrl,
+                        placeholder: (context, url) => const Center(
+                            child: CircularProgressIndicator(
+                                color: AppColors.accent)),
+                        errorWidget: (context, url, error) =>
+                            const Icon(Icons.person, size: 80),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
-                ),
+                  if (manager.boosters != null && manager.boosters!.isNotEmpty)
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.vertical(
+                              bottom: Radius.circular(24)),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.7),
+                            ],
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: manager.boosters!.take(2).map((_) {
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 2),
+                              child: Image.asset(
+                                'assets/images/elements/booster_slot.png',
+                                width: 32,
+                                height: 32,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             const SizedBox(height: 32),
