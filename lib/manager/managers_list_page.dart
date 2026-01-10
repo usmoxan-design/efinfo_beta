@@ -11,7 +11,6 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-// import 'package:http/http.dart' as http; // Use for remote fetching
 
 class ManagersListPage extends StatefulWidget {
   const ManagersListPage({super.key});
@@ -24,30 +23,35 @@ class _ManagersListPageState extends State<ManagersListPage> {
   List<Manager> managers = [];
   bool isLoading = true;
 
+  // Search and Filter State
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
+  String? _selectedPlayStyle;
+  String? _selectedFormation;
+
+  // View State
+  bool _areItemsExpanded = true;
+
   @override
   void initState() {
     super.initState();
     loadManagers();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> loadManagers() async {
     setState(() => isLoading = true);
     try {
-      // 1. Load from assets first as a fallback/initial data
-      // try {
-      //   final String localResponse =
-      //       await rootBundle.loadString('assets/data/managers.json');
-      //   final List<dynamic> localData = json.decode(localResponse);
-      //   if (mounted) {
-      //     setState(() {
-      //       managers = localData.map((json) => Manager.fromJson(json)).toList();
-      //     });
-      //   }
-      // } catch (e) {
-      //   debugPrint("Error loading local managers: $e");
-      // }
-
-      // 2. Try to update from GitHub if online
       if (await hasInternet()) {
         final response = await http.get(Uri.parse(
             'https://raw.githubusercontent.com/usmoxan-design/efinfo_data/refs/heads/main/managers.json'));
@@ -70,7 +74,6 @@ class _ManagersListPageState extends State<ManagersListPage> {
     }
   }
 
-  // Internet connectivity check function
   Future<bool> hasInternet() async {
     if (kIsWeb) return true;
     try {
@@ -83,9 +86,259 @@ class _ManagersListPageState extends State<ManagersListPage> {
     }
   }
 
+  List<Manager> get _filteredManagers {
+    return managers.where((m) {
+      // Search Logic
+      final q = _searchQuery.toLowerCase();
+      final matchesSearch = m.name.toLowerCase().contains(q) ||
+          m.team.toLowerCase().contains(q) ||
+          m.fullName.toLowerCase().contains(q);
+
+      if (!matchesSearch) return false;
+
+      // Filter by Play Style
+      if (_selectedPlayStyle != null) {
+        final rating = m.teamPlaystyle[_selectedPlayStyle] ?? 0;
+        // Assume users want managers proficient in this style (e.g., >= 70)
+        if (rating < 70) return false;
+      }
+
+      // Filter by Formation (Type)
+      if (_selectedFormation != null && _selectedFormation!.isNotEmpty) {
+        if (m.type != _selectedFormation) return false;
+      }
+
+      return true;
+    }).toList()
+      ..sort((a, b) {
+        // Sort logic: If playstyle is selected, sort by that rating descending.
+        // Otherwise, maybe sort by name? Or just keep original order.
+        if (_selectedPlayStyle != null) {
+          final valA = a.teamPlaystyle[_selectedPlayStyle] ?? 0;
+          final valB = b.teamPlaystyle[_selectedPlayStyle] ?? 0;
+          return valB.compareTo(valA); // highest first
+        }
+        return 0;
+      });
+  }
+
+  void _showFilterSheet(bool isDark) {
+    // Collect unique formations
+    final formations = managers.map((m) => m.type).toSet().toList()..sort();
+
+    // Collect unique playstyles (from all managers)
+    final Set<String> allPlayStyles = {};
+    for (var m in managers) {
+      allPlayStyles.addAll(m.teamPlaystyle.keys);
+    }
+    final playStylesList = allPlayStyles.toList()..sort();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Filtrlash",
+                        style: GoogleFonts.outfit(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          // Clear filters
+                          setState(() {
+                            // Updates _ManagersListPageState
+                            _selectedPlayStyle = null;
+                            _selectedFormation = null;
+                          });
+                          // Also update modal state to reflect changes visually immediately if needed
+                          setModalState(() {
+                            // This is just to satisfy the pattern, though the main values are in parent state.
+                            // But since chips read from parent state, we need to make sure parent state update triggers rebuild here?
+                            // No, setState updates parent. But the modal content is inside StatefulBuilder.
+                            // We should update the values (parent state) and then call setModalState to rebuild the sheet.
+                          });
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          "Tozalash",
+                          style: GoogleFonts.outfit(
+                            color: const Color(0xFF06DF5D),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Play Style Filter
+                  Text(
+                    "O'yin uslubi (Play Style)",
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: playStylesList.map((style) {
+                      final isSelected = _selectedPlayStyle == style;
+                      return ChoiceChip(
+                        label: Text(style),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setModalState(() {
+                            // Update parent state directly (since _ManagersListPageState vars are accessible)
+                            _selectedPlayStyle = selected ? style : null;
+                          });
+                          // We also strictly need to call setState on the parent if we want the background list to update live?
+                          // The user probably expects to click "Apply".
+                          // So we just update the variables. But wait, variables are in _ManagersListPageState.
+                          // Yes, this closure captures the parent instance.
+                        },
+                        backgroundColor:
+                            isDark ? Colors.black26 : Colors.grey[100],
+                        selectedColor: const Color(0xFF06DF5D).withOpacity(0.2),
+                        labelStyle: GoogleFonts.outfit(
+                          color: isSelected
+                              ? const Color(0xFF06DF5D)
+                              : (isDark ? Colors.white : Colors.black),
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        side: BorderSide(
+                          color: isSelected
+                              ? const Color(0xFF06DF5D)
+                              : Colors.transparent,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Formation Filter
+                  Text(
+                    "Taktika (Formation)",
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 150),
+                    child: SingleChildScrollView(
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: formations.map((fmt) {
+                          final isSelected = _selectedFormation == fmt;
+                          return ChoiceChip(
+                            label: Text(fmt),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setModalState(() {
+                                _selectedFormation = selected ? fmt : null;
+                              });
+                            },
+                            backgroundColor:
+                                isDark ? Colors.black26 : Colors.grey[100],
+                            selectedColor:
+                                const Color(0xFF06DF5D).withOpacity(0.2),
+                            labelStyle: GoogleFonts.outfit(
+                              color: isSelected
+                                  ? const Color(0xFF06DF5D)
+                                  : (isDark ? Colors.white : Colors.black),
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                            side: BorderSide(
+                              color: isSelected
+                                  ? const Color(0xFF06DF5D)
+                                  : Colors.transparent,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Apply filter
+                        setState(() {}); // Rebuild main page
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF06DF5D),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        "Qo'llash (Apply)",
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+    final filteredList = _filteredManagers;
+
     return Scaffold(
       backgroundColor:
           isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF5F5F5),
@@ -96,23 +349,127 @@ class _ManagersListPageState extends State<ManagersListPage> {
         elevation: 0,
         centerTitle: true,
       ),
-      body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF06DF5D)))
-          : managers.isEmpty
-              ? Center(
-                  child: Text("Menejerlar topilmadi",
+      body: Column(
+        children: [
+          // Search and Filter Bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? Colors.white12 : Colors.black12,
+                      ),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
                       style: GoogleFonts.outfit(
-                          color: isDark ? Colors.white : Colors.black)))
-              : ListView.builder(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  itemCount: managers.length,
-                  itemBuilder: (context, index) {
-                    final manager = managers[index];
-                    return _buildManagerCard(context, manager, isDark);
-                  },
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: "Menejer ismini qidirish...",
+                        hintStyle: GoogleFonts.outfit(
+                          color: isDark ? Colors.white38 : Colors.black38,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: isDark ? Colors.white38 : Colors.black38,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
+                const SizedBox(width: 8),
+
+                // Toggle Collapse/Expand Button
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _areItemsExpanded = !_areItemsExpanded;
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? Colors.white12 : Colors.black12,
+                      ),
+                    ),
+                    child: Icon(
+                      _areItemsExpanded ? Icons.unfold_less : Icons.unfold_more,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                // Filter Button
+                InkWell(
+                  onTap: () => _showFilterSheet(isDark),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: (_selectedPlayStyle != null ||
+                              _selectedFormation != null)
+                          ? const Color(0xFF06DF5D).withOpacity(0.2)
+                          : (isDark ? const Color(0xFF1E1E1E) : Colors.white),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: (_selectedPlayStyle != null ||
+                                _selectedFormation != null)
+                            ? const Color(0xFF06DF5D)
+                            : (isDark ? Colors.white12 : Colors.black12),
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.tune,
+                      color: (_selectedPlayStyle != null ||
+                              _selectedFormation != null)
+                          ? const Color(0xFF06DF5D)
+                          : (isDark ? Colors.white : Colors.black),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // List
+          Expanded(
+            child: isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF06DF5D)))
+                : filteredList.isEmpty
+                    ? Center(
+                        child: Text("Menejer topilmadi",
+                            style: GoogleFonts.outfit(
+                                color: isDark ? Colors.white : Colors.black)))
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        itemCount: filteredList.length,
+                        itemBuilder: (context, index) {
+                          final manager = filteredList[index];
+                          return _buildManagerCard(context, manager, isDark);
+                        },
+                      ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -240,26 +597,36 @@ class _ManagersListPageState extends State<ManagersListPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              // Playstyles
-              ...manager.teamPlaystyle.entries.map((entry) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Row(
-                    children: [
-                      _buildRatingBox(entry.value),
-                      const SizedBox(width: 12),
-                      Text(
-                        entry.key,
-                        style: GoogleFonts.outfit(
-                          fontSize: 14,
-                          color: isDark ? Colors.white : Colors.black,
+              if (_areItemsExpanded) ...[
+                const SizedBox(height: 16),
+                // Playstyles
+                ...manager.teamPlaystyle.entries.map((entry) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Row(
+                      children: [
+                        _buildRatingBox(entry.value),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            entry.key,
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              color: isDark ? Colors.white : Colors.black,
+                              fontWeight: _selectedPlayStyle == entry.key
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                        if (_selectedPlayStyle == entry.key)
+                          const Icon(Icons.check_circle,
+                              color: Color(0xFF06DF5D), size: 16),
+                      ],
+                    ),
+                  );
+                }),
+              ],
             ],
           ),
         ),

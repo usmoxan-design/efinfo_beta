@@ -91,11 +91,15 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
   }
 
   Future<void> _loadFeaturedOptions() async {
-    final options = await _pesService.fetchFeaturedOptions();
-    if (mounted) {
-      setState(() {
-        _featuredOptions = options;
-      });
+    try {
+      final options = await _pesService.fetchFeaturedOptions();
+      if (mounted) {
+        setState(() {
+          _featuredOptions = options;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error loading featured options: $e");
     }
   }
 
@@ -663,22 +667,48 @@ class _StandartPlayersPageState extends State<StandartPlayersPage> {
                         onRetry: _loadPlayers,
                       ),
                     )
-                  : SliverPadding(
-                      padding: const EdgeInsets.all(16),
-                      sliver: SliverGrid(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.65,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
+                  : _players.isEmpty
+                      ? SliverFillRemaining(
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.person_off_rounded,
+                                    size: 64,
+                                    color:
+                                        isDark ? Colors.white24 : Colors.grey),
+                                const SizedBox(height: 16),
+                                Text(
+                                  "No players found",
+                                  style: GoogleFonts.outfit(
+                                    color: isDark
+                                        ? Colors.white54
+                                        : Colors.black54,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : SliverPadding(
+                          padding: const EdgeInsets.all(16),
+                          sliver: SliverGrid(
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.65,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
+                            delegate:
+                                SliverChildBuilderDelegate((context, index) {
+                              final player = _players[index];
+                              return _buildModernPlayerCard(player, isDark);
+                            }, childCount: _players.length),
+                          ),
                         ),
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          final player = _players[index];
-                          return _buildModernPlayerCard(player, isDark);
-                        }, childCount: _players.length),
-                      ),
-                    ),
 
           // Bottom spacing for comfortable scrolling
           const SliverToBoxAdapter(child: SizedBox(height: 50)),
