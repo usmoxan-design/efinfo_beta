@@ -10,11 +10,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 class QuizResultPage extends StatefulWidget {
   final int score;
   final int totalQuestions;
+  final String mode;
 
   const QuizResultPage({
     super.key,
     required this.score,
     required this.totalQuestions,
+    required this.mode,
   });
 
   @override
@@ -32,11 +34,12 @@ class _QuizResultPageState extends State<QuizResultPage> {
 
   Future<void> _updateStats() async {
     final prefs = await SharedPreferences.getInstance();
+    final String key = 'quiz_highscore_${widget.mode}';
 
     // Update High Score
-    int currentHigh = prefs.getInt('quiz_highscore') ?? 0;
+    int currentHigh = prefs.getInt(key) ?? 0;
     if (widget.score > currentHigh) {
-      prefs.setInt('quiz_highscore', widget.score);
+      prefs.setInt(key, widget.score);
       if (mounted) {
         setState(() {
           _isNewRecord = true;
@@ -47,7 +50,7 @@ class _QuizResultPageState extends State<QuizResultPage> {
 
   void _shareResult() {
     Share.share(
-      "eFootball Logo Quiz da ${widget.score}/${widget.totalQuestions} natija qayd etdim! \n Siz ham kuchingizni sinab ko'ring!",
+      "eFootball Players Quiz (${widget.mode}) da ${widget.score}/${widget.totalQuestions} natija qayd etdim! \n Siz ham kuchingizni sinab ko'ring!",
     );
   }
 

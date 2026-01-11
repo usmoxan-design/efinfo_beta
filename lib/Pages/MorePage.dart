@@ -28,8 +28,8 @@ class _MorePageState extends State<MorePage> {
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> moreData = [
       {
-        'title': 'Football Logo Quiz',
-        'subtitle': 'Bilmimni sinash',
+        'title': 'eFootball Players Name Quiz',
+        'subtitle': 'O\'yinchilarni toping',
         'icon': "assets/images/efootball-logo.png",
         'accent': AppColors.accent,
         'badge': true,

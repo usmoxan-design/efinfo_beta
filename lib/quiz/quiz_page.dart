@@ -16,7 +16,12 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
-  int _highScore = 0;
+  Map<String, int> _highScores = {
+    'Oson': 0,
+    'Standart': 0,
+    'Qiyin': 0,
+    'Ekstremal': 0,
+  };
   bool _isLoading = true;
 
   @override
@@ -30,7 +35,12 @@ class _QuizPageState extends State<QuizPage> {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
-        _highScore = prefs.getInt('quiz_highscore') ?? 0;
+        _highScores = {
+          'Oson': prefs.getInt('quiz_highscore_Oson') ?? 0,
+          'Standart': prefs.getInt('quiz_highscore_Standart') ?? 0,
+          'Qiyin': prefs.getInt('quiz_highscore_Qiyin') ?? 0,
+          'Ekstremal': prefs.getInt('quiz_highscore_Ekstremal') ?? 0,
+        };
         _isLoading = false;
       });
     }
@@ -78,30 +88,69 @@ class _QuizPageState extends State<QuizPage> {
               child: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 20),
-                      _buildUserCard(isDark),
-                      const SizedBox(height: 50),
-                      _buildGameModeCard(
-                        context,
-                        title: "O'yinni boshlash",
-                        subtitle: "O'yinchilarni toping",
-                        icon: Icons.play_arrow_rounded,
-                        color: AppColors.accent,
-                        onTap: () => _startGame(context, league: "All"),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        "O'yin qoidasi: Rasmdagi o'yinchini ismini 4 ta variant ichidan topishingiz kerak. Har bir to'g'ri javob uchun ball beriladi.",
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.outfit(
-                          color: isDark ? Colors.white60 : Colors.black54,
-                          fontSize: 14,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 10),
+                        _buildHighScoresGrid(isDark),
+                        const SizedBox(height: 30),
+                        Text(
+                          "O'yin rejimini tanlang:",
+                          style: GoogleFonts.outfit(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 15),
+                        _buildGameModeCard(
+                          context,
+                          title: "Oson",
+                          subtitle: "Harf ko'p, imkoniyatlar yo'q",
+                          icon: Icons.sentiment_satisfied_rounded,
+                          color: Colors.green,
+                          onTap: () => _startGame(context, mode: "Oson"),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildGameModeCard(
+                          context,
+                          title: "Standart",
+                          subtitle: "O'rtacha qiyinchilik",
+                          icon: Icons.sentiment_neutral_rounded,
+                          color: AppColors.accent,
+                          onTap: () => _startGame(context, mode: "Standart"),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildGameModeCard(
+                          context,
+                          title: "Qiyin",
+                          subtitle: "Harf kam, haqiqiy sinov",
+                          icon: Icons.sentiment_very_dissatisfied_rounded,
+                          color: Colors.redAccent,
+                          onTap: () => _startGame(context, mode: "Qiyin"),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildGameModeCard(
+                          context,
+                          title: "Ekstremal",
+                          subtitle: "Hech qanday shama yo'q!",
+                          icon: Icons.whatshot_rounded,
+                          color: Colors.purpleAccent,
+                          onTap: () => _startGame(context, mode: "Ekstremal"),
+                        ),
+                        const SizedBox(height: 25),
+                        Text(
+                          "O'yin qoidasi: Rasmdagi o'yinchini ismini bo'sh katakchadagi harflarini topishingiz kerak. Har bir to'g'ri javob uchun ball beriladi.",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            color: isDark ? Colors.white60 : Colors.black54,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -109,77 +158,66 @@ class _QuizPageState extends State<QuizPage> {
     );
   }
 
-  Widget _buildLeagueButton(BuildContext context,
-      {required String title, required String fullLeague}) {
-    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
-    return GestureDetector(
-      onTap: () => _startGame(context, league: fullLeague),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUserCard(bool isDark) {
+  Widget _buildHighScoresGrid(bool isDark) {
     return GlassContainer(
       borderRadius: 24,
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      padding: const EdgeInsets.all(16),
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.accent.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(Icons.emoji_events,
-                color: AppColors.accent, size: 30),
-          ),
-          const SizedBox(width: 15),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const Icon(Icons.emoji_events, color: AppColors.accent, size: 24),
+              const SizedBox(width: 8),
               Text(
-                "Sizning Rekordingiz",
-                style: GoogleFonts.outfit(
-                  color: isDark ? Colors.white70 : Colors.black54,
-                  fontSize: 14,
-                ),
-              ),
-              Text(
-                "$_highScore",
+                "Sizning Rekordlaringiz",
                 style: GoogleFonts.outfit(
                   color: isDark ? Colors.white : Colors.black,
-                  fontSize: 28,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 16),
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            childAspectRatio: 2.2,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            children: _highScores.entries.map((entry) {
+              return Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.05)
+                      : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      entry.key,
+                      style: GoogleFonts.outfit(
+                        color: isDark ? Colors.white60 : Colors.black54,
+                        fontSize: 12,
+                      ),
+                    ),
+                    Text(
+                      entry.value.toString(),
+                      style: GoogleFonts.outfit(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -197,16 +235,16 @@ class _QuizPageState extends State<QuizPage> {
       onTap: onTap,
       child: GlassContainer(
         borderRadius: 20,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(15),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: color, size: 28),
+              child: Icon(icon, color: color, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -216,7 +254,7 @@ class _QuizPageState extends State<QuizPage> {
                   Text(
                     title,
                     style: GoogleFonts.outfit(
-                      fontSize: 18,
+                      fontSize: 17,
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : Colors.black,
                     ),
@@ -232,17 +270,19 @@ class _QuizPageState extends State<QuizPage> {
               ),
             ),
             Icon(Icons.arrow_forward_ios,
-                size: 16, color: isDark ? Colors.white30 : Colors.black38),
+                size: 14, color: isDark ? Colors.white30 : Colors.black38),
           ],
         ),
       ),
     );
   }
 
-  void _startGame(BuildContext context, {String? league}) {
+  void _startGame(BuildContext context,
+      {String? league, String mode = 'Standart'}) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => QuizGamePage(league: league)),
+      MaterialPageRoute(
+          builder: (context) => QuizGamePage(league: league, mode: mode)),
     ).then((_) => _initData());
   }
 }
