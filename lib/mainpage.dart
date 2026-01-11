@@ -1,6 +1,7 @@
 import 'package:efinfo_beta/Pages/HomePage.dart';
 import 'package:efinfo_beta/Pages/MorePage.dart';
 import 'package:efinfo_beta/Pages/SettingsPage.dart';
+import 'package:efinfo_beta/Pages/marketplace_list_page.dart';
 import 'package:efinfo_beta/tournament/TournamentMaker.dart';
 import 'package:efinfo_beta/theme/app_colors.dart';
 import 'package:efinfo_beta/theme/theme_provider.dart';
@@ -10,7 +11,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import 'package:efinfo_beta/chat/chat_page.dart';
 
 class MainPage extends StatefulWidget {
@@ -26,6 +26,7 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = const [
     HomePage(),
     TournamentListPage(),
+    MarketplaceListPage(),
     MorePage(),
   ];
 
@@ -104,7 +105,7 @@ class _MainPageState extends State<MainPage> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildTelegramBanner(),
+          if (_currentIndex != 2) _buildTelegramBanner(),
           _buildBottomNavBar(themeProvider),
         ],
       ),
@@ -219,8 +220,9 @@ class _MainPageState extends State<MainPage> {
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: [
         _buildNavDestination(IonIcons.apps, "Hub", 0, isDark),
-        _buildNavDestination(IonIcons.trophy, 'Turnirchi', 1, isDark),
-        _buildNavDestination(EvaIcons.grid, "Ko'proq", 2, isDark),
+        _buildNavDestination(IonIcons.trophy, 'Turnir', 1, isDark),
+        _buildNavDestination(IonIcons.cart, 'Savdo', 2, isDark),
+        _buildNavDestination(EvaIcons.grid, "Ko'proq", 3, isDark),
       ],
     );
   }

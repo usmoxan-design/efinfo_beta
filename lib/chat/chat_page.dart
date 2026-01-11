@@ -1,3 +1,4 @@
+import 'package:efinfo_beta/Pages/auth_page.dart';
 import 'package:efinfo_beta/chat/chat_message.dart';
 import 'package:efinfo_beta/chat/chat_service.dart';
 import 'package:efinfo_beta/theme/app_colors.dart';
@@ -74,11 +75,46 @@ class _ChatPageState extends State<ChatPage> {
       _isLoading = false;
     });
 
-    if (_myName == null || _myName!.isEmpty) {
+    if (_myId == null || _myId!.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showLoginDialog();
+      });
+    } else if (_myName == null || _myName!.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showNameDialog();
       });
     }
+  }
+
+  void _showLoginDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("Kirish kerak"),
+        content:
+            const Text("Chatda qatnashish uchun tizimga kirishingiz kerak."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text("Chiqish"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AuthPage()),
+              ).then((_) => _loadUserInfo());
+            },
+            child: const Text("Kirish"),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showNameDialog() {
@@ -251,6 +287,10 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _sendMessage() async {
+    if (_myId == null || _myId!.isEmpty) {
+      _showLoginDialog();
+      return;
+    }
     if (_messageController.text.trim().isEmpty) return;
     if (_myName == null || _myName!.isEmpty) {
       _showNameDialog();

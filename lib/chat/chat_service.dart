@@ -1,24 +1,27 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart';
 import 'chat_message.dart';
 
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final String _collectionPath = 'public_chat';
 
-  // Get current user's locally stored info
+  // Get current user's Firebase info
   Future<Map<String, String>> getUserInfo() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? userId = prefs.getString('chat_user_id');
-    String? userName = prefs.getString('chat_user_name');
-
-    if (userId == null) {
-      userId = const Uuid().v4();
-      await prefs.setString('chat_user_id', userId);
+    final user = _auth.currentUser;
+    if (user == null) {
+      return {
+        'id': '',
+        'name': '',
+        'isAdmin': 'false',
+      };
     }
+
+    final userId = user.uid;
+    final userName = user.displayName ?? '';
 
     // Database'dan admin holatini tekshirish
     bool isAdmin = false;
@@ -32,13 +35,9 @@ class ChatService {
       debugPrint("Admin check error: $e");
     }
 
-    if (userName != null && userName.isNotEmpty) {
-      await registerUser(userId, userName);
-    }
-
     return {
       'id': userId,
-      'name': userName ?? '',
+      'name': userName,
       'isAdmin': isAdmin.toString(),
     };
   }
@@ -56,6 +55,7 @@ class ChatService {
 
   // Admin holatini real-vaqtda kuzatish
   Stream<bool> getAdminStatus(String userId) {
+    if (userId.isEmpty) return Stream.value(false);
     return _firestore
         .collection('chat_users')
         .doc(userId)
@@ -82,14 +82,11 @@ class ChatService {
   }
 
   Future<void> saveUserName(String name) async {
-    final prefs = await SharedPreferences.getInstance();
-    String? userId = prefs.getString('chat_user_id');
-    if (userId == null) {
-      userId = const Uuid().v4();
-      await prefs.setString('chat_user_id', userId);
+    final user = _auth.currentUser;
+    if (user != null) {
+      await user.updateDisplayName(name);
+      await registerUser(user.uid, name);
     }
-    await prefs.setString('chat_user_name', name);
-    await registerUser(userId, name);
   }
 
   Stream<List<ChatMessage>> getMessages() {
