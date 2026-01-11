@@ -265,7 +265,7 @@ class _QuizGamePageState extends State<QuizGamePage>
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  "Qaysi klub?",
+                  "Qaysi o'yinchi?",
                   style: GoogleFonts.outfit(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,

@@ -53,7 +53,7 @@ class _QuizPageState extends State<QuizPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          "Football Logo Quiz",
+          "Player Quiz",
           style: GoogleFonts.outfit(
             color: isDark ? Colors.white : Colors.black,
             fontWeight: FontWeight.bold,
@@ -83,71 +83,29 @@ class _QuizPageState extends State<QuizPage> {
                     children: [
                       const SizedBox(height: 20),
                       _buildUserCard(isDark),
-                      const SizedBox(height: 30),
-                      Text(
-                        "O'yin Rejimlari",
-                        style: GoogleFonts.outfit(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 50),
                       _buildGameModeCard(
                         context,
-                        title: "Barcha Ligalar",
-                        subtitle: "Aralash savollar",
-                        icon: Icons.public,
+                        title: "O'yinni boshlash",
+                        subtitle: "O'yinchilarni toping",
+                        icon: Icons.play_arrow_rounded,
                         color: AppColors.accent,
                         onTap: () => _startGame(context, league: "All"),
                       ),
                       const SizedBox(height: 20),
                       Text(
-                        "Ligalar bo'yicha",
+                        "O'yin qoidasi: Rasmdagi o'yinchini ismini 4 ta variant ichidan topishingiz kerak. Har bir to'g'ri javob uchun ball beriladi.",
+                        textAlign: TextAlign.center,
                         style: GoogleFonts.outfit(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black,
+                          color: isDark ? Colors.white60 : Colors.black54,
+                          fontSize: 14,
                         ),
-                      ),
-                      const SizedBox(height: 15),
-                      Expanded(
-                        child: _buildLeagueList(context),
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-    );
-  }
-
-  Widget _buildLeagueList(BuildContext context) {
-    var leagues = QuizData.getAvailableLeagues();
-    if (leagues.isEmpty) {
-      return const Center(child: Text("Ligalar topilmadi"));
-    }
-    return GridView.builder(
-      physics: const BouncingScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 2.5,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
-      itemCount: leagues.length,
-      itemBuilder: (context, index) {
-        String league = leagues[index];
-        // Clean up league name if needed (e.g. "Country - League" -> "League")
-        String displayName =
-            league.contains(' - ') ? league.split(' - ')[1] : league;
-
-        return _buildLeagueButton(
-          context,
-          title: displayName,
-          fullLeague: league,
-        );
-      },
     );
   }
 

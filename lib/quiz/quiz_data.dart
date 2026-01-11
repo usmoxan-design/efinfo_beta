@@ -29,26 +29,26 @@ class QuizData {
       _allClubs = [];
 
       for (String key in assets) {
-        if (key.startsWith('assets/images/quiz/') && key.endsWith('.png')) {
-          // Format: assets/images/quiz/Country - League/Club.png
-          // key parts: [assets, images, quiz, Country - League, Club.png]
+        if (key.startsWith('assets/images/players_quiz/') &&
+            key.endsWith('.png')) {
+          // Format: assets/images/players_quiz/Player Name.png
           var parts = key.split('/');
-          if (parts.length >= 5) {
-            String folderName = parts[3]; // "Country - League"
-            String fileName = parts[4]; // "Club.png"
+          if (parts.length >= 4) {
+            String fileName = parts[3]; // "Player Name.png"
 
-            String clubName = fileName.replaceAll('.png', '');
-            String league = folderName;
+            String playerName = fileName.replaceAll('.png', '');
+            String league = "Players"; // Default category for now
 
             _allClubs.add({
               'league': league,
-              'club': clubName,
+              'club':
+                  playerName, // Reusing 'club' key for player name to minimize code changes
               'path': key,
             });
           }
         }
       }
-      print("QuizData: Loaded ${_allClubs.length} clubs.");
+      print("QuizData: Loaded ${_allClubs.length} players.");
       _isLoaded = true;
     } catch (e) {
       print("Error loading quiz assets: $e");
@@ -63,50 +63,42 @@ class QuizData {
     List<QuizQuestion> questions = [];
     var filteredData = _allClubs;
 
+    // For now, since everything is in 'Players' league, filtering might not be needed
+    // but keeping it for compatibility.
     if (league != null && league != "All") {
       filteredData = _allClubs.where((e) => e['league'] == league).toList();
     }
 
-    // If we don't have enough data for the requested count, just take what we have
-    // But we also need wrong answers.
     if (filteredData.isEmpty) return [];
 
     var data = List<Map<String, String>>.from(filteredData)..shuffle();
 
     for (var item in data.take(count)) {
-      String clubName = item['club']!;
+      String playerName = item['club']!;
       String itemLeague = item['league']!;
       String path = item['path']!;
 
       // Generate options
-      List<String> options = [clubName];
+      List<String> options = [playerName];
 
-      // Get other clubs for wrong answers.
-      // Prefer same league if possible, otherwise any.
-      var sameLeagueOptions = _allClubs
-          .where((e) => e['league'] == itemLeague && e['club'] != clubName)
+      // Get other players for wrong answers.
+      var otherPlayers = _allClubs
+          .where((e) => e['club'] != playerName)
           .map((e) => e['club']!)
           .toList()
         ..shuffle();
 
-      var otherOptions = _allClubs
-          .where((e) => e['league'] != itemLeague) // Just backup
-          .map((e) => e['club']!)
-          .toList()
-        ..shuffle();
-
-      if (sameLeagueOptions.length >= 3) {
-        options.addAll(sameLeagueOptions.take(3));
+      if (otherPlayers.length >= 3) {
+        options.addAll(otherPlayers.take(3));
       } else {
-        options.addAll(sameLeagueOptions);
-        options.addAll(otherOptions.take(3 - sameLeagueOptions.length));
+        options.addAll(otherPlayers);
       }
 
       options.shuffle();
 
       questions.add(QuizQuestion(
         imageUrl: path,
-        correctAnswer: clubName,
+        correctAnswer: playerName,
         options: options,
         league: itemLeague,
       ));
