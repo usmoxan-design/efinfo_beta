@@ -70,112 +70,126 @@ class _OnlineTournamentLobbyPageState extends State<OnlineTournamentLobbyPage> {
         final List players = tour['players'] ?? [];
         final model = TournamentModel.fromJson(
             Map<String, dynamic>.from(tour['tournamentData']));
+        final isDrawDone = model.isDrawDone;
         final isCreator = tour['creatorId'] == _service.currentUser?.uid;
 
-        return Scaffold(
-          backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
-          appBar: AppBar(
-            title: Text(tour['name'],
-                style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            actions: [
-              if (isCreator)
-                IconButton(
-                    onPressed: _renameTournament,
-                    icon: const Icon(Icons.edit_rounded,
-                        color: Color(0xFF06DF5D))),
-            ],
-          ),
-          body: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _buildStatsCard(players.length, isDark),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  const Icon(Icons.check_circle_rounded,
-                      color: Color(0xFF06DF5D), size: 20),
-                  const SizedBox(width: 8),
-                  Text("Qo'shilganlar",
-                      style: GoogleFonts.outfit(
-                          fontSize: 18, fontWeight: FontWeight.bold)),
+        return FutureBuilder<bool>(
+          future: _service.isAdmin(),
+          builder: (context, adminSnapshot) {
+            final isAdmin = adminSnapshot.data ?? false;
+            final hasControl = isCreator || isAdmin;
+
+            return Scaffold(
+              backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
+              appBar: AppBar(
+                title: Text(tour['name'],
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                actions: [
+                  if (hasControl)
+                    IconButton(
+                        onPressed: _renameTournament,
+                        icon: const Icon(Icons.edit_rounded,
+                            color: Color(0xFF06DF5D))),
                 ],
               ),
-              const SizedBox(height: 12),
-              ...model.teams.map((team) {
-                // Map team back to email for removal if needed
-                // For now just show them
-                return _buildPlayerTile(
-                    team.name, team.id, true, isDark, isCreator);
-              }),
-              const SizedBox(height: 24),
-              Row(
+              body: ListView(
+                padding: const EdgeInsets.all(16),
                 children: [
-                  const Icon(Icons.pending_rounded,
-                      color: Colors.orangeAccent, size: 20),
-                  const SizedBox(width: 8),
-                  Text("Taklif qilinganlar",
-                      style: GoogleFonts.outfit(
-                          fontSize: 18, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              StreamBuilder<List<Map<String, dynamic>>>(
-                stream: _service.getTournamentRequests(_tournamentId),
-                builder: (context, reqSnapshot) {
-                  final requests = reqSnapshot.data
-                          ?.where((r) => r['status'] == 'pending')
-                          .toList() ??
-                      [];
-                  if (requests.isEmpty)
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 28),
-                      child: Text("Hozircha kutilayotganlar yo'q",
+                  _buildStatsCard(players.length, isDark),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      const Icon(Icons.check_circle_rounded,
+                          color: Color(0xFF06DF5D), size: 20),
+                      const SizedBox(width: 8),
+                      Text("Qo'shilganlar",
                           style: GoogleFonts.outfit(
-                              color: Colors.grey, fontSize: 14)),
-                    );
-                  return Column(
-                    children: requests
-                        .map((req) => _buildPlayerTile(req['toEmail'],
-                            req['toEmail'], false, isDark, isCreator))
-                        .toList(),
-                  );
-                },
-              ),
-              const SizedBox(height: 100),
-            ],
-          ),
-          bottomNavigationBar: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => TournamentBracketPage(
-                      tournament: model,
-                      onUpdate: (updatedModel) {
-                        _service.updateTournamentData(
-                            _tournamentId, updatedModel);
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ...model.teams.map((team) {
+                    return _buildPlayerTile(
+                        team.name, team.id, true, isDark, hasControl);
+                  }),
+                  if (!isDrawDone) ...[
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        const Icon(Icons.pending_rounded,
+                            color: Colors.orangeAccent, size: 20),
+                        const SizedBox(width: 8),
+                        Text("Taklif qilinganlar",
+                            style: GoogleFonts.outfit(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    StreamBuilder<List<Map<String, dynamic>>>(
+                      stream: _service.getTournamentRequests(_tournamentId),
+                      builder: (context, reqSnapshot) {
+                        final requests = reqSnapshot.data
+                                ?.where((r) => r['status'] == 'pending')
+                                .toList() ??
+                            [];
+                        if (requests.isEmpty)
+                          return Padding(
+                            padding: const EdgeInsets.only(left: 28),
+                            child: Text("Hozircha kutilayotganlar yo'q",
+                                style: GoogleFonts.outfit(
+                                    color: Colors.grey, fontSize: 14)),
+                          );
+                        return Column(
+                          children: requests
+                              .map((req) => _buildPlayerTile(req['toEmail'],
+                                  req['toEmail'], false, isDark, hasControl))
+                              .toList(),
+                        );
                       },
                     ),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF06DF5D),
-                foregroundColor: Colors.black,
-                minimumSize: const Size(double.infinity, 55),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
+                  ],
+                  const SizedBox(height: 100),
+                ],
               ),
-              child: Text("Qura tashlash va Ko'rish",
-                  style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold, fontSize: 16)),
-            ),
-          ),
+              bottomNavigationBar: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TournamentBracketPage(
+                          tournament: model,
+                          isOnline: true,
+                          hasControl: hasControl,
+                          onUpdate: (updatedModel) {
+                            _service.updateTournamentData(
+                                _tournamentId, updatedModel);
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF06DF5D),
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size(double.infinity, 55),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                      isDrawDone
+                          ? "Turnirni Ko'rish"
+                          : (hasControl ? "Qura tashlash" : "Kutilmoqda..."),
+                      style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
+              ),
+            );
+          },
         );
       },
     );

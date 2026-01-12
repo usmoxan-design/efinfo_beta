@@ -426,67 +426,101 @@ class _OnlineTournamentTabState extends State<OnlineTournamentTab> {
     final isCreator = tour['creatorId'] == _authService.currentUser?.uid;
     final List players = tour['players'] ?? [];
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: GlassContainer(
-        borderRadius: 20,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return FutureBuilder<bool>(
+      future: _service.isAdmin(),
+      builder: (context, adminSnapshot) {
+        final isAdmin = adminSnapshot.data ?? false;
+        final hasControl = isCreator || isAdmin;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: GlassContainer(
+            borderRadius: 20,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(tour['name'],
-                    style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blueAccent,
-                        fontSize: 18)),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                      color: Colors.blueAccent.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8)),
-                  child: Text(tour['type'],
-                      style: GoogleFonts.outfit(
-                          fontSize: 12, color: Colors.blueAccent)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(tour['name'],
+                        style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blueAccent,
+                            fontSize: 18)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                          color: Colors.blueAccent.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8)),
+                      child: Text(tour['type'],
+                          style: GoogleFonts.outfit(
+                              fontSize: 12, color: Colors.blueAccent)),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 8),
+                Text("O'yinchilar: ${players.length}",
+                    style:
+                        GoogleFonts.outfit(color: Colors.grey, fontSize: 12)),
+                const Divider(height: 24),
+                Row(
+                  children: [
+                    if (hasControl &&
+                        !TournamentModel.fromJson(Map<String, dynamic>.from(
+                                tour['tournamentData']))
+                            .isDrawDone)
+                      ElevatedButton.icon(
+                        onPressed: () =>
+                            _invitePlayer(tour['id'], tour['name']),
+                        icon: const Icon(Icons.person_add_rounded, size: 16),
+                        label: const Text("Taklif"),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueAccent,
+                            foregroundColor: Colors.white),
+                      ),
+                    const Spacer(),
+                    ElevatedButton(
+                      onPressed: () {
+                        final modelMap =
+                            Map<String, dynamic>.from(tour['tournamentData']);
+                        final model = TournamentModel.fromJson(modelMap);
+
+                        if (model.isDrawDone) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => TournamentBracketPage(
+                                tournament: model,
+                                isOnline: true,
+                                hasControl: hasControl,
+                                onUpdate: (updatedModel) {
+                                  _service.updateTournamentData(
+                                      tour['id'], updatedModel);
+                                },
+                              ),
+                            ),
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  OnlineTournamentLobbyPage(tournament: tour),
+                            ),
+                          );
+                        }
+                      },
+                      child: const Text("Ko'rish"),
+                    ),
+                  ],
+                )
               ],
             ),
-            const SizedBox(height: 8),
-            Text("O'yinchilar: ${players.length}",
-                style: GoogleFonts.outfit(color: Colors.grey, fontSize: 12)),
-            const Divider(height: 24),
-            Row(
-              children: [
-                if (isCreator)
-                  ElevatedButton.icon(
-                    onPressed: () => _invitePlayer(tour['id'], tour['name']),
-                    icon: const Icon(Icons.person_add_rounded, size: 16),
-                    label: const Text("Taklif"),
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        foregroundColor: Colors.white),
-                  ),
-                const Spacer(),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            OnlineTournamentLobbyPage(tournament: tour),
-                      ),
-                    );
-                  },
-                  child: const Text("Ko'rish"),
-                ),
-              ],
-            )
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

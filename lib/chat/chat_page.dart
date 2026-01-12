@@ -923,7 +923,7 @@ class _ChatPageState extends State<ChatPage> {
                                 ),
                                 const SizedBox(width: 2),
                                 Text(
-                                  "${message.views.length}",
+                                  "${(!message.views.contains(_myId) && _readMessages.contains(message.id)) ? message.views.length + 1 : message.views.length}",
                                   style: GoogleFonts.outfit(
                                     fontSize: 9,
                                     color: isMe

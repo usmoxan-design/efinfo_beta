@@ -12,12 +12,12 @@ import 'package:provider/provider.dart';
 
 class LeagueTableWidget extends StatefulWidget {
   final TournamentModel tournament;
-  final Function(MatchModel) onMatchTap;
+  final Function(MatchModel)? onMatchTap;
 
   const LeagueTableWidget({
     super.key,
     required this.tournament,
-    required this.onMatchTap,
+    this.onMatchTap,
   });
 
   @override
@@ -505,7 +505,7 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
 
   Widget _buildMatchTile(MatchModel match, bool isDark) {
     return GestureDetector(
-      onTap: () => widget.onMatchTap(match),
+      onTap: widget.onMatchTap != null ? () => widget.onMatchTap!(match) : null,
       child: GlassContainer(
         borderRadius: 12,
         margin: const EdgeInsets.only(bottom: 8),

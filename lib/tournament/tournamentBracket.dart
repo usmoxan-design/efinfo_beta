@@ -20,11 +20,23 @@ import 'dart:ui' as ui;
 import 'dart:math';
 import 'package:provider/provider.dart';
 
+import 'package:efinfo_beta/services/online_tournament_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+
 class TournamentBracketPage extends StatefulWidget {
   final TournamentModel tournament;
   final Function(TournamentModel)? onUpdate;
-  const TournamentBracketPage(
-      {super.key, required this.tournament, this.onUpdate});
+  final bool isOnline;
+  final bool hasControl;
+
+  const TournamentBracketPage({
+    super.key,
+    required this.tournament,
+    this.onUpdate,
+    this.isOnline = false,
+    this.hasControl = true,
+  });
 
   @override
   State<TournamentBracketPage> createState() => _TournamentBracketPageState();
@@ -34,6 +46,7 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
   late TournamentModel _currentTournament;
   final BracketService _bracketService = BracketService();
   final LeagueService _leagueService = LeagueService();
+  final OnlineTournamentService _onlineService = OnlineTournamentService();
   late ConfettiController _confettiController;
 
   @override
@@ -195,6 +208,9 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                   if (isFinished) {
                     _confettiController.play();
                     _showSnackbar("Turnir g'olibi aniqlandi! 🏆", Colors.amber);
+                    if (widget.isOnline) {
+                      _archiveAndDelete();
+                    }
                   } else {
                     _showSnackbar("Natija saqlandi.", Colors.green);
                   }
@@ -212,6 +228,32 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
         );
       },
     );
+  }
+
+  Future<void> _archiveAndDelete() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? tournamentsString = prefs.getString('tournaments');
+      List<dynamic> jsonList = [];
+      if (tournamentsString != null) {
+        jsonList = jsonDecode(tournamentsString);
+      }
+
+      // Add current tournament to offline list
+      final archivedTour = _currentTournament;
+      archivedTour.name = "${archivedTour.name} (Online Arxiv)";
+      jsonList.add(archivedTour.toJson());
+
+      await prefs.setString('tournaments', jsonEncode(jsonList));
+
+      // Delete from online
+      await _onlineService.deleteTournament(_currentTournament.id);
+
+      _showSnackbar(
+          "Turnir arxivlandi va online bazadan o'chirildi.", Colors.blue);
+    } catch (e) {
+      _showSnackbar("Arxivlashda xato: $e", Colors.red);
+    }
   }
 
   void _performDraw() {
@@ -277,7 +319,7 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton.icon(
-                  onPressed: _performDraw,
+                  onPressed: widget.hasControl ? _performDraw : null,
                   icon: const Icon(BoxIcons.bx_dice_5, color: Colors.black),
                   label: Text("Qura Tashlash",
                       style: GoogleFonts.outfit(
@@ -384,7 +426,7 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
     double width = 200;
 
     return InkWell(
-      onTap: () => _editScore(match),
+      onTap: widget.hasControl ? () => _editScore(match) : null,
       child: GlassContainer(
         margin: const EdgeInsets.symmetric(vertical: 8),
         borderRadius: 16,
@@ -556,7 +598,7 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                 tooltip: "Qura tashlash",
               ),
             const SizedBox(width: 10),
-            if (_currentTournament.isDrawDone)
+            if (_currentTournament.isDrawDone && !widget.isOnline)
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: ElevatedButton(
@@ -584,7 +626,9 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                         key: pitchBoundaryKey,
                         child: LeagueTableWidget(
                           tournament: _currentTournament,
-                          onMatchTap: (match) => _editScore(match),
+                          onMatchTap: widget.hasControl
+                              ? (match) => _editScore(match)
+                              : null,
                         ),
                       )
                     : SingleChildScrollView(

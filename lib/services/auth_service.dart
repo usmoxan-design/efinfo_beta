@@ -40,7 +40,7 @@ class AuthService {
         'createdAt': FieldValue.serverTimestamp(),
         'isAdmin': false,
         'isBlocked': false,
-        'coins': 500, // Starting balance
+        'coins': 0, // Starting balance
         if (deviceInfo != null) 'deviceInfo': deviceInfo,
       }, SetOptions(merge: true));
 

@@ -261,4 +261,30 @@ class OnlineTournamentService {
         .snapshots()
         .map((snap) => snap.data() ?? {});
   }
+
+  // Check if current user is admin
+  Future<bool> isAdmin() async {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+    final doc = await _firestore.collection('chat_users').doc(user.uid).get();
+    return doc.data()?['role'] == 'admin' || doc.data()?['isAdmin'] == true;
+  }
+
+  // Delete online tournament
+  Future<void> deleteTournament(String tournamentId) async {
+    await _firestore
+        .collection('online_tournaments')
+        .doc(tournamentId)
+        .delete();
+
+    // Also delete associated requests
+    final requests = await _firestore
+        .collection('tournament_requests')
+        .where('tournamentId', isEqualTo: tournamentId)
+        .get();
+
+    for (var doc in requests.docs) {
+      await doc.reference.delete();
+    }
+  }
 }

@@ -123,175 +123,189 @@ class _AuthPageState extends State<AuthPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _isLogin ? "Kirish" : "Ro'yxatdan o'tish",
-                  style: GoogleFonts.outfit(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  _isLogin
-                      ? "Hisobingizga kiring va davom eting."
-                      : "Yangi hisob yarating va imkoniyatlardan foydalaning.",
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    color: isDark ? Colors.white60 : Colors.black54,
-                  ),
-                ),
-                const SizedBox(height: 48),
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      if (!_isLogin) ...[
-                        _buildField(
-                          label: "Ismingiz",
-                          controller: _nameController,
-                          validator: (val) =>
-                              val!.isEmpty ? "Ismni kiriting" : null,
-                          isDark: isDark,
-                        ),
-                        const SizedBox(height: 20),
-                      ],
-                      _buildField(
-                        label: _isLogin ? "Email" : "Email uchun nom kiriting",
-                        controller: _emailController,
-                        hint: _isLogin ? "example@efhub.uz" : "namuna@efhub.uz",
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (val) {
-                          if (val!.isEmpty) return "Emailni kiriting";
-                          if (!_isLogin &&
-                              !val.toLowerCase().endsWith("@efhub.uz")) {
-                            return "Doim oxirida @efhub.uz bo'lishi shart!";
-                          }
-                          if (!val.contains("@"))
-                            return "To'g'ri email kiriting";
-                          return null;
-                        },
-                        isDark: isDark,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isLogin ? "Kirish" : "Ro'yxatdan o'tish",
+                      style: GoogleFonts.outfit(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black,
                       ),
-                      const SizedBox(height: 20),
-                      _buildField(
-                        label: _isLogin ? "Parol" : "Parol o'rnating",
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        validator: (val) =>
-                            val!.length < 6 ? "Minimal 6 belgi" : null,
-                        isDark: isDark,
-                        suffix: IconButton(
-                          icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                              color: Colors.grey,
-                              size: 20),
-                          onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword),
-                        ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _isLogin
+                          ? "Hisobingizga kiring va davom eting."
+                          : "Yangi hisob yarating va imkoniyatlardan foydalaning.",
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        color: isDark ? Colors.white60 : Colors.black54,
                       ),
-                      if (!_isLogin) ...[
-                        const SizedBox(height: 20),
-                        _buildField(
-                          label: "Parolni tasdiqlash",
-                          controller: _confirmPasswordController,
-                          obscureText: _obscureConfirmPassword,
-                          validator: (val) {
-                            if (val!.isEmpty) return "Parolni tasdiqlang";
-                            if (val != _passwordController.text)
-                              return "Parollar mos emas";
-                            return null;
-                          },
-                          isDark: isDark,
-                          suffix: IconButton(
-                            icon: Icon(
-                                _obscureConfirmPassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                                color: Colors.grey,
-                                size: 20),
-                            onPressed: () => setState(() =>
-                                _obscureConfirmPassword =
-                                    !_obscureConfirmPassword),
+                    ),
+                    const SizedBox(height: 48),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          if (!_isLogin) ...[
+                            _buildField(
+                              label: "Ismingiz",
+                              controller: _nameController,
+                              validator: (val) =>
+                                  val!.isEmpty ? "Ismni kiriting" : null,
+                              isDark: isDark,
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+                          _buildField(
+                            label:
+                                _isLogin ? "Email" : "Email uchun nom kiriting",
+                            controller: _emailController,
+                            hint: _isLogin
+                                ? "example@efhub.uz"
+                                : "namuna@efhub.uz",
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (val) {
+                              if (val!.isEmpty) return "Emailni kiriting";
+                              if (!_isLogin &&
+                                  !val.toLowerCase().endsWith("@efhub.uz")) {
+                                return "Doim oxirida @efhub.uz bo'lishi shart!";
+                              }
+                              if (!val.contains("@"))
+                                return "To'g'ri email kiriting";
+                              return null;
+                            },
+                            isDark: isDark,
                           ),
-                        ),
-                      ],
-                      const SizedBox(height: 48),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _submit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                          const SizedBox(height: 20),
+                          _buildField(
+                            label: _isLogin ? "Parol" : "Parol o'rnating",
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            validator: (val) =>
+                                val!.length < 6 ? "Minimal 6 belgi" : null,
+                            isDark: isDark,
+                            suffix: IconButton(
+                              icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  color: Colors.grey,
+                                  size: 20),
+                              onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword),
                             ),
                           ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                      color: Colors.white, strokeWidth: 2),
-                                )
-                              : Text(
-                                  _isLogin ? "KIRISH" : "DAVOM ETISH",
-                                  style: GoogleFonts.outfit(
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.2,
-                                  ),
+                          if (!_isLogin) ...[
+                            const SizedBox(height: 20),
+                            _buildField(
+                              label: "Parolni tasdiqlash",
+                              controller: _confirmPasswordController,
+                              obscureText: _obscureConfirmPassword,
+                              validator: (val) {
+                                if (val!.isEmpty) return "Parolni tasdiqlang";
+                                if (val != _passwordController.text)
+                                  return "Parollar mos emas";
+                                return null;
+                              },
+                              isDark: isDark,
+                              suffix: IconButton(
+                                icon: Icon(
+                                    _obscureConfirmPassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    color: Colors.grey,
+                                    size: 20),
+                                onPressed: () => setState(() =>
+                                    _obscureConfirmPassword =
+                                        !_obscureConfirmPassword),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 48),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _submit,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blueAccent,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-                Center(
-                  child: TextButton(
-                    onPressed: () => setState(() {
-                      _isLogin = !_isLogin;
-                      _formKey.currentState?.reset();
-                    }),
-                    child: RichText(
-                      text: TextSpan(
-                        text: _isLogin
-                            ? "Hisobingiz yo'qmi? "
-                            : "Hisobingiz bormi? ",
-                        style: GoogleFonts.outfit(
-                          color: isDark ? Colors.white60 : Colors.black54,
-                          fontSize: 14,
-                        ),
-                        children: [
-                          TextSpan(
-                            text: _isLogin ? "Ro'yxatdan o'ting" : "Kiring",
-                            style: const TextStyle(
-                              color: Colors.blueAccent,
-                              fontWeight: FontWeight.bold,
+                              ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                          color: Colors.white, strokeWidth: 2),
+                                    )
+                                  : Text(
+                                      _isLogin ? "KIRISH" : "DAVOM ETISH",
+                                      style: GoogleFonts.outfit(
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 32),
+                    Center(
+                      child: TextButton(
+                        onPressed: () => setState(() {
+                          _isLogin = !_isLogin;
+                          _formKey.currentState?.reset();
+                        }),
+                        child: RichText(
+                          text: TextSpan(
+                            text: _isLogin
+                                ? "Hisobingiz yo'qmi? "
+                                : "Hisobingiz bormi? ",
+                            style: GoogleFonts.outfit(
+                              color: isDark ? Colors.white60 : Colors.black54,
+                              fontSize: 14,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: _isLogin ? "Ro'yxatdan o'ting" : "Kiring",
+                                style: const TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+          if (_isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.blueAccent),
+              ),
+            ),
+        ],
       ),
     );
   }
