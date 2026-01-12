@@ -1,4 +1,3 @@
-import 'package:efinfo_beta/Pages/image_preview_page.dart';
 import 'package:efinfo_beta/Pages/auth_page.dart';
 import 'package:efinfo_beta/Pages/marketplace_add_edit_page.dart';
 import 'package:efinfo_beta/Pages/marketplace_my_posts_page.dart';
@@ -8,16 +7,17 @@ import 'package:efinfo_beta/services/marketplace_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:efinfo_beta/chat/chat_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:efinfo_beta/Pages/marketplace_detail_page.dart';
 
 class MarketplaceListPage extends StatefulWidget {
   const MarketplaceListPage({super.key});
 
   static Widget buildStaticPostCard(BuildContext context, AccountPost post,
-      {bool showActions = false}) {
+      {bool showActions = false, bool isAdmin = false}) {
     return _MarketplaceListPageState.buildStaticPostCard(context, post,
-        showActions: showActions);
+        showActions: showActions, isAdmin: isAdmin);
   }
 
   @override
@@ -35,12 +35,31 @@ class _MarketplaceListPageState extends State<MarketplaceListPage> {
   bool _filterGameCenter = false;
 
   String _sortBy = 'yangi'; // Default sort
+  bool _isAdmin = false;
   final List<Map<String, String>> _sortingOptions = [
     {'value': 'yangi', 'label': "Eng yangi"},
     {'value': 'ko_p', 'label': "Ko'p ko'rilgan"},
     {'value': 'qimmat', 'label': "Qimmatdan arzonga"},
     {'value': 'arzon', 'label': "Arzondan qimmatga"},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAdminStatus();
+  }
+
+  Future<void> _checkAdminStatus() async {
+    final user = _authService.currentUser;
+    if (user != null) {
+      final info = await ChatService().getUserInfo();
+      if (mounted) {
+        setState(() {
+          _isAdmin = info['isAdmin'] == 'true';
+        });
+      }
+    }
+  }
 
   void _addNewPost() {
     if (_authService.currentUser == null) {
@@ -185,7 +204,7 @@ class _MarketplaceListPageState extends State<MarketplaceListPage> {
                 icon: const Icon(Icons.tune_rounded),
                 onPressed: _showFilterSheet,
               ),
-              TextButton.icon(
+              IconButton(
                 onPressed: () {
                   if (_authService.currentUser == null) {
                     Navigator.push(
@@ -202,10 +221,6 @@ class _MarketplaceListPageState extends State<MarketplaceListPage> {
                 },
                 icon: Icon(Icons.person_outline_rounded,
                     size: 20, color: isDark ? Colors.white70 : Colors.black87),
-                label: Text("Mening e'lonlarim",
-                    style: GoogleFonts.outfit(
-                        color: isDark ? Colors.white70 : Colors.black87,
-                        fontSize: 13)),
               ),
               const SizedBox(width: 8),
             ],
@@ -354,22 +369,28 @@ class _MarketplaceListPageState extends State<MarketplaceListPage> {
   }
 
   Widget _buildPostCard(AccountPost post) {
-    return buildStaticPostCard(context, post);
+    return buildStaticPostCard(context, post, isAdmin: _isAdmin);
   }
 
   static Widget buildStaticPostCard(BuildContext context, AccountPost post,
-      {bool showActions = false}) {
+      {bool showActions = false, bool isAdmin = false}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final authService = AuthService();
     final marketplaceService = MarketplaceService();
     final currentUser = authService.currentUser;
     final isOwner = currentUser != null && currentUser.uid == post.userId;
+    final canModerate = isOwner || isAdmin;
 
     return GestureDetector(
       onTap: () {
         marketplaceService.incrementView(
             post.id, currentUser?.uid ?? 'anonymous');
-        _showPostDetailsStatic(context, post);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MarketplaceDetailPage(post: post),
+          ),
+        );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
@@ -418,6 +439,31 @@ class _MarketplaceListPageState extends State<MarketplaceListPage> {
                           const Icon(Icons.error),
                     ),
                   ),
+                  if (post.imageUrls.length > 1)
+                    Positioned(
+                      bottom: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.style_rounded,
+                                color: Colors.white, size: 12),
+                            const SizedBox(width: 4),
+                            Text("${post.imageUrls.length}",
+                                style: GoogleFonts.outfit(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ),
                   Positioned(
                     top: 12,
                     right: 12,
@@ -491,6 +537,12 @@ class _MarketplaceListPageState extends State<MarketplaceListPage> {
                                 color: Colors.blueAccent,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500)),
+                        if (post.isAuthorAdmin)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 4),
+                            child: Icon(Icons.verified,
+                                size: 12, color: Colors.blue),
+                          ),
                         const Spacer(),
                         Text(
                             DateFormat('dd.MM.yyyy HH:mm')
@@ -515,20 +567,17 @@ class _MarketplaceListPageState extends State<MarketplaceListPage> {
                           spacing: 6,
                           runSpacing: 6,
                           children: [
-                            if (post.googleAccount)
-                              _buildTagStatic(
-                                  context, "Google", const Color(0xFFEA4335)),
-                            if (post.konamiId)
-                              _buildTagStatic(
-                                  context, "Konami", const Color(0xFFE10000)),
-                            if (post.gameCenter)
-                              _buildTagStatic(context, "GameCenter",
-                                  const Color(0xFF007AFF)),
+                            _buildTagStatic(
+                                context, "Google", post.googleAccount),
+                            _buildTagStatic(context, "Konami", post.konamiId),
+                            _buildTagStatic(
+                                context, "GameCenter", post.gameCenter),
+                            _buildTagStatic(context, "Obmen", post.isExchange),
                           ],
                         ),
                       ],
                     ),
-                    if (showActions && isOwner) ...[
+                    if (showActions && canModerate) ...[
                       const SizedBox(height: 16),
                       const Divider(),
                       const SizedBox(height: 12),
@@ -556,7 +605,7 @@ class _MarketplaceListPageState extends State<MarketplaceListPage> {
                                     context, post, "Sotildi", Colors.green,
                                     () async {
                                   await marketplaceService.deletePost(
-                                      post.id, post.fileId);
+                                      post.id, post.fileIds);
                                 });
                               }),
                           const SizedBox(width: 8),
@@ -568,7 +617,7 @@ class _MarketplaceListPageState extends State<MarketplaceListPage> {
                                 _confirmActionStatic(context, post, "O'chirish",
                                     Colors.redAccent, () async {
                                   await marketplaceService.deletePost(
-                                      post.id, post.fileId);
+                                      post.id, post.fileIds);
                                 });
                               }),
                         ],
@@ -585,15 +634,30 @@ class _MarketplaceListPageState extends State<MarketplaceListPage> {
   }
 
   static Widget _buildTagStatic(
-      BuildContext context, String label, Color color) {
+      BuildContext context, String label, bool isActive) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: isActive
+              ? Colors.green.withOpacity(0.1)
+              : Colors.red.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8)),
-      child: Text(label,
-          style: GoogleFonts.outfit(
-              fontSize: 10, color: color, fontWeight: FontWeight.bold)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isActive ? Icons.check_circle : Icons.cancel,
+            size: 10,
+            color: isActive ? Colors.green : Colors.red,
+          ),
+          const SizedBox(width: 4),
+          Text(label,
+              style: GoogleFonts.outfit(
+                  fontSize: 10,
+                  color: isActive ? Colors.green : Colors.red,
+                  fontWeight: FontWeight.bold)),
+        ],
+      ),
     );
   }
 
@@ -616,186 +680,6 @@ class _MarketplaceListPageState extends State<MarketplaceListPage> {
             Text(label,
                 style: GoogleFonts.outfit(
                     color: color, fontSize: 11, fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  static void _showPostDetailsStatic(BuildContext context, AccountPost post) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.9,
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF121212) : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        child: Column(
-          children: [
-            Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                    color: Colors.grey[700],
-                    borderRadius: BorderRadius.circular(2))),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    GestureDetector(
-                      onTap: () => _showImagePreview(
-                          context, post.imageUrl, 'post-img-detail-${post.id}'),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: Hero(
-                          tag: 'post-img-detail-${post.id}',
-                          child: CachedNetworkImage(imageUrl: post.imageUrl),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                            child: Text(post.title,
-                                style: GoogleFonts.outfit(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold))),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                              color: Colors.blueAccent.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(16)),
-                          child: Text(
-                              "${NumberFormat("#,###").format(post.price)} so'm",
-                              style: GoogleFonts.outfit(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blueAccent)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Icon(Icons.access_time_rounded,
-                            size: 14, color: Colors.grey[500]),
-                        const SizedBox(width: 4),
-                        Text(
-                            DateFormat('dd.MM.yyyy HH:mm')
-                                .format(post.createdAt),
-                            style: GoogleFonts.outfit(
-                                color: Colors.grey[500], fontSize: 13)),
-                        const SizedBox(width: 16),
-                        Icon(Icons.remove_red_eye_outlined,
-                            size: 14, color: Colors.grey[500]),
-                        const SizedBox(width: 4),
-                        Text("${post.views.length} marta ko'rildi",
-                            style: GoogleFonts.outfit(
-                                color: Colors.grey[500], fontSize: 13)),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Text("Tavsif",
-                        style: GoogleFonts.outfit(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Text(post.description,
-                        style: GoogleFonts.outfit(
-                            fontSize: 15,
-                            color: isDark ? Colors.white70 : Colors.black87,
-                            height: 1.6)),
-                    const SizedBox(height: 32),
-                    Text("Bog'lanish",
-                        style: GoogleFonts.outfit(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 16),
-                    _buildContactCardStatic(context,
-                        icon: Icons.telegram_rounded,
-                        title: post.telegramUser,
-                        subtitle: "Telegram",
-                        color: const Color(0xFF0088cc), onTap: () async {
-                      final url = Uri.parse(
-                          "https://t.me/${post.telegramUser.replaceAll('@', '')}");
-                      if (await canLaunchUrl(url)) await launchUrl(url);
-                    }),
-                    const SizedBox(height: 12),
-                    _buildContactCardStatic(context,
-                        icon: Icons.phone_forwarded_rounded,
-                        title: post.phoneNumber,
-                        subtitle: "Qo'ng'iroq",
-                        color: Colors.green, onTap: () async {
-                      final url = Uri.parse("tel:${post.phoneNumber}");
-                      if (await canLaunchUrl(url)) await launchUrl(url);
-                    }),
-                    const SizedBox(height: 40),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  static void _showImagePreview(BuildContext context, String url, String tag) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ImagePreviewPage(imageUrl: url, heroTag: tag),
-      ),
-    );
-  }
-
-  static Widget _buildContactCardStatic(BuildContext context,
-      {required IconData icon,
-      required String title,
-      required String subtitle,
-      required Color color,
-      required VoidCallback onTap}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withOpacity(0.05)
-                : Colors.grey.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(20),
-            border:
-                Border.all(color: isDark ? Colors.white10 : Colors.black12)),
-        child: Row(
-          children: [
-            Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                    color: color.withOpacity(0.1), shape: BoxShape.circle),
-                child: Icon(icon, color: color, size: 24)),
-            const SizedBox(width: 16),
-            Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Text(title,
-                      style: GoogleFonts.outfit(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 2),
-                  Text(subtitle,
-                      style:
-                          GoogleFonts.outfit(fontSize: 12, color: Colors.grey))
-                ])),
-            const Icon(Icons.arrow_forward_ios_rounded,
-                size: 14, color: Colors.grey),
           ],
         ),
       ),

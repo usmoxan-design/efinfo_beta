@@ -53,10 +53,9 @@ class _HomePageState extends State<HomePage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: TabBar(
                 controller: _tabController,
-                // overlayColor: isDark ? Colors.white : Colors.black,
                 indicatorColor: const Color(0xFF06DF5D),
                 indicatorWeight: 3,
                 dividerColor: dividerColor,

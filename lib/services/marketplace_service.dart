@@ -31,23 +31,46 @@ class MarketplaceService {
   }
 
   // Add a new post
-  Future<void> addPost(AccountPost post, File imageFile) async {
+  Future<void> addPost(AccountPost post, List<File> imageFiles) async {
     try {
-      // 1. Upload to ImageKit
-      String fileName = "account_${DateTime.now().millisecondsSinceEpoch}.jpg";
-      var uploadResult = await ImageKitService.uploadImage(imageFile, fileName);
+      List<String> imageUrls = [];
+      List<String> fileIds = [];
 
-      if (uploadResult == null)
-        throw "Rasm yuklashda xatolik yuz berdi (ImageKit)";
+      // 1. Upload all to ImageKit
+      for (var imageFile in imageFiles) {
+        String fileName =
+            "account_${DateTime.now().millisecondsSinceEpoch}_${imageFiles.indexOf(imageFile)}.jpg";
+        var uploadResult =
+            await ImageKitService.uploadImage(imageFile, fileName);
 
-      String imageUrl = uploadResult['url'];
-      String fileId = uploadResult['fileId'];
+        if (uploadResult == null) {
+          // If one fails, we might want to cleanup others, but for simplicity:
+          throw "Rasm yuklashda xatolik yuz berdi (ImageKit)";
+        }
+
+        imageUrls.add(uploadResult['url']);
+        fileIds.add(uploadResult['fileId']);
+      }
 
       // 2. Save post to Firestore
       Map<String, dynamic> postData = post.toFirestore();
-      postData['imageUrl'] = imageUrl;
-      postData['fileId'] = fileId;
+
+      // Check for admin status to add badge
+      bool isAdmin = false;
+      try {
+        final userDoc =
+            await _firestore.collection('chat_users').doc(post.userId).get();
+        isAdmin = userDoc.data()?['isAdmin'] ?? false;
+      } catch (_) {}
+
+      postData['imageUrls'] = imageUrls;
+      postData['fileIds'] = fileIds;
+      postData['isAuthorAdmin'] = isAdmin;
       postData['createdAt'] = FieldValue.serverTimestamp();
+
+      // Clear legacy fields if they were set in toFirestore
+      postData.remove('imageUrl');
+      postData.remove('fileId');
 
       await _firestore.collection(_collectionPath).add(postData);
     } catch (e) {
@@ -57,37 +80,56 @@ class MarketplaceService {
   }
 
   // Update a post
-  Future<void> updatePost(AccountPost post, File? newImageFile) async {
+  Future<void> updatePost(AccountPost post, List<File>? newImageFiles) async {
     try {
-      String imageUrl = post.imageUrl;
-      String fileId = post.fileId;
+      List<String> imageUrls = post.imageUrls;
+      List<String> fileIds = post.fileIds;
 
-      // 1. Update image if new one provided
-      if (newImageFile != null) {
-        // Delete old image from ImageKit
-        if (post.fileId.isNotEmpty) {
-          await ImageKitService.deleteImage(post.fileId);
+      // 1. Update images if new ones provided
+      if (newImageFiles != null && newImageFiles.isNotEmpty) {
+        // Delete OLD images from ImageKit
+        for (var fId in post.fileIds) {
+          if (fId.isNotEmpty) {
+            await ImageKitService.deleteImage(fId);
+          }
         }
 
-        // Upload new image
-        String fileName =
-            "account_${DateTime.now().millisecondsSinceEpoch}.jpg";
-        var uploadResult =
-            await ImageKitService.uploadImage(newImageFile, fileName);
-        if (uploadResult == null)
-          throw "Yangi rasm yuklashda xatolik yuz berdi";
+        imageUrls = [];
+        fileIds = [];
 
-        imageUrl = uploadResult['url'];
-        fileId = uploadResult['fileId'];
+        // Upload NEW images
+        for (var imageFile in newImageFiles) {
+          String fileName =
+              "account_${DateTime.now().millisecondsSinceEpoch}_${newImageFiles.indexOf(imageFile)}.jpg";
+          var uploadResult =
+              await ImageKitService.uploadImage(imageFile, fileName);
+          if (uploadResult == null)
+            throw "Yangi rasm yuklashda xatolik yuz berdi";
+
+          imageUrls.add(uploadResult['url']);
+          fileIds.add(uploadResult['fileId']);
+        }
       }
 
       // 2. Update Firestore doc
       Map<String, dynamic> postData = post.toFirestore();
-      postData['imageUrl'] = imageUrl;
-      postData['fileId'] = fileId;
+
+      // Refresh admin status
+      bool isAdmin = false;
+      try {
+        final userDoc =
+            await _firestore.collection('chat_users').doc(post.userId).get();
+        isAdmin = userDoc.data()?['isAdmin'] ?? false;
+      } catch (_) {}
+
+      postData['imageUrls'] = imageUrls;
+      postData['fileIds'] = fileIds;
+      postData['isAuthorAdmin'] = isAdmin;
 
       // Don't overwrite original creation date
       postData.remove('createdAt');
+      postData.remove('imageUrl');
+      postData.remove('fileId');
 
       await _firestore
           .collection(_collectionPath)
@@ -100,14 +142,16 @@ class MarketplaceService {
   }
 
   // Delete a post
-  Future<void> deletePost(String postId, String fileId) async {
+  Future<void> deletePost(String postId, List<String> fileIds) async {
     try {
       // 1. Delete Firestore doc
       await _firestore.collection(_collectionPath).doc(postId).delete();
 
-      // 2. Delete image from ImageKit
-      if (fileId.isNotEmpty) {
-        await ImageKitService.deleteImage(fileId);
+      // 2. Delete images from ImageKit
+      for (var fileId in fileIds) {
+        if (fileId.isNotEmpty) {
+          await ImageKitService.deleteImage(fileId);
+        }
       }
     } catch (e) {
       debugPrint("Delete post error: $e");

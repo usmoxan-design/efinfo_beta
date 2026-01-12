@@ -1,6 +1,5 @@
 import 'package:efinfo_beta/Pages/HomePage.dart';
 import 'package:efinfo_beta/Pages/MorePage.dart';
-import 'package:efinfo_beta/Pages/SettingsPage.dart';
 import 'package:efinfo_beta/Pages/marketplace_list_page.dart';
 import 'package:efinfo_beta/tournament/TournamentMaker.dart';
 import 'package:efinfo_beta/theme/app_colors.dart';
@@ -12,6 +11,8 @@ import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:efinfo_beta/chat/chat_page.dart';
+import 'package:efinfo_beta/services/auth_service.dart';
+import 'package:efinfo_beta/services/online_tournament_service.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -22,6 +23,8 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
+  final AuthService _authService = AuthService();
+  final OnlineTournamentService _tournamentService = OnlineTournamentService();
 
   final List<Widget> _pages = const [
     HomePage(),
@@ -39,6 +42,7 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
+    final user = _authService.currentUser;
 
     return Scaffold(
       backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
@@ -58,18 +62,82 @@ class _MainPageState extends State<MainPage> {
               'assets/images/mainLogo.png',
               height: 32,
             ),
-            const SizedBox(width: 15),
-            Text(
-              "v1.0.10",
-              style: GoogleFonts.outfit(
-                fontSize: 14,
-                color: isDark ? AppColors.textDim : Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
           ],
         ),
         actions: [
+          if (user != null) ...[
+            StreamBuilder<int>(
+                stream: _authService.getUserCoins(user.uid),
+                builder: (context, snapshot) {
+                  return Center(
+                    child: GestureDetector(
+                      onTap: () =>
+                          launchUrl(Uri.parse("https://t.me/eFinfo_HUB")),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.monetization_on_rounded,
+                                color: Colors.amber, size: 16),
+                            const SizedBox(width: 4),
+                            Text(
+                              "${snapshot.data ?? 0}",
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.add_circle_outline_rounded,
+                                color: Colors.blueAccent, size: 14),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+            StreamBuilder<int>(
+                stream: _tournamentService.getRequestsCount(),
+                builder: (context, snapshot) {
+                  final count = snapshot.data ?? 0;
+                  return Stack(
+                    children: [
+                      IconButton(
+                        onPressed: () => _showNotifications(context, isDark),
+                        icon: Icon(IonIcons.notifications,
+                            color: isDark ? Colors.white : Colors.black),
+                      ),
+                      if (count > 0)
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                                color: Colors.red, shape: BoxShape.circle),
+                            constraints: const BoxConstraints(
+                                minWidth: 16, minHeight: 16),
+                            child: Text(
+                              "$count",
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                }),
+          ],
           IconButton(
             onPressed: () {
               Navigator.push(
@@ -83,18 +151,6 @@ class _MainPageState extends State<MainPage> {
             ),
             tooltip: "Chat",
           ),
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
-              );
-            },
-            icon: Icon(
-              IonIcons.settings,
-              color: isDark ? Colors.white : Colors.black,
-            ),
-          ),
           const SizedBox(width: 8),
         ],
       ),
@@ -105,10 +161,20 @@ class _MainPageState extends State<MainPage> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (_currentIndex != 2) _buildTelegramBanner(),
+          if (_currentIndex != 2 && _currentIndex != 1) _buildTelegramBanner(),
           _buildBottomNavBar(themeProvider),
         ],
       ),
+    );
+  }
+
+  void _showNotifications(BuildContext context, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => _NotificationBottomSheet(isDark: isDark),
     );
   }
 
@@ -233,6 +299,111 @@ class _MainPageState extends State<MainPage> {
       icon: Icon(icon, color: isDark ? Colors.white54 : Colors.black54),
       selectedIcon: Icon(icon, color: const Color(0xFF06DF5D)),
       label: label,
+    );
+  }
+}
+
+class _NotificationBottomSheet extends StatelessWidget {
+  final bool isDark;
+  const _NotificationBottomSheet({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final tournamentService = OnlineTournamentService();
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "Bildirishnomalar",
+            style: GoogleFonts.outfit(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Flexible(
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: tournamentService.getMyRequests(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData)
+                  return const Center(child: CircularProgressIndicator());
+                final requests = snapshot.data!;
+                if (requests.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40),
+                    child: Center(
+                      child: Text(
+                        "Hozircha xabarlar yo'q",
+                        style: GoogleFonts.outfit(color: Colors.grey),
+                      ),
+                    ),
+                  );
+                }
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: requests.length,
+                  itemBuilder: (context, index) {
+                    final req = requests[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.05)
+                            : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${req['fromName']} sizni \"${req['tournamentName']}\" turniriga taklif qildi.",
+                            style: GoogleFonts.outfit(
+                              color: isDark ? Colors.white70 : Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () => tournamentService
+                                    .handleRequest(req['id'], false),
+                                child: Text("Rad etish",
+                                    style: GoogleFonts.outfit(
+                                        color: Colors.redAccent)),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                onPressed: () => tournamentService
+                                    .handleRequest(req['id'], true),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF06DF5D),
+                                  foregroundColor: Colors.black,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: Text("Qabul qilish",
+                                    style: GoogleFonts.outfit(
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

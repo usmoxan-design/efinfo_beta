@@ -11,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:efinfo_beta/Pages/ProfilePage.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class ChatPage extends StatefulWidget {
@@ -816,17 +817,24 @@ class _ChatPageState extends State<ChatPage> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
-            CircleAvatar(
-              radius: 14,
-              backgroundColor: userColor.withOpacity(0.2),
-              child: Text(
-                message.senderName.isNotEmpty
-                    ? message.senderName[0].toUpperCase()
-                    : "?",
-                style: GoogleFonts.outfit(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: userColor,
+            GestureDetector(
+              onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          ProfilePage(userId: message.senderId))),
+              child: CircleAvatar(
+                radius: 14,
+                backgroundColor: userColor.withOpacity(0.2),
+                child: Text(
+                  message.senderName.isNotEmpty
+                      ? message.senderName[0].toUpperCase()
+                      : "?",
+                  style: GoogleFonts.outfit(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: userColor,
+                  ),
                 ),
               ),
             ),
@@ -930,11 +938,13 @@ class _ChatPageState extends State<ChatPage> {
                             if (isMe) ...[
                               const SizedBox(width: 4),
                               Icon(
-                                message.views.isNotEmpty
+                                message.views.length > 1
                                     ? Icons.done_all
                                     : Icons.done,
                                 size: 12,
-                                color: Colors.white70,
+                                color: message.views.length > 1
+                                    ? Colors.blueAccent
+                                    : Colors.white70,
                               ),
                             ],
                           ],

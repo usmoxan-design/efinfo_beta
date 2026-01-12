@@ -1,19 +1,18 @@
+import 'package:efinfo_beta/services/auth_service.dart';
+import 'package:efinfo_beta/services/online_tournament_service.dart';
 import 'package:efinfo_beta/theme/theme_provider.dart';
 import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:efinfo_beta/tournament/TournamentEditor.dart';
 import 'package:efinfo_beta/tournament/tournamentBracket.dart';
 import 'package:efinfo_beta/tournament/tournament_model.dart';
+import 'package:efinfo_beta/tournament/OnlineTournamentLobbyPage.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class TournamentListPage extends StatefulWidget {
   const TournamentListPage({super.key});
@@ -22,7 +21,64 @@ class TournamentListPage extends StatefulWidget {
   State<TournamentListPage> createState() => _TournamentListPageState();
 }
 
-class _TournamentListPageState extends State<TournamentListPage> {
+class _TournamentListPageState extends State<TournamentListPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
+    return Scaffold(
+      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(50),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: TabBar(
+            controller: _tabController,
+            indicatorColor: const Color(0xFF06DF5D),
+            labelColor: isDark ? Colors.white : Colors.black,
+            unselectedLabelColor: Colors.grey,
+            tabs: const [
+              Tab(text: "Oflayn"),
+              Tab(text: "Onlayn"),
+            ],
+          ),
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: const [
+          OfflineTournamentTab(),
+          OnlineTournamentTab(),
+        ],
+      ),
+    );
+  }
+}
+
+class OfflineTournamentTab extends StatefulWidget {
+  const OfflineTournamentTab({super.key});
+
+  @override
+  State<OfflineTournamentTab> createState() => _OfflineTournamentTabState();
+}
+
+class _OfflineTournamentTabState extends State<OfflineTournamentTab> {
   List<TournamentModel> _tournaments = [];
   bool _isLoading = true;
 
@@ -30,13 +86,10 @@ class _TournamentListPageState extends State<TournamentListPage> {
   void initState() {
     super.initState();
     _loadTournaments();
-    // Webda LateInitializationError oldini olish uchun plaginni oldindan uyg'otamiz
     try {
       FilePicker.platform;
     } catch (_) {}
   }
-
-  // --- Saqlash/Yuklash Mantig'i ---
 
   Future<void> _loadTournaments() async {
     final prefs = await SharedPreferences.getInstance();
@@ -52,14 +105,10 @@ class _TournamentListPageState extends State<TournamentListPage> {
               .toList();
         });
       } catch (e) {
-        _showSnackbar(
-            "Saqlangan ma'lumotlarni yuklashda xatolik: $e", Colors.red);
         _tournaments = [];
       }
     }
-    setState(() {
-      _isLoading = false;
-    });
+    setState(() => _isLoading = false);
   }
 
   Future<void> _saveTournaments() async {
@@ -84,523 +133,358 @@ class _TournamentListPageState extends State<TournamentListPage> {
   void _confirmDelete(BuildContext context, TournamentModel tournament) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
-        return AlertDialog(
-          backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: Text(
-            "Turnirni o'chirishni tasdiqlang",
-            style: GoogleFonts.outfit(
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black,
-            ),
-          ),
-          content: Text(
-            "Siz rostdan ham \"${tournament.name}\" turnirini butunlay o'chirmoqchimisiz? Bu jarayonni ortga qaytarib bo'lmaydi.",
-            style: GoogleFonts.outfit(
-              fontSize: 16,
-              color: isDark ? Colors.white70 : Colors.black87,
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
+      builder: (context) => AlertDialog(
+        title: const Text("Turnirni o'chirish"),
+        content: Text("${tournament.name}ni o'chirasizmi?"),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Yo'q")),
+          TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                setState(() {
+                  _tournaments.removeWhere((t) => t.id == tournament.id);
+                  _saveTournaments();
+                });
+                Navigator.pop(context);
               },
-              child: Text(
-                "Bekor qilish",
-                style: GoogleFonts.outfit(
-                    color: isDark ? Colors.white54 : Colors.black54),
-              ),
+              child: const Text("Ha", style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: _tournaments.length + 1,
+      itemBuilder: (context, index) {
+        if (index == 0) return _buildAddCard(isDark);
+        return _buildTile(_tournaments[index - 1], isDark);
+      },
+    );
+  }
+
+  Widget _buildAddCard(bool isDark) {
+    return GestureDetector(
+      onTap: () async {
+        final result = await Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const TournamentEditorPage()));
+        if (result != null && result is TournamentModel)
+          _addOrUpdateTournament(result);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: GlassContainer(
+          borderRadius: 20,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const Icon(BoxIcons.bx_plus, color: Color(0xFF06DF5D), size: 32),
+              const SizedBox(height: 8),
+              Text("Yangi Oflayn Turnir",
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold, fontSize: 16)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTile(TournamentModel t, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: GlassContainer(
+        borderRadius: 20,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(t.name,
+                    style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF06DF5D))),
+                IconButton(
+                    onPressed: () => _confirmDelete(context, t),
+                    icon:
+                        const Icon(Icons.delete, color: Colors.red, size: 20)),
+              ],
             ),
-            TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.red,
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _deleteTournamentConfirmed(tournament);
-              },
-              child: Text(
-                "O'chirish",
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.redAccent,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ElevatedButton(
+                  onPressed: () async {
+                    final res = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) =>
+                                TournamentBracketPage(tournament: t)));
+                    if (res != null && res is TournamentModel)
+                      _addOrUpdateTournament(res);
+                  },
+                  child: const Text("Ko'rish"),
                 ),
-              ),
-            ),
+              ],
+            )
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class OnlineTournamentTab extends StatefulWidget {
+  const OnlineTournamentTab({super.key});
+
+  @override
+  State<OnlineTournamentTab> createState() => _OnlineTournamentTabState();
+}
+
+class _OnlineTournamentTabState extends State<OnlineTournamentTab> {
+  final OnlineTournamentService _service = OnlineTournamentService();
+  final AuthService _authService = AuthService();
+  bool _isCreating = false;
+
+  void _createOnlineTournament() async {
+    final user = _authService.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("Tizimga kirmagansiz!")));
+      return;
+    }
+
+    final nameController = TextEditingController();
+    String type = 'League';
+    bool includeCreator = true;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("Yangi Onlayn Turnir"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Yaratish narxi: 100 Coin",
+                  style: TextStyle(
+                      color: Colors.amber, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(hintText: "Turnir nomi")),
+              const SizedBox(height: 16),
+              DropdownButton<String>(
+                value: type,
+                isExpanded: true,
+                items: ['League', 'Knockout'].map((String value) {
+                  return DropdownMenuItem<String>(
+                      value: value, child: Text(value));
+                }).toList(),
+                onChanged: (val) => setDialogState(() => type = val!),
+              ),
+              const SizedBox(height: 8),
+              CheckboxListTile(
+                title: const Text("O'zim ham qatnashaman",
+                    style: TextStyle(fontSize: 14)),
+                value: includeCreator,
+                onChanged: (val) => setDialogState(() => includeCreator = val!),
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Bekor qilish")),
+            ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Yaratish")),
+          ],
+        ),
+      ),
+    );
+
+    if (result == true && nameController.text.isNotEmpty) {
+      setState(() => _isCreating = true);
+      try {
+        await _service.createTournament(
+          name: nameController.text,
+          type: type,
+          includeCreator: includeCreator,
+        );
+        if (mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Muvaffaqiyatli yaratildi!")));
+      } catch (e) {
+        if (mounted)
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(e.toString())));
+      } finally {
+        if (mounted) setState(() => _isCreating = false);
+      }
+    }
+  }
+
+  void _invitePlayer(String tourId, String tourName) async {
+    final emailController = TextEditingController();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("O'yinchi taklif qilish"),
+        content: TextField(
+          controller: emailController,
+          decoration: const InputDecoration(
+              hintText: "example@efhub.uz", labelText: "Foydalanuvchi emaili"),
+          keyboardType: TextInputType.emailAddress,
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Bekor qilish")),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("Taklif qilish")),
+        ],
+      ),
+    );
+
+    if (result == true && emailController.text.isNotEmpty) {
+      try {
+        await _service.sendJoinRequest(
+            tourId, tourName, emailController.text.trim());
+        if (mounted)
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text("Taklif yuborildi!")));
+      } catch (e) {
+        if (mounted)
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+    if (_authService.currentUser == null) {
+      return const Center(child: Text("Onlayn turnirlar uchun tizimga kiring"));
+    }
+
+    if (_isCreating) return const Center(child: CircularProgressIndicator());
+
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _service.getMyTournaments(),
+      builder: (context, snapshot) {
+        final tours = snapshot.data ?? [];
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: tours.length + 1,
+          itemBuilder: (context, index) {
+            if (index == 0) return _buildAddCard(isDark);
+            final tour = tours[index - 1];
+            return _buildOnlineTile(tour, isDark);
+          },
         );
       },
     );
   }
 
-  void _deleteTournamentConfirmed(TournamentModel tournament) {
-    setState(() {
-      _tournaments.removeWhere((t) => t.id == tournament.id);
-      _saveTournaments();
-    });
-    _showSnackbar("Turnir o'chirildi: ${tournament.name}", Colors.red);
-  }
-
-  Future<void> _exportTournament(TournamentModel tournament) async {
-    try {
-      final String jsonString = jsonEncode(tournament.toJson());
-
-      if (kIsWeb) {
-        final Uri uri = Uri.parse(
-            "data:application/json;charset=utf-8,${Uri.encodeComponent(jsonString)}");
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri);
-          _showSnackbar(
-              "${tournament.name} nusxasi yuklab olindi", Colors.green);
-          return;
-        }
-      }
-
-      final Uint8List bytes = Uint8List.fromList(utf8.encode(jsonString));
-      final xFile = XFile.fromData(
-        bytes,
-        mimeType: 'application/json',
-        name: 'efinfo_${tournament.name.replaceAll(' ', '_')}.json',
-      );
-
-      await Share.shareXFiles(
-        [xFile],
-        text: "${tournament.name} - Turnir ma'lumotlari nusxasi",
-      );
-    } catch (e) {
-      _showSnackbar("Eksport qilishda xatolik: $e", Colors.red);
-    }
-  }
-
-  Future<void> _importTournaments() async {
-    try {
-      // Plaginni xavfsiz chaqirish
-      FilePickerResult? result;
-      try {
-        result = await FilePicker.platform.pickFiles(
-          type: kIsWeb ? FileType.any : FileType.custom,
-          allowedExtensions: kIsWeb ? null : ['json'],
-          withData: true,
-        );
-      } catch (e) {
-        // LateInitializationError yoki boshqa plagin xatolarini ushlash
-        debugPrint("FilePicker error: $e");
-        _showSnackbar(
-            "Plagin yuklanishda xato. Sahifani qayta yangilang (Ctrl+F5)",
-            Colors.red);
-        return;
-      }
-
-      if (result != null && result.files.isNotEmpty) {
-        final platformFile = result.files.first;
-
-        // Webda fayl kengaytmasini qo'lda tekshiramiz
-        if (kIsWeb &&
-            platformFile.name.split('.').last.toLowerCase() != 'json') {
-          _showSnackbar("Faqat .json fayllarini tanlang", Colors.orange);
-          return;
-        }
-
-        if (platformFile.bytes == null) {
-          _showSnackbar("Faylni o'qib bo'lmadi", Colors.red);
-          return;
-        }
-
-        final String content = utf8.decode(platformFile.bytes!);
-        final dynamic decodedData = jsonDecode(content);
-
-        final List<TournamentModel> importedTournaments = [];
-        if (decodedData is List) {
-          importedTournaments.addAll(
-            decodedData.map((json) =>
-                TournamentModel.fromJson(json as Map<String, dynamic>)),
-          );
-        } else if (decodedData is Map<String, dynamic>) {
-          importedTournaments.add(TournamentModel.fromJson(decodedData));
-        }
-
-        if (importedTournaments.isEmpty) {
-          _showSnackbar("Faylda turnirlar topilmadi", Colors.orange);
-          return;
-        }
-
-        // Tasdiqlash dialogni ko'rsatamiz
-        if (!mounted) return;
-        bool? confirm = await showDialog<bool>(
-          context: context,
-          builder: (context) {
-            final isDark =
-                Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
-            return AlertDialog(
-              backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24)),
-              title: Text(
-                "Importni tasdiqlang",
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
-                ),
-              ),
-              content: Text(
-                "${importedTournaments.length} ta turnir aniqlandi. Ularni joriy ro'yxatga qo'shishni xohlaysizmi?\n\n(Bir xil ID dagi turnirlar yangilanadi)",
-                style: GoogleFonts.outfit(
-                  color: isDark ? Colors.white70 : Colors.black87,
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text("Bekor qilish",
-                      style: GoogleFonts.outfit(color: Colors.grey)),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text("Import",
-                      style: GoogleFonts.outfit(
-                          color: const Color(0xFF06DF5D),
-                          fontWeight: FontWeight.bold)),
-                ),
-              ],
-            );
-          },
-        );
-
-        if (confirm == true) {
-          setState(() {
-            for (var imported in importedTournaments) {
-              int index = _tournaments.indexWhere((t) => t.id == imported.id);
-              if (index != -1) {
-                _tournaments[index] = imported;
-              } else {
-                _tournaments.add(imported);
-              }
-            }
-            _saveTournaments();
-          });
-          _showSnackbar(
-              "${importedTournaments.length} ta turnir import qilindi",
-              Colors.green);
-        }
-      }
-    } catch (e) {
-      debugPrint("Import error: $e");
-      _showSnackbar("Import qilishda xatolik yuz berdi", Colors.red);
-    }
-  }
-
-  void _showSnackbar(String message, Color color) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(message),
-        backgroundColor: color,
-        duration: const Duration(milliseconds: 1500),
-      ));
-    }
-  }
-
-  // --- UI Yaratish ---
-
-  @override
-  Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
-
-    return Scaffold(
-      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF06DF5D)))
-          : ListView.builder(
-              padding: const EdgeInsets.only(
-                  left: 12.0, right: 12.0, top: 12.0, bottom: 180.0),
-              itemCount: _tournaments.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) return _buildAddTournamentCard(isDark);
-                final tournament = _tournaments[index - 1];
-                return _buildTournamentTile(tournament, isDark);
-              },
-            ),
-    );
-  }
-
-  Widget _buildAddTournamentCard(bool isDark) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: () async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const TournamentEditorPage(),
-              ),
-            );
-            if (result != null && result is TournamentModel) {
-              _addOrUpdateTournament(result);
-            }
-          },
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 8.0),
-            child: GlassContainer(
-              borderRadius: 20,
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF06DF5D).withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      BoxIcons.bx_plus,
-                      color: Color(0xFF06DF5D),
-                      size: 32,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    "Yangi Turnir Yaratish",
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "O'z turniringizni boshlang va natijalarni kuzatib boring",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      color: isDark ? Colors.white54 : Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+  Widget _buildAddCard(bool isDark) {
+    return GestureDetector(
+      onTap: _createOnlineTournament,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: GlassContainer(
+          borderRadius: 20,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const Icon(Icons.add_rounded, color: Colors.blueAccent, size: 32),
+              const SizedBox(height: 8),
+              Text("Yangi Onlayn Turnir",
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold, fontSize: 16)),
+              Text("Narxi: 100 Coin",
+                  style: GoogleFonts.outfit(fontSize: 12, color: Colors.amber)),
+            ],
           ),
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              "Ma'lumotlarni import qilish",
-              style: GoogleFonts.outfit(
-                  fontSize: 12,
-                  color: isDark ? Colors.white54 : Colors.black54),
-            ),
-            const SizedBox(width: 8),
-            _buildActionButton(
-              icon: BoxIcons.bx_import,
-              label: "Import",
-              color: const Color(0xFF06DF5D),
-              onPressed: _importTournaments,
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-      ],
+      ),
     );
   }
 
-  Widget _buildTournamentTile(TournamentModel tournament, bool isDark) {
-    String? championName;
-    if (tournament.championId != null) {
-      try {
-        championName = tournament.teams
-            .firstWhere((t) => t.id == tournament.championId)
-            .name;
-      } catch (_) {
-        championName = null;
-      }
-    }
+  Widget _buildOnlineTile(Map<String, dynamic> tour, bool isDark) {
+    final isCreator = tour['creatorId'] == _authService.currentUser?.uid;
+    final List players = tour['players'] ?? [];
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      margin: const EdgeInsets.only(bottom: 12),
       child: GlassContainer(
         borderRadius: 20,
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Text(
-                    tournament.name,
+                Text(tour['name'],
                     style: GoogleFonts.outfit(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF06DF5D),
-                    ),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueAccent,
+                        fontSize: 18)),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: Colors.blueAccent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8)),
+                  child: Text(tour['type'],
+                      style: GoogleFonts.outfit(
+                          fontSize: 12, color: Colors.blueAccent)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text("O'yinchilar: ${players.length}",
+                style: GoogleFonts.outfit(color: Colors.grey, fontSize: 12)),
+            const Divider(height: 24),
+            Row(
+              children: [
+                if (isCreator)
+                  ElevatedButton.icon(
+                    onPressed: () => _invitePlayer(tour['id'], tour['name']),
+                    icon: const Icon(Icons.person_add_rounded, size: 16),
+                    label: const Text("Taklif"),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent,
+                        foregroundColor: Colors.white),
                   ),
-                ),
-                Icon(
-                  championName != null
-                      ? Icons.emoji_events
-                      : (tournament.isDrawDone
-                          ? BoxIcons.bx_check_circle
-                          : BoxIcons.bx_loader_circle),
-                  color: championName != null
-                      ? Colors.amber
-                      : (tournament.isDrawDone ? Colors.green : Colors.orange),
-                )
-              ],
-            ),
-            const Divider(height: 24, color: Colors.white10),
-            Row(
-              children: [
-                _buildInfoTag(
-                  icon: BoxIcons.bx_group,
-                  label: "${tournament.teams.length} jamoa",
-                  isDark: isDark,
-                ),
-                const SizedBox(width: 8),
-                _buildInfoTag(
-                  icon: BoxIcons.bx_grid_alt,
-                  label: tournament.type == TournamentType.knockout
-                      ? 'Knockout'
-                      : 'League',
-                  isDark: isDark,
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              championName != null
-                  ? "CHEMPION: $championName 👑"
-                  : tournament.isDrawDone
-                      ? "Holati: O'yinlarni kiriting"
-                      : "Holati: Qura tashlanmagan",
-              style: GoogleFonts.outfit(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: championName != null
-                    ? Colors.blueAccent
-                    : (tournament.isDrawDone
-                        ? Colors.greenAccent
-                        : Colors.redAccent),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                _buildActionButton(
-                  icon: BoxIcons.bx_show,
-                  label: "Ko'rish",
-                  color: Colors.blueAccent,
-                  onPressed: () async {
-                    final result = await Navigator.push(
+                const Spacer(),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            TournamentBracketPage(tournament: tournament),
+                        builder: (_) =>
+                            OnlineTournamentLobbyPage(tournament: tour),
                       ),
                     );
-                    if (result != null && result is TournamentModel) {
-                      _addOrUpdateTournament(result);
-                    }
                   },
-                ),
-                const SizedBox(width: 8),
-                _buildActionButton(
-                  icon: BoxIcons.bx_edit,
-                  label: "Ozgar",
-                  color: Colors.grey,
-                  onPressed: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            TournamentEditorPage(tournament: tournament),
-                      ),
-                    );
-                    if (result != null && result is TournamentModel) {
-                      _addOrUpdateTournament(result);
-                    }
-                  },
-                ),
-                const SizedBox(width: 8),
-                _buildActionButton(
-                  icon: BoxIcons.bx_export,
-                  label: "",
-                  color: Colors.blueAccent,
-                  onPressed: () => _exportTournament(tournament),
-                ),
-                const SizedBox(width: 8),
-                _buildActionButton(
-                  icon: BoxIcons.bx_trash,
-                  label: "",
-                  color: Colors.redAccent,
-                  onPressed: () => _confirmDelete(context, tournament),
+                  child: const Text("Ko'rish"),
                 ),
               ],
-            ),
+            )
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoTag(
-      {required IconData icon, required String label, required bool isDark}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: isDark ? Colors.white70 : Colors.black54),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: GoogleFonts.outfit(
-              fontSize: 12,
-              color: isDark ? Colors.white70 : Colors.black54,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onPressed,
-  }) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 16, color: Colors.white),
-      label: label.isEmpty
-          ? const SizedBox.shrink()
-          : Text(
-              label,
-              style: GoogleFonts.outfit(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color.withOpacity(0.2),
-        foregroundColor: color,
-        elevation: 0,
-        padding: EdgeInsets.symmetric(
-            horizontal: label.isEmpty ? 8 : 12, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: color.withOpacity(0.3)),
         ),
       ),
     );

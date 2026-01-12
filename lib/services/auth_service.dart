@@ -24,8 +24,8 @@ class AuthService {
   }
 
   // Sign up with email and password
-  Future<UserCredential> signUp(
-      String email, String password, String name) async {
+  Future<UserCredential> signUp(String email, String password, String name,
+      {Map<String, dynamic>? deviceInfo}) async {
     try {
       UserCredential credential = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
@@ -40,6 +40,8 @@ class AuthService {
         'createdAt': FieldValue.serverTimestamp(),
         'isAdmin': false,
         'isBlocked': false,
+        'coins': 500, // Starting balance
+        if (deviceInfo != null) 'deviceInfo': deviceInfo,
       }, SetOptions(merge: true));
 
       return credential;
@@ -47,6 +49,22 @@ class AuthService {
       debugPrint("Signup error: $e");
       rethrow;
     }
+  }
+
+  // Get current user's coin balance
+  Stream<int> getUserCoins(String userId) {
+    return _firestore
+        .collection('chat_users')
+        .doc(userId)
+        .snapshots()
+        .map((snap) => snap.data()?['coins'] ?? 0);
+  }
+
+  // Update coins
+  Future<void> updateCoins(String userId, int amount) async {
+    await _firestore.collection('chat_users').doc(userId).update({
+      'coins': FieldValue.increment(amount),
+    });
   }
 
   // Sign out

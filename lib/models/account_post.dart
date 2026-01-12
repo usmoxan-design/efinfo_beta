@@ -7,8 +7,8 @@ class AccountPost {
   final String title;
   final String description;
   final double price;
-  final String imageUrl;
-  final String fileId; // ID from ImageKit for deletion
+  final List<String> imageUrls;
+  final List<String> fileIds; // IDs from ImageKit for deletion
   final bool googleAccount;
   final bool konamiId;
   final bool gameCenter;
@@ -16,6 +16,8 @@ class AccountPost {
   final String phoneNumber;
   final List<String> views;
   final DateTime createdAt;
+  final bool isAuthorAdmin;
+  final bool isExchange;
 
   AccountPost({
     required this.id,
@@ -24,8 +26,8 @@ class AccountPost {
     required this.title,
     required this.description,
     required this.price,
-    required this.imageUrl,
-    required this.fileId,
+    required this.imageUrls,
+    required this.fileIds,
     required this.googleAccount,
     required this.konamiId,
     required this.gameCenter,
@@ -33,10 +35,28 @@ class AccountPost {
     required this.phoneNumber,
     required this.views,
     required this.createdAt,
+    this.isAuthorAdmin = false,
+    this.isExchange = false,
   });
 
   factory AccountPost.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+    // Legacy support for single image
+    List<String> imageUrls = [];
+    if (data['imageUrls'] != null) {
+      imageUrls = List<String>.from(data['imageUrls']);
+    } else if (data['imageUrl'] != null) {
+      imageUrls = [data['imageUrl']];
+    }
+
+    List<String> fileIds = [];
+    if (data['fileIds'] != null) {
+      fileIds = List<String>.from(data['fileIds']);
+    } else if (data['fileId'] != null) {
+      fileIds = [data['fileId']];
+    }
+
     return AccountPost(
       id: doc.id,
       userId: data['userId'] ?? '',
@@ -44,8 +64,8 @@ class AccountPost {
       title: data['title'] ?? '',
       description: data['description'] ?? '',
       price: (data['price'] ?? 0).toDouble(),
-      imageUrl: data['imageUrl'] ?? '',
-      fileId: data['fileId'] ?? '',
+      imageUrls: imageUrls,
+      fileIds: fileIds,
       googleAccount: data['googleAccount'] ?? false,
       konamiId: data['konamiId'] ?? false,
       gameCenter: data['gameCenter'] ?? false,
@@ -53,6 +73,8 @@ class AccountPost {
       phoneNumber: data['phoneNumber'] ?? '',
       views: List<String>.from(data['views'] ?? []),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      isAuthorAdmin: data['isAuthorAdmin'] ?? false,
+      isExchange: data['isExchange'] ?? false,
     );
   }
 
@@ -63,16 +85,21 @@ class AccountPost {
       'title': title,
       'description': description,
       'price': price,
-      'imageUrl': imageUrl,
-      'fileId': fileId,
+      'imageUrls': imageUrls,
+      'fileIds': fileIds,
       'googleAccount': googleAccount,
       'konamiId': konamiId,
       'gameCenter': gameCenter,
       'telegramUser': telegramUser,
       'phoneNumber': phoneNumber,
       'views': views,
-      'createdAt':
-          createdAt, // Note: MarketplaceService will handle server timestamp if needed
+      'createdAt': createdAt,
+      'isAuthorAdmin': isAuthorAdmin,
+      'isExchange': isExchange,
     };
   }
+
+  // Helper to get first image
+  String get imageUrl => imageUrls.isNotEmpty ? imageUrls.first : '';
+  String get fileId => fileIds.isNotEmpty ? fileIds.first : '';
 }

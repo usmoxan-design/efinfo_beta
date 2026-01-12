@@ -22,7 +22,9 @@ import 'package:provider/provider.dart';
 
 class TournamentBracketPage extends StatefulWidget {
   final TournamentModel tournament;
-  const TournamentBracketPage({super.key, required this.tournament});
+  final Function(TournamentModel)? onUpdate;
+  const TournamentBracketPage(
+      {super.key, required this.tournament, this.onUpdate});
 
   @override
   State<TournamentBracketPage> createState() => _TournamentBracketPageState();
@@ -45,6 +47,12 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
         _currentTournament.type == TournamentType.knockout) {
       _currentTournament =
           _bracketService.createThirdPlaceMatch(_currentTournament);
+    }
+  }
+
+  void _onChanged() {
+    if (widget.onUpdate != null) {
+      widget.onUpdate!(_currentTournament);
     }
   }
 
@@ -165,6 +173,7 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
 
                   setState(() {
                     _currentTournament = updatedTournament;
+                    _onChanged();
                     Navigator.pop(context);
                   });
 
@@ -233,8 +242,7 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
 
       setState(() {
         _currentTournament = updatedTournament;
-        // Bosh sahifaga o'zgarishlarni qaytarish
-        // Note: Navigator.pop(context, _currentTournament) replaces the whole state in TournamentListPage
+        _onChanged();
       });
       _showSnackbar("Qura muvaffaqiyatli tashlandi.", Colors.green);
     } catch (e) {

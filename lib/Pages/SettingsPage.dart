@@ -1,3 +1,4 @@
+import 'package:efinfo_beta/Pages/ProfilePage.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -36,6 +37,22 @@ class SettingsPage extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.all(20),
             children: [
+              _buildSectionTitle("Hisob"),
+              const SizedBox(height: 15),
+              GestureDetector(
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ProfilePage())),
+                child: _buildSettingTile(
+                  context,
+                  icon: IonIcons.person,
+                  title: "Profil",
+                  subtitle: "Profilni boshqarish va e'lonlar",
+                  trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                ),
+              ),
+              const SizedBox(height: 30),
               _buildSectionTitle("Ko'rinish"),
               const SizedBox(height: 15),
               _buildSettingTile(
@@ -68,7 +85,7 @@ class SettingsPage extends StatelessWidget {
                 context,
                 icon: IonIcons.information_circle,
                 title: "Versiya",
-                subtitle: "1.0.10",
+                subtitle: "1.1.0",
                 trailing: const Icon(Icons.chevron_right, color: Colors.grey),
               ),
               const SizedBox(height: 15),

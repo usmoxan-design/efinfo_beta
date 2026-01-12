@@ -28,8 +28,9 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
   bool _googleAccount = false;
   bool _konamiId = false;
   bool _gameCenter = false;
+  bool _isExchange = false;
 
-  File? _imageFile;
+  List<File> _imageFiles = [];
   bool _isLoading = false;
 
   @override
@@ -48,21 +49,47 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
     _googleAccount = widget.post?.googleAccount ?? false;
     _konamiId = widget.post?.konamiId ?? false;
     _gameCenter = widget.post?.gameCenter ?? false;
+    _isExchange = widget.post?.isExchange ?? false;
   }
 
-  Future<void> _pickImage() async {
-    final picked = await ImagePicker()
-        .pickImage(source: ImageSource.gallery, imageQuality: 70);
-    if (picked != null) {
-      setState(() => _imageFile = File(picked.path));
+  Future<void> _pickImages() async {
+    if (_imageFiles.length >= 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Maksimal 3 ta rasm yuklash mumkin")));
+      return;
     }
+
+    final picked = await ImagePicker().pickMultiImage(imageQuality: 70);
+
+    if (picked.isNotEmpty) {
+      setState(() {
+        _imageFiles.addAll(
+            picked.take(3 - _imageFiles.length).map((e) => File(e.path)));
+      });
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _imageFiles.removeAt(index);
+    });
   }
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_imageFile == null && widget.post == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Rasm tanlang")));
+
+    // Validation: 1-3 images
+    bool hasImages = _imageFiles.isNotEmpty ||
+        (widget.post != null && widget.post!.imageUrls.isNotEmpty);
+    if (!hasImages) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Kamida 1 ta rasm yuklang")));
+      return;
+    }
+
+    if (_imageFiles.length > 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Maksimal 3 ta rasm yuklash mumkin")));
       return;
     }
 
@@ -84,8 +111,8 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
         title: _titleController.text.trim(),
         description: _descController.text.trim(),
         price: double.parse(_priceController.text.trim()),
-        imageUrl: widget.post?.imageUrl ?? '',
-        fileId: widget.post?.fileId ?? '',
+        imageUrls: widget.post?.imageUrls ?? [],
+        fileIds: widget.post?.fileIds ?? [],
         googleAccount: _googleAccount,
         konamiId: _konamiId,
         gameCenter: _gameCenter,
@@ -93,12 +120,15 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
         phoneNumber: _phoneController.text.trim(),
         views: widget.post?.views ?? [],
         createdAt: widget.post?.createdAt ?? DateTime.now(),
+        isAuthorAdmin: widget.post?.isAuthorAdmin ?? false,
+        isExchange: _isExchange,
       );
 
       if (widget.post == null) {
-        await _marketplaceService.addPost(post, _imageFile!);
+        await _marketplaceService.addPost(post, _imageFiles);
       } else {
-        await _marketplaceService.updatePost(post, _imageFile);
+        await _marketplaceService.updatePost(
+            post, _imageFiles.isEmpty ? null : _imageFiles);
       }
 
       if (mounted) Navigator.pop(context);
@@ -137,66 +167,102 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Image Picker Section
-                    _buildSectionTitle("Rasm"),
-                    GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        height: 220,
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withOpacity(0.03)
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                              color: Colors.blueAccent.withOpacity(0.2)),
-                          image: (_imageFile != null)
-                              ? DecorationImage(
-                                  image: FileImage(_imageFile!),
-                                  fit: BoxFit.cover)
-                              : (widget.post != null)
-                                  ? DecorationImage(
-                                      image:
-                                          NetworkImage(widget.post!.imageUrl),
-                                      fit: BoxFit.cover)
-                                  : null,
-                        ),
-                        child: (_imageFile == null && widget.post == null)
-                            ? Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                    _buildSectionTitle(
+                        "Rasmlar (${_imageFiles.length + (widget.post?.imageUrls.length ?? 0)}/3)"),
+                    SizedBox(
+                      height: 120,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          // Existing images (if editing)
+                          if (widget.post != null)
+                            ...widget.post!.imageUrls.map((url) => Container(
+                                  width: 120,
+                                  margin: const EdgeInsets.only(right: 12),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    image: DecorationImage(
+                                        image: NetworkImage(url),
+                                        fit: BoxFit.cover),
+                                  ),
+                                  child: Container(
+                                    alignment: Alignment.topRight,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(16),
+                                      color: Colors.black26,
+                                    ),
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(4.0),
+                                      child: Icon(Icons.check_circle,
+                                          color: Colors.white, size: 20),
+                                    ),
+                                  ),
+                                )),
+                          // New local images
+                          ..._imageFiles.asMap().entries.map((entry) => Stack(
                                 children: [
-                                  Icon(Icons.add_photo_alternate_rounded,
-                                      size: 48,
-                                      color:
-                                          Colors.blueAccent.withOpacity(0.5)),
-                                  const SizedBox(height: 12),
-                                  Text("Skrenshot yuklash",
-                                      style: GoogleFonts.outfit(
-                                          color: Colors.blueAccent,
-                                          fontWeight: FontWeight.w500)),
+                                  Container(
+                                    width: 120,
+                                    margin: const EdgeInsets.only(right: 12),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(16),
+                                      image: DecorationImage(
+                                          image: FileImage(entry.value),
+                                          fit: BoxFit.cover),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    right: 16,
+                                    top: 4,
+                                    child: GestureDetector(
+                                      onTap: () => _removeImage(entry.key),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle),
+                                        child: const Icon(Icons.close,
+                                            size: 14, color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
                                 ],
-                              )
-                            : Container(
-                                alignment: Alignment.bottomRight,
-                                padding: const EdgeInsets.all(12),
+                              )),
+                          // Add button
+                          if (_imageFiles.length +
+                                  (widget.post?.imageUrls.length ?? 0) <
+                              3)
+                            GestureDetector(
+                              onTap: _pickImages,
+                              child: Container(
+                                width: 120,
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(24),
-                                  gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.transparent,
-                                        Colors.black.withOpacity(0.4)
-                                      ]),
+                                  color: isDark
+                                      ? Colors.white.withOpacity(0.03)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                      color:
+                                          Colors.blueAccent.withOpacity(0.2)),
                                 ),
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle),
-                                  child: const Icon(Icons.edit_rounded,
-                                      size: 18, color: Colors.blueAccent),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.add_photo_alternate_rounded,
+                                        size: 32,
+                                        color:
+                                            Colors.blueAccent.withOpacity(0.5)),
+                                    const SizedBox(height: 4),
+                                    Text("Rasm qo'shish",
+                                        style: GoogleFonts.outfit(
+                                            fontSize: 10,
+                                            color: Colors.blueAccent,
+                                            fontWeight: FontWeight.w500)),
+                                  ],
                                 ),
                               ),
+                            ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -233,7 +299,7 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
                     ], isDark),
                     const SizedBox(height: 24),
 
-                    _buildSectionTitle("Ulanishlar (Linked Accounts)"),
+                    _buildSectionTitle("Ulanishlar & Obmen"),
                     _buildCard([
                       _buildSwitchTile("Google Account", _googleAccount,
                           (v) => setState(() => _googleAccount = v)),
@@ -241,6 +307,9 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
                           (v) => setState(() => _konamiId = v)),
                       _buildSwitchTile("GameCenter", _gameCenter,
                           (v) => setState(() => _gameCenter = v)),
+                      const Divider(),
+                      _buildSwitchTile("Obmen bormi?", _isExchange,
+                          (v) => setState(() => _isExchange = v)),
                     ], isDark),
                     const SizedBox(height: 24),
 
@@ -258,9 +327,8 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
                         controller: _phoneController,
                         style: GoogleFonts.outfit(),
                         decoration: _inputDecoration(
-                            "Telefon raqami", Icons.phone_rounded),
+                            "Telefon raqami (ixtiyoriy)", Icons.phone_rounded),
                         keyboardType: TextInputType.phone,
-                        validator: (v) => v!.isEmpty ? "Majburiy" : null,
                       ),
                     ], isDark),
                     const SizedBox(height: 40),

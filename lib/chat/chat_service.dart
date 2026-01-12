@@ -39,6 +39,29 @@ class ChatService {
       'id': userId,
       'name': userName,
       'isAdmin': isAdmin.toString(),
+      'email': user.email ?? '',
+    };
+  }
+
+  Future<Map<String, String>> getUserInfoByOtherId(String userId) async {
+    try {
+      final userDoc =
+          await _firestore.collection('chat_users').doc(userId).get();
+      if (userDoc.exists) {
+        final data = userDoc.data();
+        return {
+          'id': userId,
+          'name': data?['name'] ?? 'Noma\'lum',
+          'isAdmin': (data?['isAdmin'] ?? false).toString(),
+        };
+      }
+    } catch (e) {
+      debugPrint("Get user info error: $e");
+    }
+    return {
+      'id': userId,
+      'name': 'Noma\'lum',
+      'isAdmin': 'false',
     };
   }
 
@@ -63,12 +86,28 @@ class ChatService {
         .map((doc) => doc.data()?['isAdmin'] ?? false);
   }
 
-  Future<void> registerUser(String userId, String name) async {
+  Future<bool> checkIfAdmin(String userId) async {
+    if (userId.isEmpty) return false;
     try {
-      await _firestore.collection('chat_users').doc(userId).set({
+      final doc = await _firestore.collection('chat_users').doc(userId).get();
+      return doc.data()?['isAdmin'] ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<void> registerUser(String userId, String name, {String? email}) async {
+    try {
+      final Map<String, dynamic> data = {
         'name': name,
         'lastSeen': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      };
+      if (email != null) data['email'] = email;
+
+      await _firestore
+          .collection('chat_users')
+          .doc(userId)
+          .set(data, SetOptions(merge: true));
     } catch (e) {
       debugPrint("❌ Register Error: $e");
     }
@@ -85,7 +124,7 @@ class ChatService {
     final user = _auth.currentUser;
     if (user != null) {
       await user.updateDisplayName(name);
-      await registerUser(user.uid, name);
+      await registerUser(user.uid, name, email: user.email);
     }
   }
 

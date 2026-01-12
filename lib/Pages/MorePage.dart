@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:efinfo_beta/quiz/quiz_page.dart';
 import 'package:provider/provider.dart';
+import 'package:efinfo_beta/Pages/SettingsPage.dart';
 
 class MorePage extends StatefulWidget {
   const MorePage({super.key});
@@ -27,6 +28,16 @@ class _MorePageState extends State<MorePage> {
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> moreData = [
+      {
+        'title': 'Sozlamalar',
+        'subtitle': 'Ilova sozlamalari',
+        'icon': "assets/images/playing_styles.png",
+        'accent': Colors.grey,
+        'badge': false,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const SettingsPage())),
+      },
       {
         'title': 'eFootball Players Name Quiz',
         'subtitle': 'O\'yinchilarni toping',
