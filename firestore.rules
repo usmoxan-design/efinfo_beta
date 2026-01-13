@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    // --- 1. Yordamchi funksiyalar ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Admin ekanligini tekshirish (role yoki isAdmin field orqali)
+    function isAdmin() {
+      return isSignedIn() && 
+        (get(/databases/$(database)/documents/chat_users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/chat_users/$(request.auth.uid)).data.isAdmin == true);
+    }
+
+    // --- 2. Account Marketplace ---
+    match /account_marketplace/{postId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        request.auth.uid == resource.data.userId || 
+        isAdmin() ||
+        // Faqat ko'rishlar sonini oshirishga ruxsat
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views'])
+      );
+      allow delete: if isSignedIn() && (request.auth.uid == resource.data.userId || isAdmin());
+    }
+    
+    // --- 3. Foydalanuvchi ma'lumotlari (chat_users) ---
+    match /chat_users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+    }
+    
+    // --- 4. Onlayn Turnirlar (online_tournaments) ---
+    match /online_tournaments/{tournamentId} {
+      allow read: if isSignedIn(); // Turnirlarni hamma ko'ra olishi kerak
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        request.auth.uid == resource.data.creatorId || 
+        isAdmin() ||
+        // O'yinchilar ro'yxatiga o'zini qo'shishiga ruxsat berish. 
+        // DIQQAT: Turnirga qo'shilganda 'tournamentData' ham o'zgaradi (yangi jamoa qo'shiladi), 
+        // shuning uchun unga ham ruxsat berish shart!
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players', 'tournamentData'])
+      );
+      allow delete: if isSignedIn() && (request.auth.uid == resource.data.creatorId || isAdmin());
+    }
+    
+    // Taklifnomalar uchun qoidalar
+    match /tournament_requests/{requestId} {
+      allow read, delete: if request.auth != null && (
+        request.auth.uid == resource.data.fromId || 
+        request.auth.token.email == resource.data.toEmail
+      );
+      allow create: if request.auth != null;
+    }
+
+    // --- 6. Chat xabarlari (public_chat) ---
+    match /public_chat/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (request.auth.uid == resource.data.senderId || isAdmin());
+      allow delete: if isAdmin(); // Chatda faqat admin o'chira olsin
+    }
+    
+    // --- 7. Umumiy sozlamalar (settings) ---
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

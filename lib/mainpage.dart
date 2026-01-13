@@ -60,6 +60,12 @@ class _MainPageState extends State<MainPage> {
         appBar: AppBar(
           elevation: 0,
           backgroundColor: Colors.transparent,
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness:
+                isDark ? Brightness.light : Brightness.dark,
+            statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+          ),
           flexibleSpace: themeProvider.isGlassMode
               ? const GlassContainer(
                   borderRadius: 0,

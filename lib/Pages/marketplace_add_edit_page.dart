@@ -454,7 +454,7 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
                                   color: Colors.white, strokeWidth: 2))
                           : Text(
                               widget.post == null
-                                  ? "E'lonni joylash"
+                                  ? "E'lonni joylash (100 Coin)"
                                   : "Yangilash",
                               style: GoogleFonts.outfit(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
