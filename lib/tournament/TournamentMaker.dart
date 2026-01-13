@@ -164,7 +164,7 @@ class _OfflineTournamentTabState extends State<OfflineTournamentTab> {
     return RefreshIndicator(
       onRefresh: _loadTournaments,
       child: ListView.builder(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
         itemCount: _tournaments.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) return _buildAddCard(isDark);
@@ -483,7 +483,7 @@ class _OnlineTournamentTabState extends State<OnlineTournamentTab> {
         builder: (context, snapshot) {
           final tours = snapshot.data ?? [];
           return ListView.builder(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
             itemCount: tours.length + 1,
             itemBuilder: (context, index) {
               if (index == 0) return _buildAddCard(isDark);
@@ -970,7 +970,7 @@ class _ArchiveTournamentTabState extends State<ArchiveTournamentTab> {
     return RefreshIndicator(
       onRefresh: _loadArchived,
       child: ListView.builder(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
         itemCount: _archived.length,
         itemBuilder: (context, index) {
           final t = _archived[index];
