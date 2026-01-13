@@ -27,6 +27,17 @@ class AuthService {
   Future<UserCredential> signUp(String email, String password, String name,
       {Map<String, dynamic>? deviceInfo}) async {
     try {
+      // Check if name is already taken (Commented out due to security rules requiring auth)
+      /* 
+      final nameCheck = await _firestore
+          .collection('chat_users')
+          .where('name', isEqualTo: name)
+          .get();
+      if (nameCheck.docs.isNotEmpty) {
+        throw "Bu ism band, boshqa ism tanlang!";
+      }
+      */
+
       UserCredential credential = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
 
@@ -40,7 +51,7 @@ class AuthService {
         'createdAt': FieldValue.serverTimestamp(),
         'isAdmin': false,
         'isBlocked': false,
-        'coins': 0, // Starting balance
+        'coins': 200, // Starting balance
         if (deviceInfo != null) 'deviceInfo': deviceInfo,
       }, SetOptions(merge: true));
 
@@ -51,7 +62,7 @@ class AuthService {
     }
   }
 
-  // Get current user's coin balance
+  // Get current user's coin balance stream
   Stream<int> getUserCoins(String userId) {
     return _firestore
         .collection('chat_users')
@@ -60,8 +71,16 @@ class AuthService {
         .map((snap) => snap.data()?['coins'] ?? 0);
   }
 
+  // Get current user's coins once
+  Future<int> getCurrentUserCoins() async {
+    if (currentUser == null) return 0;
+    final doc =
+        await _firestore.collection('chat_users').doc(currentUser!.uid).get();
+    return doc.data()?['coins'] ?? 0;
+  }
+
   // Update coins
-  Future<void> updateCoins(String userId, int amount) async {
+  Future<void> updateUserCoins(String userId, int amount) async {
     await _firestore.collection('chat_users').doc(userId).update({
       'coins': FieldValue.increment(amount),
     });

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:efinfo_beta/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -92,14 +93,67 @@ class _AuthPageState extends State<AuthPage> {
           deviceInfo: deviceData,
         );
       }
-      if (mounted) Navigator.pop(context);
-    } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Xatolik: ${e.toString()}"),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
+        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+      }
+    } catch (e) {
+      String errorMessage = e.toString();
+      String title = "Xatolik";
+
+      if (e is FirebaseAuthException) {
+        switch (e.code) {
+          case 'user-not-found':
+            errorMessage = "Bunday email bilan foydalanuvchi topilmadi.";
+            break;
+          case 'wrong-password':
+            errorMessage = "Kiritilgan parol noto'g'ri.";
+            break;
+          case 'email-already-in-use':
+            errorMessage = "Bu email manzili allaqachon ro'yxatdan o'tgan.";
+            break;
+          case 'invalid-email':
+            errorMessage = "Email manzili formati noto'g'ri.";
+            break;
+          case 'weak-password':
+            errorMessage = "Parol juda zaif, kamida 6 ta belgi bo'lishi kerak.";
+            break;
+          case 'network-request-failed':
+            errorMessage = "Internet bilan bog'lanishda xato yuz berdi.";
+            break;
+          case 'too-many-requests':
+            errorMessage =
+                "Urinishlar ko'payib ketdi, birozdan keyin qayta urinib ko'ring.";
+            break;
+          default:
+            errorMessage = "Xatolik yuz berdi: ${e.message}";
+        }
+      }
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                const Icon(Icons.error_outline_rounded,
+                    color: Colors.redAccent),
+                const SizedBox(width: 10),
+                Text(title,
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: Text(errorMessage,
+                style: GoogleFonts.outfit(fontSize: 16, height: 1.4)),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text("Tushunarli",
+                      style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueAccent))),
+            ],
           ),
         );
       }

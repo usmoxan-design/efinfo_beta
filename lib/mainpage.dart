@@ -1,5 +1,6 @@
+import 'package:flutter/services.dart';
 import 'package:efinfo_beta/Pages/HomePage.dart';
-import 'package:efinfo_beta/Pages/MorePage.dart';
+import 'package:efinfo_beta/Pages/SettingsPage.dart';
 import 'package:efinfo_beta/Pages/marketplace_list_page.dart';
 import 'package:efinfo_beta/tournament/TournamentMaker.dart';
 import 'package:efinfo_beta/theme/app_colors.dart';
@@ -30,7 +31,7 @@ class _MainPageState extends State<MainPage> {
     HomePage(),
     TournamentListPage(),
     MarketplaceListPage(),
-    MorePage(),
+    SettingsPage(),
   ];
 
   Future<void> _launchTelegram() async {
@@ -44,126 +45,137 @@ class _MainPageState extends State<MainPage> {
     final isDark = themeProvider.isDarkMode;
     final user = _authService.currentUser;
 
-    return Scaffold(
-      backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
-      extendBody: true,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        flexibleSpace: themeProvider.isGlassMode
-            ? const GlassContainer(
-                borderRadius: 0,
-                child: SizedBox.expand(),
-              )
-            : Container(color: isDark ? AppColors.surface : Colors.white),
-        title: Row(
-          children: [
-            Image.asset(
-              'assets/images/mainLogo.png',
-              height: 32,
-            ),
-          ],
-        ),
-        actions: [
-          if (user != null) ...[
-            StreamBuilder<int>(
-                stream: _authService.getUserCoins(user.uid),
-                builder: (context, snapshot) {
-                  return Center(
-                    child: GestureDetector(
-                      onTap: () =>
-                          launchUrl(Uri.parse("https://t.me/eFinfo_HUB")),
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.monetization_on_rounded,
-                                color: Colors.amber, size: 16),
-                            const SizedBox(width: 4),
-                            Text(
-                              "${snapshot.data ?? 0}",
-                              style: GoogleFonts.outfit(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : Colors.black,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
+        extendBody: true,
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          flexibleSpace: themeProvider.isGlassMode
+              ? const GlassContainer(
+                  borderRadius: 0,
+                  child: SizedBox.expand(),
+                )
+              : Container(color: isDark ? AppColors.surface : Colors.white),
+          title: Row(
+            children: [
+              Image.asset(
+                'assets/images/mainLogo.png',
+                height: 32,
+              ),
+            ],
+          ),
+          actions: [
+            if (user != null) ...[
+              StreamBuilder<int>(
+                  stream: _authService.getUserCoins(user.uid),
+                  builder: (context, snapshot) {
+                    return Center(
+                      child: GestureDetector(
+                        onTap: () =>
+                            launchUrl(Uri.parse("https://t.me/eFinfo_HUB")),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.monetization_on_rounded,
+                                  color: Colors.amber, size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                "${snapshot.data ?? 0}",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : Colors.black,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(Icons.add_circle_outline_rounded,
-                                color: Colors.blueAccent, size: 14),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-            StreamBuilder<int>(
-                stream: _tournamentService.getRequestsCount(),
-                builder: (context, snapshot) {
-                  final count = snapshot.data ?? 0;
-                  return Stack(
-                    children: [
-                      IconButton(
-                        onPressed: () => _showNotifications(context, isDark),
-                        icon: Icon(IonIcons.notifications,
-                            color: isDark ? Colors.white : Colors.black),
-                      ),
-                      if (count > 0)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                                color: Colors.red, shape: BoxShape.circle),
-                            constraints: const BoxConstraints(
-                                minWidth: 16, minHeight: 16),
-                            child: Text(
-                              "$count",
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.center,
-                            ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.add_circle_outline_rounded,
+                                  color: Colors.blueAccent, size: 14),
+                            ],
                           ),
                         ),
-                    ],
-                  );
-                }),
-          ],
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ChatPage()),
-              );
-            },
-            icon: Icon(
-              IonIcons.chatbox_ellipses,
-              color: isDark ? Colors.white : Colors.black,
+                      ),
+                    );
+                  }),
+              StreamBuilder<int>(
+                  stream: _tournamentService.getRequestsCount(),
+                  builder: (context, snapshot) {
+                    final count = snapshot.data ?? 0;
+                    return Stack(
+                      children: [
+                        IconButton(
+                          onPressed: () => _showNotifications(context, isDark),
+                          icon: Icon(IonIcons.notifications,
+                              color: isDark ? Colors.white : Colors.black),
+                        ),
+                        if (count > 0)
+                          Positioned(
+                            right: 8,
+                            top: 8,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                  color: Colors.red, shape: BoxShape.circle),
+                              constraints: const BoxConstraints(
+                                  minWidth: 16, minHeight: 16),
+                              child: Text(
+                                "$count",
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  }),
+            ],
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ChatPage()),
+                );
+              },
+              icon: Icon(
+                IonIcons.chatbox_ellipses,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+              tooltip: "Chat",
             ),
-            tooltip: "Chat",
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (_currentIndex != 2 && _currentIndex != 1) _buildTelegramBanner(),
-          _buildBottomNavBar(themeProvider),
-        ],
+            const SizedBox(width: 8),
+          ],
+        ),
+        body: IndexedStack(
+          index: _currentIndex,
+          children: _pages,
+        ),
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_currentIndex != 2 && _currentIndex != 1)
+              _buildTelegramBanner(),
+            _buildBottomNavBar(themeProvider),
+          ],
+        ),
       ),
     );
   }
@@ -179,66 +191,48 @@ class _MainPageState extends State<MainPage> {
   }
 
   Widget _buildTelegramBanner() {
+    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF229ED9), Color(0xFF1B8ABA)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: const Color(0xFF229ED9).withOpacity(isDark ? 0.15 : 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF229ED9).withOpacity(0.2),
+          width: 1,
         ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF229ED9).withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Row(
         children: [
-          const Icon(Icons.telegram, color: Colors.white, size: 32),
+          const Icon(Icons.telegram, color: Color(0xFF229ED9), size: 24),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "@eFootball_Info_Hub",
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-                Text(
-                  "Eng so'nggi yangiliklarni o'tkazib yubormang",
-                  style: GoogleFonts.outfit(
-                    color: Colors.white70,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
+            child: Text(
+              "Telegram kanalimizga obuna bo'ling",
+              style: GoogleFonts.outfit(
+                color: isDark ? Colors.white70 : Colors.black87,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-          ElevatedButton(
+          TextButton(
             onPressed: _launchTelegram,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               foregroundColor: const Color(0xFF229ED9),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
             child: Text(
-              "Qo'shilish",
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+              "O'tish",
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -288,7 +282,7 @@ class _MainPageState extends State<MainPage> {
         _buildNavDestination(IonIcons.apps, "Hub", 0, isDark),
         _buildNavDestination(IonIcons.trophy, 'Turnir', 1, isDark),
         _buildNavDestination(IonIcons.cart, 'Savdo', 2, isDark),
-        _buildNavDestination(EvaIcons.grid, "Ko'proq", 3, isDark),
+        _buildNavDestination(IonIcons.settings, 'Sozlamalar', 3, isDark),
       ],
     );
   }
@@ -303,16 +297,77 @@ class _MainPageState extends State<MainPage> {
   }
 }
 
-class _NotificationBottomSheet extends StatelessWidget {
+class _NotificationBottomSheet extends StatefulWidget {
   final bool isDark;
   const _NotificationBottomSheet({required this.isDark});
 
   @override
-  Widget build(BuildContext context) {
-    final tournamentService = OnlineTournamentService();
+  State<_NotificationBottomSheet> createState() =>
+      _NotificationBottomSheetState();
+}
 
+class _NotificationBottomSheetState extends State<_NotificationBottomSheet> {
+  final Set<String> _loadingIds = {};
+  final OnlineTournamentService _tournamentService = OnlineTournamentService();
+
+  Future<void> _handleAction(
+      String requestId, String tournamentName, bool accept) async {
+    // Show global loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => WillPopScope(
+        onWillPop: () async => false,
+        child: AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(color: Color(0xFF06DF5D)),
+              const SizedBox(height: 20),
+              Text("Biroz kuting, so'rov bajarilmoqda...",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(fontSize: 16)),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      await _tournamentService.handleRequest(requestId, accept);
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(accept
+                ? "\"$tournamentName\" turniriga muvaffaqiyatli qo'shildingiz!"
+                : "Turnir taklifi rad etildi."),
+            backgroundColor: accept ? const Color(0xFF06DF5D) : Colors.orange,
+          ),
+        );
+        Navigator.pop(context); // Close BottomSheet
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Xato yuz berdi: $e"), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: widget.isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -322,17 +377,18 @@ class _NotificationBottomSheet extends StatelessWidget {
             style: GoogleFonts.outfit(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black,
+              color: widget.isDark ? Colors.white : Colors.black,
             ),
           ),
           const SizedBox(height: 20),
           Flexible(
             child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: tournamentService.getMyRequests(),
+              stream: _tournamentService.getMyRequests(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData)
+                if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
-                final requests = snapshot.data!;
+                }
+                final requests = snapshot.data ?? [];
                 if (requests.isEmpty) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 40),
@@ -349,11 +405,15 @@ class _NotificationBottomSheet extends StatelessWidget {
                   itemCount: requests.length,
                   itemBuilder: (context, index) {
                     final req = requests[index];
+                    final String reqId = req['id'];
+                    final String tourName = req['tournamentName'];
+                    final bool isLoading = _loadingIds.contains(reqId);
+
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: isDark
+                        color: widget.isDark
                             ? Colors.white.withOpacity(0.05)
                             : Colors.grey[100],
                         borderRadius: BorderRadius.circular(16),
@@ -362,36 +422,47 @@ class _NotificationBottomSheet extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "${req['fromName']} sizni \"${req['tournamentName']}\" turniriga taklif qildi.",
+                            "${req['fromName']} sizni \"$tourName\" turniriga taklif qildi.",
                             style: GoogleFonts.outfit(
-                              color: isDark ? Colors.white70 : Colors.black87,
+                              color: widget.isDark
+                                  ? Colors.white70
+                                  : Colors.black87,
                             ),
                           ),
                           const SizedBox(height: 12),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              TextButton(
-                                onPressed: () => tournamentService
-                                    .handleRequest(req['id'], false),
-                                child: Text("Rad etish",
-                                    style: GoogleFonts.outfit(
-                                        color: Colors.redAccent)),
-                              ),
-                              const SizedBox(width: 8),
-                              ElevatedButton(
-                                onPressed: () => tournamentService
-                                    .handleRequest(req['id'], true),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF06DF5D),
-                                  foregroundColor: Colors.black,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8)),
+                              if (isLoading)
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.grey),
+                                )
+                              else ...[
+                                TextButton(
+                                  onPressed: () =>
+                                      _handleAction(reqId, tourName, false),
+                                  child: Text("Rad etish",
+                                      style: GoogleFonts.outfit(
+                                          color: Colors.redAccent)),
                                 ),
-                                child: Text("Qabul qilish",
-                                    style: GoogleFonts.outfit(
-                                        fontWeight: FontWeight.bold)),
-                              ),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: () =>
+                                      _handleAction(reqId, tourName, true),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF06DF5D),
+                                    foregroundColor: Colors.black,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  child: Text("Qabul qilish",
+                                      style: GoogleFonts.outfit(
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                              ],
                             ],
                           )
                         ],

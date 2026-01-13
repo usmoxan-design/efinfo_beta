@@ -80,24 +80,23 @@ class MarketplaceService {
   }
 
   // Update a post
-  Future<void> updatePost(AccountPost post, List<File>? newImageFiles) async {
+  Future<void> updatePost(AccountPost post, List<File>? newImageFiles,
+      {List<String>? deletedFileIds}) async {
     try {
-      List<String> imageUrls = post.imageUrls;
-      List<String> fileIds = post.fileIds;
+      List<String> imageUrls = List.from(post.imageUrls);
+      List<String> fileIds = List.from(post.fileIds);
 
-      // 1. Update images if new ones provided
-      if (newImageFiles != null && newImageFiles.isNotEmpty) {
-        // Delete OLD images from ImageKit
-        for (var fId in post.fileIds) {
+      // 1. Delete SPECIFIED images from ImageKit
+      if (deletedFileIds != null && deletedFileIds.isNotEmpty) {
+        for (var fId in deletedFileIds) {
           if (fId.isNotEmpty) {
             await ImageKitService.deleteImage(fId);
           }
         }
+      }
 
-        imageUrls = [];
-        fileIds = [];
-
-        // Upload NEW images
+      // 2. Upload NEW images and append to list
+      if (newImageFiles != null && newImageFiles.isNotEmpty) {
         for (var imageFile in newImageFiles) {
           String fileName =
               "account_${DateTime.now().millisecondsSinceEpoch}_${newImageFiles.indexOf(imageFile)}.jpg";
@@ -111,20 +110,12 @@ class MarketplaceService {
         }
       }
 
-      // 2. Update Firestore doc
+      // 3. Update Firestore doc
       Map<String, dynamic> postData = post.toFirestore();
-
-      // Refresh admin status
-      bool isAdmin = false;
-      try {
-        final userDoc =
-            await _firestore.collection('chat_users').doc(post.userId).get();
-        isAdmin = userDoc.data()?['isAdmin'] ?? false;
-      } catch (_) {}
 
       postData['imageUrls'] = imageUrls;
       postData['fileIds'] = fileIds;
-      postData['isAuthorAdmin'] = isAdmin;
+      postData['isAuthorAdmin'] = post.isAuthorAdmin;
 
       // Don't overwrite original creation date
       postData.remove('createdAt');

@@ -31,6 +31,8 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
   bool _isExchange = false;
 
   List<File> _imageFiles = [];
+  List<String> _existingImageUrls = [];
+  List<String> _existingFileIds = [];
   bool _isLoading = false;
 
   @override
@@ -50,10 +52,15 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
     _konamiId = widget.post?.konamiId ?? false;
     _gameCenter = widget.post?.gameCenter ?? false;
     _isExchange = widget.post?.isExchange ?? false;
+
+    if (widget.post != null) {
+      _existingImageUrls = List.from(widget.post!.imageUrls);
+      _existingFileIds = List.from(widget.post!.fileIds);
+    }
   }
 
   Future<void> _pickImages() async {
-    if (_imageFiles.length >= 3) {
+    if (_imageFiles.length + _existingImageUrls.length >= 3) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Maksimal 3 ta rasm yuklash mumkin")));
       return;
@@ -63,8 +70,9 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
 
     if (picked.isNotEmpty) {
       setState(() {
-        _imageFiles.addAll(
-            picked.take(3 - _imageFiles.length).map((e) => File(e.path)));
+        _imageFiles.addAll(picked
+            .take(3 - (_imageFiles.length + _existingImageUrls.length))
+            .map((e) => File(e.path)));
       });
     }
   }
@@ -75,44 +83,65 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
     });
   }
 
+  void _removeExistingImage(int index) {
+    setState(() {
+      _existingImageUrls.removeAt(index);
+      _existingFileIds.removeAt(index);
+    });
+  }
+
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     // Validation: 1-3 images
-    bool hasImages = _imageFiles.isNotEmpty ||
-        (widget.post != null && widget.post!.imageUrls.isNotEmpty);
+    bool hasImages = _imageFiles.isNotEmpty || _existingImageUrls.isNotEmpty;
     if (!hasImages) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Kamida 1 ta rasm yuklang")));
       return;
     }
 
-    if (_imageFiles.length > 3) {
+    if (_imageFiles.length + _existingImageUrls.length > 3) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Maksimal 3 ta rasm yuklash mumkin")));
       return;
     }
 
-    setState(() => _isLoading = true);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => WillPopScope(
+        onWillPop: () async => false,
+        child: const Center(
+            child: CircularProgressIndicator(color: Color(0xFF06DF5D))),
+      ),
+    );
 
     try {
       final user = _authService.currentUser;
       if (user == null) throw "Tizimga kirmagansiz";
 
+      // Charge 100 coins for NEW posts
       if (widget.post == null) {
-        int count = await _marketplaceService.getUserPostCount(user.uid);
-        if (count >= 2) throw "Maksimal 2 ta e'lon qo'ya olasiz!";
+        final coins = await _authService.getCurrentUserCoins();
+        if (coins < 100) {
+          throw "E'lon berish uchun 100 Coin kerak. Sizda: $coins";
+        }
+        await _authService.updateUserCoins(user.uid, -100);
       }
 
       final post = AccountPost(
         id: widget.post?.id ?? '',
-        userId: user.uid,
-        userName: user.displayName ?? 'Foydalanuvchi',
+        userId: widget.post?.userId ?? user.uid,
+        userName:
+            widget.post?.userName ?? (user.displayName ?? 'Foydalanuvchi'),
         title: _titleController.text.trim(),
         description: _descController.text.trim(),
-        price: double.parse(_priceController.text.trim()),
-        imageUrls: widget.post?.imageUrls ?? [],
-        fileIds: widget.post?.fileIds ?? [],
+        price: double.parse(_priceController.text.trim().isEmpty
+            ? "0"
+            : _priceController.text.trim()),
+        imageUrls: _existingImageUrls,
+        fileIds: _existingFileIds,
         googleAccount: _googleAccount,
         konamiId: _konamiId,
         gameCenter: _gameCenter,
@@ -124,21 +153,51 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
         isExchange: _isExchange,
       );
 
+      final double price = _isExchange
+          ? 0
+          : (double.tryParse(_priceController.text.trim()) ?? 0);
+      final updatedPost = AccountPost(
+        id: post.id,
+        userId: post.userId,
+        userName: post.userName,
+        title: post.title,
+        description: post.description,
+        price: price,
+        imageUrls: post.imageUrls,
+        fileIds: post.fileIds,
+        googleAccount: post.googleAccount,
+        konamiId: post.konamiId,
+        gameCenter: post.gameCenter,
+        telegramUser: post.telegramUser,
+        phoneNumber: post.phoneNumber,
+        views: post.views,
+        createdAt: post.createdAt,
+        isAuthorAdmin: post.isAuthorAdmin,
+        isExchange: post.isExchange,
+      );
+
       if (widget.post == null) {
-        await _marketplaceService.addPost(post, _imageFiles);
+        await _marketplaceService.addPost(updatedPost, _imageFiles);
       } else {
-        await _marketplaceService.updatePost(
-            post, _imageFiles.isEmpty ? null : _imageFiles);
+        await _marketplaceService.updatePost(updatedPost, _imageFiles,
+            deletedFileIds: widget.post!.fileIds
+                .where((id) => !_existingFileIds.contains(id))
+                .toList());
       }
 
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        if (widget.post == null) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("E'lon muvaffaqiyatli saqlandi! (-100 Coin)")));
+        }
+        Navigator.pop(context);
+      }
     } catch (e) {
+      Navigator.pop(context); // Close loading
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
       }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -175,29 +234,37 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
                         scrollDirection: Axis.horizontal,
                         children: [
                           // Existing images (if editing)
-                          if (widget.post != null)
-                            ...widget.post!.imageUrls.map((url) => Container(
-                                  width: 120,
-                                  margin: const EdgeInsets.only(right: 12),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
-                                    image: DecorationImage(
-                                        image: NetworkImage(url),
-                                        fit: BoxFit.cover),
-                                  ),
-                                  child: Container(
-                                    alignment: Alignment.topRight,
+                          ..._existingImageUrls.asMap().entries.map((entry) =>
+                              Stack(
+                                children: [
+                                  Container(
+                                    width: 120,
+                                    margin: const EdgeInsets.only(right: 12),
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(16),
-                                      color: Colors.black26,
-                                    ),
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(4.0),
-                                      child: Icon(Icons.check_circle,
-                                          color: Colors.white, size: 20),
+                                      image: DecorationImage(
+                                          image: NetworkImage(entry.value),
+                                          fit: BoxFit.cover),
                                     ),
                                   ),
-                                )),
+                                  Positioned(
+                                    right: 16,
+                                    top: 4,
+                                    child: GestureDetector(
+                                      onTap: () =>
+                                          _removeExistingImage(entry.key),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle),
+                                        child: const Icon(Icons.close,
+                                            size: 14, color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )),
                           // New local images
                           ..._imageFiles.asMap().entries.map((entry) => Stack(
                                 children: [
@@ -272,9 +339,14 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
                       TextFormField(
                         controller: _titleController,
                         style: GoogleFonts.outfit(),
+                        maxLength: 50,
                         decoration:
                             _inputDecoration("Sarlavha", Icons.title_rounded),
-                        validator: (v) => v!.isEmpty ? "Majburiy" : null,
+                        validator: (v) {
+                          if (v!.isEmpty) return "Sarlavha majburiy";
+                          if (v.length < 5) return "Kamida 5 ta belgi kiriting";
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
@@ -283,19 +355,50 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
                         decoration:
                             _inputDecoration("Tavsif", Icons.notes_rounded),
                         maxLines: 4,
-                        validator: (v) => v!.isEmpty ? "Majburiy" : null,
+                        maxLength: 500,
+                        validator: (v) {
+                          if (v!.isEmpty) return "Tavsif majburiy";
+                          final words = v.trim().split(RegExp(r'\s+'));
+                          if (words.length < 5)
+                            return "Kamida 5 ta so'z yozing";
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _priceController,
-                        style: GoogleFonts.outfit(),
-                        decoration: _inputDecoration(
-                            "Narxi (so'm)", Icons.payments_rounded),
-                        keyboardType: TextInputType.number,
-                        validator: (v) => double.tryParse(v!) == null
-                            ? "To'g'ri raqam kiriting"
-                            : null,
-                      ),
+                      if (!_isExchange)
+                        TextFormField(
+                          controller: _priceController,
+                          style: GoogleFonts.outfit(),
+                          decoration: _inputDecoration(
+                              "Narxi (so'm)", Icons.payments_rounded),
+                          keyboardType: TextInputType.number,
+                          validator: (v) {
+                            if (_isExchange) return null;
+                            if (v!.isEmpty) return "Majburiy";
+                            final val = double.tryParse(v);
+                            if (val == null) return "To'g'ri raqam kiriting";
+                            return null;
+                          },
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.blueAccent.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.swap_horiz_rounded,
+                                  color: Colors.blueAccent),
+                              const SizedBox(width: 12),
+                              Text("Obmen (Narx shart emas)",
+                                  style: GoogleFonts.outfit(
+                                      color: Colors.blueAccent,
+                                      fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
                     ], isDark),
                     const SizedBox(height: 24),
 
@@ -308,8 +411,8 @@ class _MarketplaceAddEditPageState extends State<MarketplaceAddEditPage> {
                       _buildSwitchTile("GameCenter", _gameCenter,
                           (v) => setState(() => _gameCenter = v)),
                       const Divider(),
-                      _buildSwitchTile("Obmen bormi?", _isExchange,
-                          (v) => setState(() => _isExchange = v)),
+                      _buildSwitchTile("To'liq Obmen (Faqat almashish)",
+                          _isExchange, (v) => setState(() => _isExchange = v)),
                     ], isDark),
                     const SizedBox(height: 24),
 

@@ -209,7 +209,9 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                     _confettiController.play();
                     _showSnackbar("Turnir g'olibi aniqlandi! 🏆", Colors.amber);
                     if (widget.isOnline) {
-                      _archiveAndDelete();
+                      Future.delayed(const Duration(seconds: 3), () {
+                        if (mounted) _archiveAndDelete(shouldPop: true);
+                      });
                     }
                   } else {
                     _showSnackbar("Natija saqlandi.", Colors.green);
@@ -230,27 +232,33 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
     );
   }
 
-  Future<void> _archiveAndDelete() async {
+  Future<void> _archiveAndDelete({bool shouldPop = true}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final String? tournamentsString = prefs.getString('tournaments');
+      final String? archivedString = prefs.getString('archived_tournaments');
       List<dynamic> jsonList = [];
-      if (tournamentsString != null) {
-        jsonList = jsonDecode(tournamentsString);
+      if (archivedString != null) {
+        jsonList = jsonDecode(archivedString);
       }
 
-      // Add current tournament to offline list
       final archivedTour = _currentTournament;
-      archivedTour.name = "${archivedTour.name} (Online Arxiv)";
+      archivedTour.name = "${archivedTour.name} (Arxiv)";
       jsonList.add(archivedTour.toJson());
 
-      await prefs.setString('tournaments', jsonEncode(jsonList));
+      await prefs.setString('archived_tournaments', jsonEncode(jsonList));
 
-      // Delete from online
-      await _onlineService.deleteTournament(_currentTournament.id);
+      if (_currentTournament.isOnline) {
+        try {
+          await _onlineService.deleteTournament(_currentTournament.id);
+        } catch (e) {
+          debugPrint("Cloud deletion failed: $e");
+        }
+      }
 
-      _showSnackbar(
-          "Turnir arxivlandi va online bazadan o'chirildi.", Colors.blue);
+      _showSnackbar("Turnir arxivlandi.", Colors.blue);
+      if (shouldPop && mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
     } catch (e) {
       _showSnackbar("Arxivlashda xato: $e", Colors.red);
     }
@@ -258,7 +266,6 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
 
   void _performDraw() {
     final int teamCount = _currentTournament.teams.length;
-
     if (teamCount < 2) {
       _showSnackbar("Kamida 2 ta jamoa qo'shing!", Colors.red);
       return;
@@ -267,9 +274,8 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
     if (_currentTournament.type == TournamentType.knockout) {
       if (teamCount % 4 != 0 && teamCount != 2) {
         _showSnackbar(
-          "Knockout uchun jamoalar soni 4 ga bo‘linadigan bo‘lishi shart. Masalan: 2, 4, 8, 12, 16.",
-          Colors.red,
-        );
+            "Knockout uchun jamoalar soni 4 ga bo‘linadigan bo‘lishi shart.",
+            Colors.red);
         return;
       }
     }
@@ -288,8 +294,7 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
       });
       _showSnackbar("Qura muvaffaqiyatli tashlandi.", Colors.green);
     } catch (e) {
-      String errorMsg = e.toString().replaceAll("Exception: ", "");
-      _showSnackbar("Xato: $errorMsg", Colors.red);
+      _showSnackbar("Xato: $e", Colors.red);
     }
   }
 
@@ -353,11 +358,9 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
         log(2);
 
     List<Widget> roundWidgets = [];
-
     for (int r = 1; r <= totalRounds; r++) {
       List<MatchModel> currentRoundMatches =
           _currentTournament.matches.where((m) => m.round == r).toList();
-
       if (currentRoundMatches.isEmpty) continue;
 
       roundWidgets.add(
@@ -371,14 +374,12 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                 child: Text(
                   _bracketService.getRoundTitle(r, totalRounds),
                   style: GoogleFonts.outfit(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF06DF5D),
-                  ),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF06DF5D)),
                 ),
               ),
               ...currentRoundMatches
-                  .toList()
                   .map((match) => _buildMatchCard(match, totalRounds, isDark)),
             ],
           ),
@@ -404,10 +405,9 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                 child: Text(
                   _bracketService.getRoundTitle(99, totalRounds),
                   style: GoogleFonts.outfit(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orangeAccent,
-                  ),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orangeAccent),
                 ),
               ),
               _buildMatchCard(thirdPlaceMatch, totalRounds, isDark),
@@ -422,9 +422,6 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
 
   Widget _buildMatchCard(MatchModel match, int totalRounds, bool isDark) {
     bool hasWinner = match.winnerId != null;
-
-    double width = 200;
-
     return InkWell(
       onTap: widget.hasControl ? () => _editScore(match) : null,
       child: GlassContainer(
@@ -432,7 +429,7 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
         borderRadius: 16,
         padding: const EdgeInsets.all(10),
         child: SizedBox(
-          width: width,
+          width: 200,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -479,37 +476,27 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
               color: isDark ? Colors.white38 : Colors.black38,
               fontStyle: FontStyle.italic));
     }
-
     bool isWinner = hasWinner && team.id == winnerId;
-
     return Row(
       children: [
-        Icon(
-          isWinner ? Icons.emoji_events : Icons.people,
-          color: isWinner ? Colors.amber : team.color,
-          size: 18,
-        ),
+        Icon(isWinner ? Icons.emoji_events : Icons.people,
+            color: isWinner ? Colors.amber : team.color, size: 18),
         const SizedBox(width: 5),
         Expanded(
-          child: Text(
-            team.name,
+          child: Text(team.name,
+              style: GoogleFonts.outfit(
+                  fontWeight: isWinner ? FontWeight.w900 : FontWeight.w500,
+                  color: isWinner
+                      ? (isDark ? Colors.white : Colors.black)
+                      : (isDark ? Colors.white70 : Colors.black87)),
+              overflow: TextOverflow.ellipsis),
+        ),
+        Text(score.toString(),
             style: GoogleFonts.outfit(
-              fontWeight: isWinner ? FontWeight.w900 : FontWeight.w500,
-              color: isWinner
-                  ? (isDark ? Colors.white : Colors.black)
-                  : (isDark ? Colors.white70 : Colors.black87),
-            ),
-          ),
-        ),
-        Text(
-          score.toString(),
-          style: GoogleFonts.outfit(
-            fontWeight: isWinner ? FontWeight.w900 : FontWeight.bold,
-            color: isWinner
-                ? const Color(0xFF06DF5D)
-                : (isDark ? Colors.white : Colors.black),
-          ),
-        ),
+                fontWeight: isWinner ? FontWeight.w900 : FontWeight.bold,
+                color: isWinner
+                    ? const Color(0xFF06DF5D)
+                    : (isDark ? Colors.white : Colors.black))),
       ],
     );
   }
@@ -541,19 +528,8 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
 
       if (bytes != null) {
         if (mounted) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => ImagePreviewScreen(imageBytes: bytes),
-            ),
-          );
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text("Rasmga olishda xato yuz berdi."),
-                backgroundColor: Colors.red),
-          );
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => ImagePreviewScreen(imageBytes: bytes)));
         }
       }
     }
@@ -566,12 +542,10 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
       child: Scaffold(
         backgroundColor: themeProvider.getTheme().scaffoldBackgroundColor,
         appBar: AppBar(
-          title: Text(
-            _currentTournament.name,
-            style: GoogleFonts.outfit(
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black),
-          ),
+          title: Text(_currentTournament.name,
+              style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black)),
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
@@ -592,13 +566,12 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
               ),
             if (!_currentTournament.isDrawDone)
               IconButton(
-                icon: Icon(BoxIcons.bx_dice_5,
-                    color: isDark ? Colors.white : Colors.black),
-                onPressed: _performDraw,
-                tooltip: "Qura tashlash",
-              ),
+                  icon: const Icon(Icons.casino_outlined),
+                  onPressed: _performDraw),
             const SizedBox(width: 10),
-            if (_currentTournament.isDrawDone && !widget.isOnline)
+            if (_currentTournament.isDrawDone &&
+                !widget.isOnline &&
+                widget.hasControl)
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: ElevatedButton(
@@ -611,56 +584,92 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
                   child: Text("Saqlash",
                       style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
                 ),
-              )
+              ),
           ],
         ),
-        body: Stack(
-          children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.vertical,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: _currentTournament.type == TournamentType.league &&
-                        _currentTournament.isDrawDone
-                    ? RepaintBoundary(
+        body: widget.isOnline
+            ? StreamBuilder<Map<String, dynamic>>(
+                stream:
+                    _onlineService.getTournamentStream(_currentTournament.id),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.active) {
+                    final tourData = snapshot.data;
+                    if (tourData == null ||
+                        tourData.isEmpty ||
+                        tourData['status'] == 'deleted') {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted && Navigator.canPop(context)) {
+                          _showSnackbar("Turnir o'chirildi yoki yakunlandi.",
+                              Colors.grey);
+                          Navigator.pop(context);
+                        }
+                      });
+                      return const Center(child: Text("Turnir yakunlandi"));
+                    }
+
+                    final modelMap = Map<String, dynamic>.from(
+                        tourData['tournamentData'] ?? {});
+                    if (modelMap.isNotEmpty) {
+                      _currentTournament = TournamentModel.fromJson(modelMap);
+                    }
+                  }
+                  return _buildMainBody(pitchBoundaryKey, isDark);
+                },
+              )
+            : _buildMainBody(pitchBoundaryKey, isDark),
+      ),
+    );
+  }
+
+  Widget _buildMainBody(GlobalKey pitchBoundaryKey, bool isDark) {
+    return Stack(
+      children: [
+        RefreshIndicator(
+          onRefresh: () async => setState(() {}),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: _currentTournament.type == TournamentType.league &&
+                      _currentTournament.isDrawDone
+                  ? RepaintBoundary(
+                      key: pitchBoundaryKey,
+                      child: LeagueTableWidget(
+                        tournament: _currentTournament,
+                        onMatchTap: widget.hasControl
+                            ? (match) => _editScore(match)
+                            : null,
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: RepaintBoundary(
                         key: pitchBoundaryKey,
-                        child: LeagueTableWidget(
-                          tournament: _currentTournament,
-                          onMatchTap: widget.hasControl
-                              ? (match) => _editScore(match)
-                              : null,
-                        ),
-                      )
-                    : SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: RepaintBoundary(
-                          key: pitchBoundaryKey,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: _buildContent(isDark),
-                          ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _buildContent(isDark),
                         ),
                       ),
-              ),
+                    ),
             ),
-            Align(
-              alignment: Alignment.topCenter,
-              child: ConfettiWidget(
-                confettiController: _confettiController,
-                blastDirectionality: BlastDirectionality.explosive,
-                shouldLoop: false,
-                colors: const [
-                  Colors.green,
-                  Colors.blue,
-                  Colors.pink,
-                  Colors.orange,
-                  Colors.purple
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+        Align(
+          alignment: Alignment.topCenter,
+          child: ConfettiWidget(
+            confettiController: _confettiController,
+            blastDirectionality: BlastDirectionality.explosive,
+            shouldLoop: false,
+            colors: const [
+              Colors.green,
+              Colors.blue,
+              Colors.pink,
+              Colors.orange,
+              Colors.purple
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -267,8 +267,28 @@ class _ProfilePageState extends State<ProfilePage> {
                 title: "Chiqish",
                 color: Colors.redAccent,
                 onTap: () async {
-                  await _authService.signOut();
-                  if (mounted) Navigator.pop(context);
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text("Chiqish"),
+                      content:
+                          const Text("Haqiqatan ham hisobdan chiqmoqchimisiz?"),
+                      actions: [
+                        TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text("Yo'q")),
+                        TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text("Ha",
+                                style: TextStyle(color: Colors.red))),
+                      ],
+                    ),
+                  );
+
+                  if (confirm == true) {
+                    await _authService.signOut();
+                    if (mounted) Navigator.pop(context);
+                  }
                 },
                 isDark: isDark,
               ),

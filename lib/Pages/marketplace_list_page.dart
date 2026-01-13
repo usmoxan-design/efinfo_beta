@@ -78,98 +78,170 @@ class _MarketplaceListPageState extends State<MarketplaceListPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF161618) : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Filtrlash",
-                  style: GoogleFonts.outfit(
-                      fontSize: 22, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 20),
-              Text("Maksimal narx (so'm)",
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w500)),
-              Slider(
-                value: _maxPrice ?? 2000000,
-                min: 0,
-                max: 2000000,
-                divisions: 20,
-                label: _maxPrice == null
-                    ? "Barchasi"
-                    : "${NumberFormat("#,###").format(_maxPrice)}",
-                onChanged: (v) {
-                  setModalState(() => _maxPrice = v);
-                  setState(() => _maxPrice = v);
-                },
-              ),
-              const SizedBox(height: 16),
-              Text("Ulanishlar",
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w500)),
-              Wrap(
-                spacing: 8,
-                children: [
-                  FilterChip(
-                    label: const Text("Google"),
-                    selected: _filterGoogle,
-                    onSelected: (v) {
-                      setModalState(() => _filterGoogle = v);
-                      setState(() => _filterGoogle = v);
-                    },
+        builder: (context, setModalState) => Padding(
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF161618) : Colors.white,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(32)),
+            ),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                  FilterChip(
-                    label: const Text("Konami"),
-                    selected: _filterKonami,
-                    onSelected: (v) {
-                      setModalState(() => _filterKonami = v);
-                      setState(() => _filterKonami = v);
-                    },
-                  ),
-                  FilterChip(
-                    label: const Text("GameCenter"),
-                    selected: _filterGameCenter,
-                    onSelected: (v) {
-                      setModalState(() => _filterGameCenter = v);
-                      setState(() => _filterGameCenter = v);
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    setModalState(() {
-                      _maxPrice = null;
-                      _filterGoogle = false;
-                      _filterKonami = false;
-                      _filterGameCenter = false;
-                    });
-                    setState(() {
-                      _maxPrice = null;
-                      _filterGoogle = false;
-                      _filterKonami = false;
-                      _filterGameCenter = false;
-                    });
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[200],
-                      foregroundColor: Colors.black,
-                      elevation: 0),
-                  child: const Text("Filtrni tozalash"),
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+                Text("Filtrlash",
+                    style: GoogleFonts.outfit(
+                        fontSize: 22, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 20),
+                Text("Narx oralig'i (so'm)",
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w500)),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: TextEditingController(
+                            text: _minPrice > 0
+                                ? _minPrice.toInt().toString()
+                                : ""),
+                        decoration:
+                            _inputDecoration("Min (0)", Icons.arrow_downward),
+                        keyboardType: TextInputType.number,
+                        onChanged: (v) {
+                          _minPrice = double.tryParse(v) ?? 0;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: TextEditingController(
+                            text: _maxPrice != null
+                                ? _maxPrice!.toInt().toString()
+                                : ""),
+                        decoration: _inputDecoration(
+                            "Max (10mln+)", Icons.arrow_upward),
+                        keyboardType: TextInputType.number,
+                        onChanged: (v) {
+                          _maxPrice = double.tryParse(v);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text("Ulanishlar",
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w500)),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    FilterChip(
+                      label: const Text("Google"),
+                      selected: _filterGoogle,
+                      onSelected: (v) {
+                        setModalState(() => _filterGoogle = v);
+                        setState(() => _filterGoogle = v);
+                      },
+                    ),
+                    FilterChip(
+                      label: const Text("Konami"),
+                      selected: _filterKonami,
+                      onSelected: (v) {
+                        setModalState(() => _filterKonami = v);
+                        setState(() => _filterKonami = v);
+                      },
+                    ),
+                    FilterChip(
+                      label: const Text("GameCenter"),
+                      selected: _filterGameCenter,
+                      onSelected: (v) {
+                        setModalState(() => _filterGameCenter = v);
+                        setState(() => _filterGameCenter = v);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setModalState(() {
+                        _maxPrice = null;
+                        _minPrice = 0;
+                        _filterGoogle = false;
+                        _filterKonami = false;
+                        _filterGameCenter = false;
+                      });
+                      setState(() {
+                        _maxPrice = null;
+                        _minPrice = 0;
+                        _filterGoogle = false;
+                        _filterKonami = false;
+                        _filterGameCenter = false;
+                      });
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[200],
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                        elevation: 0),
+                    child: Text("Filtrni tozalash",
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                        elevation: 0),
+                    child: Text("Qo'llash",
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  double _minPrice = 0;
+
+  static InputDecoration _inputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, size: 18),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     );
   }
 
@@ -258,6 +330,9 @@ class _MarketplaceListPageState extends State<MarketplaceListPage> {
               final totalCount = posts.length;
 
               // Apply Filters
+              if (_minPrice > 0) {
+                posts = posts.where((p) => p.price >= _minPrice).toList();
+              }
               if (_maxPrice != null) {
                 posts = posts.where((p) => p.price <= _maxPrice!).toList();
               }
@@ -471,10 +546,16 @@ class _MarketplaceListPageState extends State<MarketplaceListPage> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                          color: Colors.blueAccent,
+                          color: post.isExchange
+                              ? Colors.orange
+                              : Colors.blueAccent,
                           borderRadius: BorderRadius.circular(10)),
                       child: Text(
-                          "${NumberFormat("#,###").format(post.price)} so'm",
+                          post.isExchange
+                              ? "OBMEN"
+                              : (post.price == 0
+                                  ? "BEPUL"
+                                  : "${NumberFormat("#,###").format(post.price)} so'm"),
                           style: GoogleFonts.outfit(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -703,8 +784,29 @@ class _MarketplaceListPageState extends State<MarketplaceListPage> {
                   Text("Yo'q", style: GoogleFonts.outfit(color: Colors.grey))),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(context);
-              await onConfirm();
+              Navigator.pop(context); // Close confirm dialog
+
+              // Show global loading
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => WillPopScope(
+                  onWillPop: () async => false,
+                  child: const Center(
+                      child:
+                          CircularProgressIndicator(color: Color(0xFF06DF5D))),
+                ),
+              );
+
+              try {
+                await onConfirm();
+                if (Navigator.canPop(context))
+                  Navigator.pop(context); // Close loading
+              } catch (e) {
+                if (Navigator.canPop(context)) Navigator.pop(context);
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text("Xatolik: $e")));
+              }
             },
             style: ElevatedButton.styleFrom(
                 backgroundColor: color,

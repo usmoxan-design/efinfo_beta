@@ -1,4 +1,5 @@
 import 'package:efinfo_beta/theme/theme_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:efinfo_beta/widgets/glass_container.dart';
 import 'package:efinfo_beta/tournament/match_model.dart';
 import 'package:efinfo_beta/tournament/service/league_service.dart';
@@ -83,67 +84,91 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
       children: [
         Row(
           children: [
-            _buildTabButton('all', 'Barchasi', isDark),
-            const SizedBox(width: 8),
-            _buildTabButton('home', 'Uyda', isDark),
-            const SizedBox(width: 8),
-            _buildTabButton('away', 'Mehmon', isDark),
-            const Spacer(),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => LeagueTournamentChartsPage(
-                        tournament: widget.tournament),
-                  ),
-                );
-              },
+            Expanded(
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF06DF5D).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                      color: const Color(0xFF06DF5D).withOpacity(0.3)),
+                  color:
+                      (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(24),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.show_chart,
-                        color:
-                            isDark ? const Color(0xFF06DF5D) : Colors.black87,
-                        size: 16),
-                    const SizedBox(width: 4),
-                    Text("Statistika",
-                        style: GoogleFonts.outfit(
-                            color: isDark
-                                ? const Color(0xFF06DF5D)
-                                : Colors.black87,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13)),
+                    _buildTabButton('all', 'Barchasi', isDark),
+                    _buildTabButton('home', 'Uyda', isDark),
+                    _buildTabButton('away', 'Mehmon', isDark),
                   ],
                 ),
               ),
             ),
+            const SizedBox(width: 12),
+            _buildChartButton(isDark),
           ],
         ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Text("Ko'rinish:",
-                style: GoogleFonts.outfit(
-                    color: isDark ? Colors.white54 : Colors.black54,
-                    fontSize: 13)),
-            const SizedBox(width: 8),
-            _buildModeButton('min', 'Kichik', isDark),
-            const SizedBox(width: 4),
-            _buildModeButton('max', 'To\'liq', isDark),
-            const SizedBox(width: 4),
-            _buildModeButton('form', 'Forma', isDark),
-          ],
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.visibility_outlined,
+                  size: 14, color: isDark ? Colors.white54 : Colors.black54),
+              const SizedBox(width: 8),
+              Text("Ko'rinish:",
+                  style: GoogleFonts.outfit(
+                      color: isDark ? Colors.white54 : Colors.black54,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500)),
+              const Spacer(),
+              _buildModeButton('min', 'Kichik', isDark),
+              const SizedBox(width: 6),
+              _buildModeButton('max', 'To\'liq', isDark),
+              const SizedBox(width: 6),
+              _buildModeButton('form', 'Forma', isDark),
+            ],
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildChartButton(bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                LeagueTournamentChartsPage(tournament: widget.tournament),
+          ),
+        );
+      },
+      child: Container(
+        height: 48,
+        width: 48,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [const Color(0xFF06DF5D), const Color(0xFF00AA44)]
+                : [const Color(0xFF06DF5D), const Color(0xFF05C050)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF06DF5D).withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child:
+            const Icon(Icons.bar_chart_rounded, color: Colors.black, size: 24),
+      ),
     );
   }
 
@@ -151,26 +176,27 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
     bool isSelected = _tableMode == mode;
     return GestureDetector(
       onTap: () => setState(() => _tableMode = mode),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF06DF5D).withOpacity(0.2)
-              : (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12),
+              ? const Color(0xFF06DF5D).withOpacity(0.15)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
               color: isSelected
-                  ? const Color(0xFF06DF5D)
-                  : (isDark ? Colors.white10 : Colors.black12)),
+                  ? const Color(0xFF06DF5D).withOpacity(0.5)
+                  : Colors.transparent),
         ),
         child: Text(
           label,
           style: GoogleFonts.outfit(
             color: isSelected
-                ? (isDark ? Colors.white : Colors.black)
-                : (isDark ? Colors.white38 : Colors.black38),
+                ? (isDark ? const Color(0xFF06DF5D) : Colors.black)
+                : (isDark ? Colors.white30 : Colors.black26),
             fontSize: 11,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
           ),
         ),
       ),
@@ -179,23 +205,36 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
 
   Widget _buildTabButton(String tab, String label, bool isDark) {
     bool isSelected = _currentTab == tab;
-    return GestureDetector(
-      onTap: () => setState(() => _currentTab = tab),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF06DF5D)
-              : (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.outfit(
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _currentTab = tab),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
             color: isSelected
-                ? Colors.black
-                : (isDark ? Colors.white54 : Colors.black54),
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ? (isDark ? Colors.white10 : Colors.white)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: isSelected && !isDark
+                ? [
+                    BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2))
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              color: isSelected
+                  ? (isDark ? const Color(0xFF06DF5D) : Colors.black)
+                  : (isDark ? Colors.white38 : Colors.black38),
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              fontSize: 13,
+            ),
           ),
         ),
       ),
@@ -215,14 +254,20 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
                   fontWeight: FontWeight.bold)),
         ),
         GlassContainer(
-          borderRadius: 12,
+          borderRadius: 16,
           padding: EdgeInsets.zero,
           child: Column(
             children: [
               // Header
-              Padding(
+              Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color:
+                      (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(16)),
+                ),
                 child: Row(
                   children: [
                     _buildHeaderCell("#", 25, isDark),
@@ -251,7 +296,16 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
               ...standings.asMap().entries.map((entry) {
                 int index = entry.key;
                 LeagueStats stats = entry.value;
-                bool isFirst = index == 0;
+
+                bool isMe = false;
+                final user = FirebaseAuth.instance.currentUser;
+                if (user != null) {
+                  if (stats.team.id == "creator_${user.uid}" ||
+                      stats.team.id == user.email) {
+                    isMe = true;
+                  }
+                }
+
                 bool isTop4 = index < 4;
                 bool is5th = index == 4;
 
@@ -268,8 +322,8 @@ class _LeagueTableWidgetState extends State<LeagueTableWidget> {
                     );
                   },
                   child: Container(
-                    color: isFirst
-                        ? Colors.green.withOpacity(0.15)
+                    color: isMe
+                        ? Colors.blue.withOpacity(0.15)
                         : Colors.transparent,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),

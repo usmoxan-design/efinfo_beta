@@ -16,6 +16,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:efinfo_beta/Player/ai_playing_styles_page.dart';
 import 'package:efinfo_beta/manager/managers_list_page.dart';
+import 'package:efinfo_beta/Pages/PlayerModelPage.dart';
+import 'package:efinfo_beta/Pages/FormationSuggesterPage.dart';
+import 'package:efinfo_beta/Others/positionskillchecker.dart';
+import 'package:efinfo_beta/Others/teambuilder.dart';
+import 'package:efinfo_beta/dataPlayers/CategoryPlayersPage.dart';
+import 'package:efinfo_beta/Others/PackTricksPage.dart';
+import 'package:efinfo_beta/Pages/PackSimulatorPage.dart';
+import 'package:efinfo_beta/dataPlayers/StandartPlayersPage.dart';
+import 'package:efinfo_beta/Others/ElementsPage.dart';
+import 'package:efinfo_beta/quiz/quiz_page.dart';
 import '../Player/playerStat.dart';
 
 class HomePage extends StatefulWidget {
@@ -32,7 +42,7 @@ class _HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -65,8 +75,9 @@ class _HomePageState extends State<HomePage>
                 labelStyle: GoogleFonts.outfit(
                     fontWeight: FontWeight.bold, fontSize: 16),
                 tabs: const [
-                  Tab(text: "Futbolchi"),
+                  Tab(text: "O'yinchilar"),
                   Tab(text: "Menejer"),
+                  Tab(text: "Boshqa"),
                 ],
               ),
             ),
@@ -76,6 +87,7 @@ class _HomePageState extends State<HomePage>
                 children: [
                   _buildPlayerHub(),
                   _buildManagerHub(),
+                  _buildOtherHub(),
                 ],
               ),
             ),
@@ -252,6 +264,143 @@ class _HomePageState extends State<HomePage>
           itemCount: managerData.length,
           itemBuilder: (context, index) {
             final item = managerData[index];
+            return _GridItem(
+              title: item['title'],
+              subtitle: item['subtitle'],
+              icon: item['icon'],
+              accent: item['accent'],
+              badge: item['badge'],
+              isColoredIcon: item['isColoredIcon'] ?? false,
+              onTap: item['onTap'],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOtherHub() {
+    final List<Map<String, dynamic>> otherData = [
+      {
+        'title': 'eFootball Players Name Quiz',
+        'subtitle': 'O\'yinchilarni toping',
+        'icon': "assets/images/efootball-logo.png",
+        'accent': AppColors.accent,
+        'badge': true,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const QuizPage())),
+      },
+      {
+        'title': 'Taktik Sxema tavsiyalar',
+        'subtitle': 'Optimal jamoangizni quring',
+        'icon': "assets/images/team_playstyle.png",
+        'accent': AppColors.accentBlue,
+        'badge': true,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const FormationSuggesterPage())),
+      },
+      {
+        'title': 'Player Model',
+        'subtitle': 'eFHUBdagi player model tushuntirish',
+        'icon': "assets/images/players.png",
+        'accent': Colors.tealAccent,
+        'badge': true,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const PlayerModelPage())),
+      },
+      {
+        'title': 'Pack Simulator',
+        'subtitle': 'Omadingizni sinab ko\'ring',
+        'icon': "assets/images/elements.png",
+        'accent': Colors.amber,
+        'badge': true,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const PackSimulatorPage())),
+      },
+      {
+        'title': 'Skill Match Calculator',
+        'subtitle': 'Skill moslik hisoblagich',
+        'icon': "assets/images/skill_calculator.png",
+        'accent': AppColors.accentBlue,
+        'badge': false,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const PositionSkillPage())),
+      },
+      {
+        'title': 'SuperSquad XI',
+        'subtitle': 'Team building',
+        'icon': "assets/images/formations.png",
+        'accent': const Color(0xFF06DF5D),
+        'badge': false,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const TeamBuilderScreen())),
+      },
+      {
+        'title': 'eFootball Elements',
+        'subtitle': 'Game mechanics',
+        'icon': "assets/images/elements.png",
+        'accent': AppColors.accentGreen,
+        'badge': false,
+        'isColoredIcon': true,
+        'onTap': () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const ElementsPage())),
+      },
+      {
+        'title': 'Players Category',
+        'subtitle': 'Browse by type',
+        'icon': "assets/images/category.png",
+        'accent': AppColors.accentOrange,
+        'badge': false,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const CategoryPlayersPage())),
+      },
+      {
+        'title': 'Standard Players',
+        'subtitle': 'Full database',
+        'icon': "assets/images/players.png",
+        'accent': const Color(0xFF06DF5D),
+        'badge': false,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) =>
+                    const StandartPlayersPage(title: 'Standard Players'))),
+      },
+      {
+        'title': 'Pack Tricks',
+        'subtitle': 'Epik tushurish sirlari',
+        'icon': "assets/images/elements.png",
+        'accent': Colors.purpleAccent,
+        'badge': false,
+        'isColoredIcon': false,
+        'onTap': () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const PackTricksPage())),
+      },
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.all(8),
+      children: [
+        GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 0.9,
+          ),
+          itemCount: otherData.length,
+          itemBuilder: (context, index) {
+            final item = otherData[index];
             return _GridItem(
               title: item['title'],
               subtitle: item['subtitle'],

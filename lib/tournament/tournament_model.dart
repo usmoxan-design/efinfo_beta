@@ -186,6 +186,8 @@ class TournamentModel {
   String? championId;
   TournamentType type;
   LeagueSettings? leagueSettings;
+  String? creatorId; // For online tournaments
+  bool isOnline; // Flag to distinguish
 
   TournamentModel({
     String? id,
@@ -196,8 +198,24 @@ class TournamentModel {
     this.championId,
     this.type = TournamentType.knockout,
     this.leagueSettings,
+    this.creatorId,
+    this.isOnline = false,
+    this.startDate,
+    this.endDate,
   })  : id = id ?? uuid.v4(),
         matches = matches ?? [];
+
+  DateTime? startDate;
+  DateTime? endDate;
+
+  bool get isCompleted {
+    if (!isDrawDone || matches.isEmpty) return false;
+    return matches.every((m) => m.isPlayed);
+  }
+
+  String get typeString {
+    return type == TournamentType.league ? "League" : "Knockout";
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -208,6 +226,10 @@ class TournamentModel {
         'championId': championId,
         'type': type.index,
         'leagueSettings': leagueSettings?.toJson(),
+        'creatorId': creatorId,
+        'isOnline': isOnline,
+        'startDate': startDate?.toIso8601String(),
+        'endDate': endDate?.toIso8601String(),
       };
 
   factory TournamentModel.fromJson(Map<String, dynamic> json) {
@@ -229,6 +251,11 @@ class TournamentModel {
       leagueSettings: json['leagueSettings'] != null
           ? LeagueSettings.fromJson(json['leagueSettings'])
           : null,
+      creatorId: json['creatorId'] as String?,
+      isOnline: json['isOnline'] as bool? ?? false,
+      startDate:
+          json['startDate'] != null ? DateTime.parse(json['startDate']) : null,
+      endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
     );
   }
 }

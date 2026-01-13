@@ -41,11 +41,8 @@ class LeagueTournamentChartsPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Summary Cards
             _buildGlobalSummary(stats, isDark),
             const SizedBox(height: 24),
-
-            // Pie Charts Row
             Row(
               children: [
                 Expanded(
@@ -104,24 +101,18 @@ class LeagueTournamentChartsPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-
-            // Top Scoring Teams Chart
-            _buildSectionTitle("Eng ko'p gol urgan jamoalar", isDark),
+            _buildSectionTitle("Eng ko'p gol urganlar", isDark),
             const SizedBox(height: 12),
-            _buildGoalsChart(stats.topScoringTeams, isDark),
+            _buildLineChart(stats.topScoringTeams, true, isDark),
             const SizedBox(height: 32),
-
-            // Wins/Losses Distribution (Optional: Pie Chart)
             _buildSectionTitle(
                 "Eng yaxshi himoyalar (O'tkazilgan gollar)", isDark),
             const SizedBox(height: 12),
-            _buildDefenseChart(stats.bestDefenses, isDark),
-
+            _buildLineChart(stats.bestDefenses, false, isDark),
             const SizedBox(height: 32),
             _buildSectionTitle("G'alabalar", isDark),
             const SizedBox(height: 12),
             _buildWinsList(stats.mostWins, isDark),
-
             const SizedBox(height: 100),
           ],
         ),
@@ -182,124 +173,148 @@ class LeagueTournamentChartsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildGoalsChart(List<LeagueStats> topScoring, bool isDark) {
-    return GlassContainer(
-      height: 250,
-      padding: const EdgeInsets.all(16),
-      borderRadius: 16,
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceAround,
-          maxY: (topScoring.isEmpty ? 10 : topScoring.first.goalsFor * 1.2)
-              .toDouble(),
-          barTouchData: BarTouchData(enabled: true),
-          titlesData: FlTitlesData(
-            show: true,
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  int idx = value.toInt();
-                  if (idx >= 0 && idx < topScoring.length) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        topScoring[idx].team.name.substring(
-                            0, min(3, topScoring[idx].team.name.length)),
-                        style: GoogleFonts.outfit(
-                            color: isDark ? Colors.white38 : Colors.black38,
-                            fontSize: 10),
-                      ),
-                    );
-                  }
-                  return const SizedBox();
-                },
-              ),
-            ),
-            leftTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          ),
-          gridData: const FlGridData(show: false),
-          borderData: FlBorderData(show: false),
-          barGroups: topScoring.asMap().entries.map((entry) {
-            return BarChartGroupData(
-              x: entry.key,
-              barRods: [
-                BarChartRodData(
-                  toY: entry.value.goalsFor.toDouble(),
-                  color: const Color(0xFF06DF5D),
-                  width: 16,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ],
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
+  Widget _buildLineChart(
+      List<LeagueStats> stats, bool isGoalsFor, bool isDark) {
+    if (stats.isEmpty) return const SizedBox();
 
-  Widget _buildDefenseChart(List<LeagueStats> bestDefenses, bool isDark) {
     return GlassContainer(
-      height: 200,
       padding: const EdgeInsets.all(16),
       borderRadius: 16,
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceAround,
-          maxY:
-              (bestDefenses.isEmpty ? 10 : bestDefenses.last.goalsAgainst * 1.2)
-                  .toDouble(),
-          titlesData: FlTitlesData(
-            show: true,
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  int idx = value.toInt();
-                  if (idx >= 0 && idx < bestDefenses.length) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        bestDefenses[idx].team.name.substring(
-                            0, min(3, bestDefenses[idx].team.name.length)),
-                        style: GoogleFonts.outfit(
-                            color: isDark ? Colors.white38 : Colors.black38,
-                            fontSize: 10),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 200,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: isDark ? Colors.white12 : Colors.black12,
+                    strokeWidth: 1,
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        int index = value.toInt();
+                        if (index < 0 || index >= stats.length)
+                          return const SizedBox();
+                        return SideTitleWidget(
+                          meta: meta,
+                          child: Text(
+                            stats[index].team.name.substring(
+                                0, min(5, stats[index].team.name.length)),
+                            style: GoogleFonts.outfit(
+                              color: isDark ? Colors.white54 : Colors.black54,
+                              fontSize: 10,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 5,
+                      getTitlesWidget: (value, meta) {
+                        return SideTitleWidget(
+                          meta: meta,
+                          child: Text(
+                            value.toInt().toString(),
+                            style: GoogleFonts.outfit(
+                              color: isDark ? Colors.white38 : Colors.black38,
+                              fontSize: 10,
+                            ),
+                          ),
+                        );
+                      },
+                      reservedSize: 28,
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: stats.asMap().entries.map((entry) {
+                      int idx = entry.key;
+                      int val = isGoalsFor
+                          ? entry.value.goalsFor
+                          : entry.value.goalsAgainst;
+                      return FlSpot(idx.toDouble(), val.toDouble());
+                    }).toList(),
+                    isCurved: true,
+                    gradient: LinearGradient(
+                      colors: isGoalsFor
+                          ? [const Color(0xFF06DF5D), Colors.blueAccent]
+                          : [Colors.redAccent, Colors.orangeAccent],
+                    ),
+                    barWidth: 4,
+                    dotData: const FlDotData(show: true),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        colors: isGoalsFor
+                            ? [
+                                const Color(0xFF06DF5D).withOpacity(0.2),
+                                Colors.blueAccent.withOpacity(0.0)
+                              ]
+                            : [
+                                Colors.redAccent.withOpacity(0.2),
+                                Colors.orangeAccent.withOpacity(0.0)
+                              ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                       ),
-                    );
-                  }
-                  return const SizedBox();
-                },
+                    ),
+                  ),
+                ],
               ),
             ),
-            leftTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
-          gridData: const FlGridData(show: false),
-          borderData: FlBorderData(show: false),
-          barGroups: bestDefenses.asMap().entries.map((entry) {
-            return BarChartGroupData(
-              x: entry.key,
-              barRods: [
-                BarChartRodData(
-                  toY: entry.value.goalsAgainst.toDouble(),
-                  color: Colors.red[400]!,
-                  width: 16,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ],
+          const SizedBox(height: 16),
+          ...stats.map((s) {
+            int val = isGoalsFor ? s.goalsFor : s.goalsAgainst;
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isGoalsFor
+                          ? const Color(0xFF06DF5D)
+                          : Colors.redAccent,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(s.team.name,
+                        style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            color: isDark ? Colors.white70 : Colors.black87)),
+                  ),
+                  Text(val.toString(),
+                      style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black)),
+                ],
+              ),
             );
-          }).toList(),
-        ),
+          }),
+        ],
       ),
     );
   }
@@ -364,6 +379,4 @@ class LeagueTournamentChartsPage extends StatelessWidget {
       ),
     );
   }
-
-  // Removed local min
 }

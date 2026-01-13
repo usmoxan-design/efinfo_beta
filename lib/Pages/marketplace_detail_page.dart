@@ -117,6 +117,36 @@ class _MarketplaceDetailPageState extends State<MarketplaceDetailPage> {
                         }).toList(),
                       ),
                     ),
+                  Positioned(
+                    bottom: 20,
+                    right: 20,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                          color: widget.post.isExchange
+                              ? Colors.orange
+                              : Colors.blueAccent,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            )
+                          ]),
+                      child: Text(
+                          widget.post.isExchange
+                              ? "OBMEN"
+                              : (widget.post.price == 0
+                                  ? "BEPUL"
+                                  : "${NumberFormat("#,###").format(widget.post.price)} so'm"),
+                          style: GoogleFonts.outfit(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16)),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -152,9 +182,35 @@ class _MarketplaceDetailPageState extends State<MarketplaceDetailPage> {
                         ),
                       );
                       if (confirm == true) {
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => WillPopScope(
+                            onWillPop: () async => false,
+                            child: AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20)),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const CircularProgressIndicator(
+                                      color: Colors.redAccent),
+                                  const SizedBox(height: 20),
+                                  Text("Biroz kuting, e'lon o'chirilmoqda...",
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.outfit(fontSize: 16)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+
                         await _marketplaceService.deletePost(
                             widget.post.id, widget.post.fileIds);
-                        if (mounted) Navigator.pop(context);
+                        if (mounted) {
+                          Navigator.pop(context); // Close loading
+                          Navigator.pop(context); // Close detail page
+                        }
                       }
                     }
                   },
@@ -182,18 +238,33 @@ class _MarketplaceDetailPageState extends State<MarketplaceDetailPage> {
                           child: Text(widget.post.title,
                               style: GoogleFonts.outfit(
                                   fontSize: 24, fontWeight: FontWeight.bold))),
+                      // removed duplicate price display logic, relying on the one in image or update here too?
+                      // The user said "detilals page da ham tasir qilsin".
+                      // I added it to the image (Positioned).
+                      // If I keep the one in body, I should update logic too.
+                      // Let's update the body one as well for consistency, or remove it if redundant.
+                      // The body one is nice for context. I will update logic.
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                            color: Colors.blueAccent.withOpacity(0.1),
+                            color: (widget.post.isExchange
+                                    ? Colors.orange
+                                    : Colors.blueAccent)
+                                .withOpacity(0.1),
                             borderRadius: BorderRadius.circular(16)),
                         child: Text(
-                            "${NumberFormat("#,###").format(widget.post.price)} so'm",
+                            widget.post.isExchange
+                                ? "OBMEN"
+                                : (widget.post.price == 0
+                                    ? "BEPUL"
+                                    : "${NumberFormat("#,###").format(widget.post.price)} so'm"),
                             style: GoogleFonts.outfit(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.blueAccent)),
+                                color: widget.post.isExchange
+                                    ? Colors.orange
+                                    : Colors.blueAccent)),
                       ),
                     ],
                   ),
