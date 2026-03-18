@@ -24,9 +24,8 @@ Ushbu ilovani yaratishda quyidagi texnologiyalardan foydalanilgan:
 
 | Qism | Texnologiya |
 | :--- | :--- |
-| **Frontend** | Flutter / React Native (o'zingiznikini tanlang) |
-| **Backend** | Node.js / Python (Django/FastAPI) |
-| **Ma'lumotlar bazasi** | PostgreSQL / Firebase / MongoDB |
+| **Frontend** | Flutter|
+| **Ma'lumotlar bazasi** |  Firebase  |
 | **Dizayn** | Figma |
 
 -----
@@ -37,19 +36,19 @@ Loyihani o'z qurilmangizda ishga tushirish uchun quyidagi qadamlarni bajaring:
 
 1.  **Repozitoriyani klonlash:**
     ```bash
-    git clone https://github.com/username/efinfo-hub.git
+    git clone https://github.com/username/efinfo_beta.git
     ```
 2.  **Loyiha papkasiga o'tish:**
     ```bash
-    cd efinfo-hub
+    cd efinfo_beta
     ```
 3.  **Bog'liqliklarni o'rnatish:**
     ```bash
-    npm install  # yoki flutter pub get
+    flutter pub get
     ```
 4.  **Ilovani ishga tushirish:**
     ```bash
-    npm start    # yoki flutter run
+    yoki flutter run
     ```
 
 -----
@@ -84,8 +83,8 @@ Ushbu loyiha **MIT** litsenziyasi ostida tarqatiladi. Batafsil ma'lumot uchun `L
 
 ## 📧 Aloqa
 
-**Loyiha rahbari:** [Ismingiz]
-**Telegram:** [@username]
+**Loyiha rahbari:** [Usmoxan]
+**Telegram:** [@usmoxan_design]
 **Email:** info@efinfo.uz
 
 -----
@@ -94,4 +93,3 @@ Ushbu loyiha **MIT** litsenziyasi ostida tarqatiladi. Batafsil ma'lumot uchun `L
 
 -----
 
-> **Keyingi qadam:** Agar ilovangiz qaysi tilda (masalan: Flutter, Swift yoki Kotlin) yozilganini aytsangiz, "Texnologiyalar" va "O'rnatish" bo'limlarini aynan o'sha tilga moslab aniqroq qilib berishim mumkin. Shuni xohlaysizmi?
