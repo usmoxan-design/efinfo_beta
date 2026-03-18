@@ -12,12 +12,12 @@ void main() async {
   try {
     await Firebase.initializeApp(
       options: const FirebaseOptions(
-          apiKey: "AIzaSyDooKufViiKuIw5Q_8g8iK0qWYjuzR_ZWM",
-          authDomain: "efinfo-hub.firebaseapp.com",
-          projectId: "efinfo-hub",
-          storageBucket: "efinfo-hub.firebasestorage.app",
-          messagingSenderId: "802735861500",
-          appId: "1:802735861500:web:8785b5f4d6f1797691b179"),
+          apiKey: "YOUR_API_KEY",
+          authDomain: "yourapp.firebaseapp.com",
+          projectId: "yourapp",
+          storageBucket: "yourapp.firebasestorage.app",
+          messagingSenderId: "123456789",
+          appId: "1:802735861500:web:123456789"),
     );
   } catch (e) {
     debugPrint("Firebase initialization error: $e");
